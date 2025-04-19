@@ -135,12 +135,44 @@ button:hover,
 .button:hover {
     background: #b9b9b9;
     cursor: pointer;
+    color: black;
+    text-decoration: none;
 }
 
 button.transparent,
 .button.transparent {
     background: unset;
     border: unset;
+}
+
+.gem:hover {
+    filter: saturate(2);
+}
+
+.coal:hover {
+    filter: brightness(2);
+}
+
+button.red,
+.button.red {
+    background: #e97272;
+    border-color: #a85252;
+}
+
+button.red:hover,
+.button.red:hover {
+    background: #ec8d8d;
+}
+
+button.green,
+.button.green {
+    background: #6cbb6d;
+    border-color: #52a85d;
+}
+
+button.green:hover,
+.button.green:hover {
+    background: #85dd8a;
 }
 
 /** 

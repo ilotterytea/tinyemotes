@@ -43,13 +43,15 @@
                                 <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
                                     style="display: none;">
                                 <input type="text" name="rate" value="5" style="display:none;">
-                                <button type="submit" class="transparent">gem</button>
+                                <button type="submit" class="transparent gem"><img src="/static/img/icons/gem.png"
+                                        alt="GEM!" title="IT'S A GEM!"></button>
                             </form>
                             <form action="/emotes/rate.php" method="POST">
                                 <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
                                     style="display: none;">
                                 <input type="text" name="rate" value="1" style="display:none;">
-                                <button type="submit" class="transparent">coal</button>
+                                <button type="submit" class="transparent coal"><img src="/static/img/icons/coal.png"
+                                        alt="COAL!" title="IT'S A COAL!"></button>
                             </form>
                             <a class="button red" href="/emotes/report.php?id=<?php echo $emote->get_id() ?>">Report
                                 emote</a>
