@@ -3,6 +3,9 @@
     --background-color-hover: #e4eed8;
     --background-color-disabled: #bec6b3;
     --border-color: #b0b9a5;
+
+    --foreground-color: #7f9c3c;
+    --foreground-color-hover: #4b5632;
 }
 
 * {
@@ -23,6 +26,22 @@ table.vertical th {
 table.vertical th,
 table.vertical td {
     padding: 2px;
+}
+
+a {
+    color: var(--foreground-color);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--foreground-color-hover);
+    text-decoration: underline;
+}
+
+input {
+    padding: 2px;
+    border-radius: 4px;
+    border: 1px solid gray;
 }
 
 .container {
@@ -50,6 +69,25 @@ section.content {
     flex-direction: row;
 }
 
+.big-gap {
+    gap: 32px;
+}
+
+.center {
+    justify-content: center;
+    align-items: center;
+}
+
+/** 
+------------
+   COUNTER
+------------
+*/
+.counter img:not(:first-child) {
+    margin-left: 32px;
+}
+
+
 /** 
 -----------
    NAVBAR
@@ -60,12 +98,20 @@ section.content {
     display: flex;
     flex-direction: row;
     padding: 4px;
+
+    gap: 16px;
 }
 
 .navbar .links {
     display: flex;
     align-items: end;
     gap: 4px;
+}
+
+.navbar .brand {
+    display: flex;
+    flex-direction: row;
+    align-items: end;
 }
 
 /** 

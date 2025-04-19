@@ -3,7 +3,10 @@ function html_navigation_bar()
 {
     echo '' ?>
     <section class="navbar">
-        <h1>AlrightTV</h1>
+        <a href="/" class="brand" style="color:black;text-decoration:none;">
+            <img src="/static/img/brand/mini.webp" alt="">
+            <h2 style="margin-left:8px;font-size:24px;"><b><?php echo "alright.party" ?></b></h2>
+        </a>
         <div class="links">
             <a href="/emotes" class="button">Emotes</a>
             <a href="/emotes/upload.php" class="button">Upload</a>
