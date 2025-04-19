@@ -1,0 +1,187 @@
+:root {
+    --background-color: #d7dfcd;
+    --background-color-hover: #e4eed8;
+    --background-color-disabled: #bec6b3;
+    --border-color: #b0b9a5;
+}
+
+* {
+    padding: 0;
+    margin: 0;
+
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+div {
+    display: unset;
+}
+
+table.vertical th {
+    text-align: right;
+}
+
+table.vertical th,
+table.vertical td {
+    padding: 2px;
+}
+
+.container {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+}
+
+.wrapper {
+    flex-grow: 1;
+    display: flex;
+}
+
+main.content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 6px;
+}
+
+/** 
+-------------
+   BUTTONS
+-------------
+*/
+
+button,
+.button {
+    background: lightgray;
+    border: 1px solid gray;
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 14px;
+    text-decoration: none;
+    color: black;
+}
+
+button:hover,
+.button:hover {
+    background: #b9b9b9;
+    cursor: pointer;
+}
+
+button.transparent,
+.button.transparent {
+    background: unset;
+    border: unset;
+}
+
+/** 
+----------
+   LIST
+----------
+*/
+
+.items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.items.content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.navtab {
+    position: relative;
+    width: 50%;
+    top: 2px;
+}
+
+.full {
+    flex-grow: 1;
+}
+
+.row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.right {
+    justify-content: flex-end;
+}
+
+/** 
+---------
+   BOX
+---------
+*/
+
+.box {
+    background: var(--background-color);
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px;
+}
+
+.box.navtab {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: unset;
+    margin: 0;
+}
+
+.box:has(.navtab) {
+    background: unset;
+    border: unset;
+    border-radius: unset;
+    padding: 0;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.box:has(.navtab) .content {
+    flex-grow: 1;
+    margin: 0;
+    padding: 16px;
+}
+
+.box.emote {
+    width: 90px;
+    height: 90px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    gap: 6px;
+
+    overflow: hidden;
+}
+
+.box.emote p {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+a.box {
+    text-decoration: none;
+    color: black;
+}
+
+a.box:hover {
+    background: linear-gradient(0deg, var(--background-color-hover), var(--background-color-disabled));
+    cursor: pointer;
+}
+
+.emote-showcase {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+    margin: 32px 0;
+}
