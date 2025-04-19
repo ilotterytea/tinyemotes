@@ -46,3 +46,21 @@ function resize_image(string $src_path, string $dst_path, int $max_width, int $m
 
     return null;
 }
+
+function get_mime_and_ext(string $src_path): array|null
+{
+    if ($src_path == "") {
+        return null;
+    }
+
+    $imagick = new Imagick();
+
+    $imagick->readImage($src_path);
+    $ext = strtolower($imagick->getImageFormat());
+    $mime = $imagick->getImageMimeType();
+
+    $imagick->clear();
+    $imagick->destroy();
+
+    return [$mime, $ext];
+}

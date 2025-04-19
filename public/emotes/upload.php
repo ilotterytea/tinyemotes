@@ -42,11 +42,25 @@ if ($code == "") {
     exit;
 }
 
+$image = $_FILES["file"];
+
+if (is_null(list($mime, $ext) = get_mime_and_ext($image["tmp_name"]))) {
+    http_response_code(400);
+    echo json_encode([
+        "status_code" => 400,
+        "message" => "Not a valid image",
+        "data" => null
+    ]);
+    exit;
+}
+
 // creating a new emote record
 $db = new SQLite3("../../database.db");
 
-$stmt = $db->prepare("INSERT INTO emotes(code) VALUES (:code)");
+$stmt = $db->prepare("INSERT INTO emotes(code, mime, ext) VALUES (:code, :mime, :ext)");
 $stmt->bindValue(":code", $code);
+$stmt->bindValue(":mime", $mime);
+$stmt->bindValue(":ext", $ext);
 $results = $stmt->execute();
 
 $id = $db->lastInsertRowID();
@@ -67,8 +81,6 @@ $path = "../static/userdata/emotes/$id";
 if (!is_dir($path)) {
     mkdir($path, 0777, true);
 }
-
-$image = $_FILES["file"];
 
 // resizing the image
 
@@ -103,7 +115,9 @@ if (isset($_SERVER["HTTP_ACCEPT"]) && $_SERVER["HTTP_ACCEPT"] == "application/js
         "message" => null,
         "data" => [
             "id" => $id,
-            "code" => $code
+            "code" => $code,
+            "ext" => $ext,
+            "mime" => $mime
         ]
     ]);
     exit;
