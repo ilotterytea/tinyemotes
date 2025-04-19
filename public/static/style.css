@@ -34,14 +34,38 @@ table.vertical td {
 .wrapper {
     flex-grow: 1;
     display: flex;
+    flex-direction: column;
 }
 
-main.content {
+section.content {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     gap: 6px;
     margin: 6px;
+}
+
+.page {
+    display: flex;
+    flex-direction: row;
+}
+
+/** 
+-----------
+   NAVBAR
+-----------
+*/
+
+.navbar {
+    display: flex;
+    flex-direction: row;
+    padding: 4px;
+}
+
+.navbar .links {
+    display: flex;
+    align-items: end;
+    gap: 4px;
 }
 
 /** 

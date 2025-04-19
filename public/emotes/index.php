@@ -58,6 +58,8 @@ $id = str_replace("/", "", $id);
 $emotes = null;
 $emote = null;
 
+include "../../src/partials.php";
+
 if ($id == "" || !is_numeric($id)) {
     $page = intval($_GET["p"] ?? "0");
     $limit = 50;
