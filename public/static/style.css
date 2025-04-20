@@ -175,6 +175,17 @@ button.green:hover,
     background: #85dd8a;
 }
 
+button.purple,
+.button.purple {
+    background: #9a7ad2;
+    border-color: #6d5595;
+}
+
+button.purple:hover,
+.button.purple:hover {
+    background: #ac88ea;
+}
+
 /** 
 ----------
    LIST
@@ -250,6 +261,11 @@ button.green:hover,
     padding: 16px;
 }
 
+.box hr {
+    border-color: var(--border-color);
+    border-width: 1px;
+}
+
 .box.emote {
     width: 90px;
     height: 90px;
@@ -286,4 +302,37 @@ a.box:hover {
     align-items: center;
     gap: 32px;
     margin: 32px 0;
+}
+
+/** 
+-------------
+   ACCOUNTS
+-------------
+*/
+
+.accman {
+    flex-grow: 0;
+    width: 400px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.accman form {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.accman h1 {
+    font-size: 26px;
+}
+
+.accman h2 {
+    font-size: 20px;
+}
+
+.accman h3 {
+    font-size: 16px;
 }
