@@ -10,8 +10,18 @@ function html_navigation_bar()
         <div class="links">
             <a href="/emotes" class="button">Emotes</a>
             <a href="/emotes/upload.php" class="button">Upload</a>
-            <a href="/login" class="button">Log in...</a>
+            <a href="/account" class="button">Account</a>
         </div>
+        <?php
+        if (isset($_SESSION["user_id"])) {
+            echo '' ?>
+            <a href="/users/<?php echo $_SESSION["user_id"] ?>" class="links" style="margin-left:auto;">
+                Signed in as <?php echo $_SESSION["user_name"] ?> <img
+                    src="/static/userdata/avatars/<?php echo $_SESSION["user_id"] ?>" width="24" height="24" />
+            </a>
+            <?php ;
+        }
+        ?>
     </section>
     <?php ;
 }
