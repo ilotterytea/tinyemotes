@@ -31,31 +31,40 @@
                     </section>
 
                     <section class="box items row">
-                        <div class="items row left full">
-                            <form action="/emotes/add.php" method="POST">
-                                <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
-                                    style="display: none;">
-                                <button type="submit" class="green">Add to my channel</button>
-                            </form>
-                        </div>
-                        <div class="items row right full">
-                            <form action="/emotes/rate.php" method="POST">
-                                <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
-                                    style="display: none;">
-                                <input type="text" name="rate" value="5" style="display:none;">
-                                <button type="submit" class="transparent gem"><img src="/static/img/icons/gem.png"
-                                        alt="GEM!" title="IT'S A GEM!"></button>
-                            </form>
-                            <form action="/emotes/rate.php" method="POST">
-                                <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
-                                    style="display: none;">
-                                <input type="text" name="rate" value="1" style="display:none;">
-                                <button type="submit" class="transparent coal"><img src="/static/img/icons/coal.png"
-                                        alt="COAL!" title="IT'S A COAL!"></button>
-                            </form>
-                            <a class="button red" href="/emotes/report.php?id=<?php echo $emote->get_id() ?>">Report
-                                emote</a>
-                        </div>
+                        <?php if (isset($_SESSION["user_id"])) {
+                            echo '' ?>
+                            <div class="items row left full">
+                                <form action="/emotes/add.php" method="POST">
+                                    <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
+                                        style="display: none;">
+                                    <button type="submit" class="green">Add to my channel</button>
+                                </form>
+                            </div>
+                            <div class="items row right full">
+                                <form action="/emotes/rate.php" method="POST">
+                                    <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
+                                        style="display: none;">
+                                    <input type="text" name="rate" value="5" style="display:none;">
+                                    <button type="submit" class="transparent gem"><img src="/static/img/icons/gem.png"
+                                            alt="GEM!" title="IT'S A GEM!"></button>
+                                </form>
+                                <form action="/emotes/rate.php" method="POST">
+                                    <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
+                                        style="display: none;">
+                                    <input type="text" name="rate" value="1" style="display:none;">
+                                    <button type="submit" class="transparent coal"><img src="/static/img/icons/coal.png"
+                                            alt="COAL!" title="IT'S A COAL!"></button>
+                                </form>
+                                <a class="button red" href="/emotes/report.php?id=<?php echo $emote->get_id() ?>">Report
+                                    emote</a>
+                            </div>
+                            <?php
+                        } else {
+                            echo '' ?>
+                            <p><a href="/account/login">Log in</a> to get additional features...</p>
+                            <?php
+                        }
+                        ?>
                     </section>
 
                     <section class="box">
@@ -63,8 +72,28 @@
                             <tr>
                                 <th>Uploader</th>
                                 <td><?php
-                                echo '<a href="/users/' . "0" . '">' . "someone" . '</a>, ';
-                                echo date("d M Y", $emote->get_created_at());
+                                $username = "anonymous";
+                                $link = "#";
+
+                                if ($emote->get_uploaded_by()) {
+                                    $db = new SQLite3("../../database.db");
+                                    $stmt = $db->prepare("SELECT username FROM users WHERE id = :id");
+                                    $stmt->bindValue(":id", $emote->get_uploaded_by());
+                                    $results = $stmt->execute();
+
+                                    if ($row = $results->fetchArray()) {
+                                        $username = $row["username"];
+                                        $link = "/users/" . $emote->get_uploaded_by();
+                                    }
+
+                                    $db->close();
+                                }
+
+                                echo "<a href=\"$link\">";
+                                echo $username;
+                                echo "</a>";
+
+                                echo ", " . date("d M Y", $emote->get_created_at());
                                 ?></td>
                             </tr>
                             <tr>

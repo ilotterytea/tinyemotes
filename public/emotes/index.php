@@ -1,5 +1,7 @@
 <?php
 include "../../src/emote.php";
+include "../../src/accounts.php";
+authorize_user();
 
 function display_list_emotes(int $page, int $limit): array
 {
@@ -16,7 +18,8 @@ function display_list_emotes(int $page, int $limit): array
             $row["id"],
             $row["code"],
             $row["ext"],
-            intval(strtotime($row["created_at"]))
+            intval(strtotime($row["created_at"])),
+            $row["uploaded_by"]
         ));
     }
 
@@ -35,7 +38,8 @@ function display_emote(int $id)
             $row["id"],
             $row["code"],
             $row["ext"],
-            intval(strtotime($row["created_at"]))
+            intval(strtotime($row["created_at"])),
+            $row["uploaded_by"]
         );
     }
 
