@@ -64,4 +64,4 @@ $stmt->execute([$emote_set_id, $emote_id, $user_id]);
 
 $db = null;
 
-generate_alert("/emotes/$emote_id", "Successfully added a new emote!", 200);
+generate_alert("/emotes/$emote_id", "This emote has been added to your set. Enjoy!", 200);
