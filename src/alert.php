@@ -25,9 +25,15 @@ function display_alert()
     $ok = substr($status, 0, 1) == '2';
 
     echo '' ?>
-    <div class="box row alert <?php echo $ok ? '' : 'red' ?>" style="gap:8px;">
+    <div class="box row alert <?php echo $ok ? '' : 'red' ?>" style="gap:8px;" id="alert-box">
         <img src="/static/img/icons/<?php echo $ok ? 'yes' : 'no' ?>.png" alt="">
         <p><b><?php echo $reason ?></b></p>
     </div>
+    <script>
+        setTimeout(() => {
+            const alertBox = document.getElementById("alert-box");
+            alertBox.remove();
+        }, 5000);
+    </script>
     <?php
 }
