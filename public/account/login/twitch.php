@@ -1,8 +1,9 @@
 <?php
 include "../../../src/utils.php";
+include_once "../../../src/config.php";
 
-$client_id = "";
-$client_secret = "";
+$client_id = "472prq7kqn0a21l5um2lz7374471pp";
+$client_secret = "koho369mw8p51di4fx34jm2ogdmbj2";
 $redirect_uri = "http://localhost:8000/account/login/twitch.php";
 
 if (isset($_GET["error"])) {
@@ -66,32 +67,29 @@ $_SESSION["twitch_access_token"] = $response["access_token"];
 $_SESSION["twitch_refresh_token"] = $response["refresh_token"];
 $_SESSION["twitch_expires_on"] = time() + intval($response["expires_in"]);
 
-$db = new SQLite3("../../../database.db");
+$db = new PDO(DB_URL, DB_USER, DB_PASS);
 
 // creating user if not exists
-$stmt = $db->prepare("SELECT id, user_id FROM connections WHERE alias_id = :alias_id AND platform = 'twitch'");
-$stmt->bindValue("alias_id", $twitch_user["id"]);
-
-$results = $stmt->execute();
+$stmt = $db->prepare("SELECT id, user_id FROM connections WHERE alias_id = ? AND platform = 'twitch'");
+$stmt->execute([$twitch_user["id"]]);
 
 $user_id = "";
 $user_secret_key = "";
 $user_name = "";
 
-if ($row = $results->fetchArray()) {
+if ($row = $stmt->fetch()) {
     $id = $row["id"];
     $user_id = $row["user_id"];
 
-    $stmt = $db->prepare("SELECT * FROM users WHERE id = :id");
-    $stmt->bindValue(":id", $id);
-    $results = $stmt->execute();
+    $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
 
-    if ($row = $results->fetchArray()) {
+    if ($row = $stmt->fetch()) {
         $user_name = $row["username"];
         $user_secret_key = $row["secret_key"];
         $user_id = $row["id"];
     } else {
-        $db->close();
+        $db = null;
         echo "Connection found, but not user?";
         exit;
     }
@@ -99,32 +97,28 @@ if ($row = $results->fetchArray()) {
     $user_secret_key = generate_random_string(32);
     $user_name = $twitch_user["login"];
 
-    $stmt = $db->prepare("INSERT INTO users(username, secret_key) VALUES (:username, :secret_key)");
-    $stmt->bindValue(":username", $user_name);
-    $stmt->bindValue(":secret_key", $user_secret_key);
-    if (!$stmt->execute()) {
-        $db->close();
+    $stmt = $db->prepare("INSERT INTO users(username, secret_key) VALUES (?, ?)");
+    if (!$stmt->execute([$user_name, $user_secret_key])) {
+        $db = null;
         echo "Failed to create a user";
         exit;
     }
 
-    $user_id = $db->lastInsertRowID();
+    $user_id = $db->lastInsertId();
 
-    $stmt = $db->prepare("INSERT INTO connections(user_id, alias_id, platform, data) VALUES (:user_id, :alias_id, 'twitch', :data)");
-    $stmt->bindValue(":user_id", $user_id);
-    $stmt->bindValue(":alias_id", $twitch_user["id"]);
-    $stmt->bindValue(
-        ":data",
+    $stmt = $db->prepare("INSERT INTO connections(user_id, alias_id, platform, data) VALUES (?, ?, 'twitch', ?)");
+    $stmt->execute([
+        $user_id,
+        $twitch_user["id"],
         $_SESSION["twitch_access_token"] . ":" . $_SESSION["twitch_refresh_token"] . ":" . $_SESSION["twitch_expires_on"]
-    );
-    $stmt->execute();
+    ]);
 }
 
 $_SESSION["user_id"] = $user_id;
 $_SESSION["user_name"] = $user_name;
 setcookie("secret_key", $user_secret_key, time() + 86400 * 30, "/");
 
-$db->close();
+$db = null;
 
 // downloading profile picture
 $path = "../../static/userdata/avatars";

@@ -1,13 +1,14 @@
 <?php
 include "../../src/accounts.php";
+include_once "../../src/config.php";
+
 authorize_user();
 
-function abort_upload(string $path, SQLite3 $db, string $id, string $response_text, int $response_code = 400)
+function abort_upload(string $path, PDO $db, string $id, string $response_text, int $response_code = 400)
 {
-    $stmt = $db->prepare("DELETE FROM emotes WHERE id = :id");
-    $stmt->bindValue(":id", $id, SQLITE3_INTEGER);
-    $stmt->execute();
-    $db->close();
+    $stmt = $db->prepare("DELETE FROM emotes WHERE id = ?");
+    $stmt->execute([$id]);
+    $db = null;
 
     array_map("unlink", glob("$path/*.*"));
     rmdir($path);
@@ -62,21 +63,17 @@ if (is_null(list($mime, $ext) = get_mime_and_ext($image["tmp_name"]))) {
 }
 
 // creating a new emote record
-$db = new SQLite3("../../database.db");
+$db = new PDO(DB_URL, DB_USER, DB_PASS);
 
 $uploaded_by = $_SESSION["user_id"] ?? null;
 
-$stmt = $db->prepare("INSERT INTO emotes(code, mime, ext, uploaded_by) VALUES (:code, :mime, :ext, :uploaded_by)");
-$stmt->bindValue(":code", $code);
-$stmt->bindValue(":mime", $mime);
-$stmt->bindValue(":ext", $ext);
-$stmt->bindValue(":uploaded_by", $uploaded_by);
-$results = $stmt->execute();
+$stmt = $db->prepare("INSERT INTO emotes(code, mime, ext, uploaded_by) VALUES (?, ?, ?, ?)");
+$stmt->execute([$code, $mime, $ext, $uploaded_by]);
 
-$id = $db->lastInsertRowID();
+$id = $db->lastInsertId();
 
 if ($id == 0) {
-    $db->close();
+    $db = null;
     http_response_code(500);
     echo json_encode([
         "status_code" => 500,
@@ -112,7 +109,7 @@ if ($resized_image) {
     abort_upload($path, $db, $id, $resized_image);
 }
 
-$db->close();
+$db = null;
 
 if (isset($_SERVER["HTTP_ACCEPT"]) && $_SERVER["HTTP_ACCEPT"] == "application/json") {
     http_response_code(201);

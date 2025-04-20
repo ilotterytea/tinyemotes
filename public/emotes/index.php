@@ -1,19 +1,24 @@
 <?php
 include "../../src/emote.php";
 include "../../src/accounts.php";
+include_once "../../src/config.php";
+
 authorize_user();
 
 function display_list_emotes(int $page, int $limit): array
 {
-    $db = new SQLite3("../../database.db");
-    $stmt = $db->prepare("SELECT * FROM emotes ORDER BY created_at ASC LIMIT :limit OFFSET :offset");
-    $stmt->bindValue(":offset", $page * $limit, SQLITE3_INTEGER);
-    $stmt->bindValue(":limit", $limit, SQLITE3_INTEGER);
-    $results = $stmt->execute();
+    $offset = $page * $limit;
+    $db = new PDO(DB_URL, DB_USER, DB_PASS);
+    $stmt = $db->prepare("SELECT * FROM emotes ORDER BY created_at ASC LIMIT ? OFFSET ?");
+    $stmt->bindParam(1, $limit, PDO::PARAM_INT);
+    $stmt->bindParam(2, $offset, PDO::PARAM_INT);
+    $stmt->execute();
 
     $emotes = [];
 
-    while ($row = $results->fetchArray()) {
+    $rows = $stmt->fetchAll();
+
+    foreach ($rows as $row) {
         array_push($emotes, new Emote(
             $row["id"],
             $row["code"],
@@ -28,12 +33,13 @@ function display_list_emotes(int $page, int $limit): array
 
 function display_emote(int $id)
 {
-    $db = new SQLite3("../../database.db");
-    $stmt = $db->prepare("SELECT * FROM emotes WHERE id = :id");
-    $stmt->bindValue(":id", $id, SQLITE3_INTEGER);
-    $results = $stmt->execute();
+    $db = new PDO(DB_URL, DB_USER, DB_PASS);
+    $stmt = $db->prepare("SELECT * FROM emotes WHERE id = ?");
+    $stmt->execute([$id]);
 
-    if ($row = $results->fetchArray()) {
+    $emote = null;
+
+    if ($row = $stmt->fetch()) {
         $emote = new Emote(
             $row["id"],
             $row["code"],

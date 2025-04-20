@@ -1,7 +1,6 @@
 <?php
 include "../../../src/accounts.php";
-// FIXME
-//authorize_user();
+authorize_user();
 
 include "../../../src/partials.php";
 ?>

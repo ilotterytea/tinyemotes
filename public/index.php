@@ -1,3 +1,6 @@
+<?php
+include_once "../src/config.php";
+?>
 <html>
 
 <head>
@@ -25,11 +28,9 @@
 
             <div class="counter">
                 <?php
-                $db = new SQLite3("../database.db");
+                $db = new PDO(DB_URL, DB_USER, DB_PASS);
                 $results = $db->query("SELECT COUNT(*) FROM emotes");
-                $count = $results->fetchArray()[0];
-
-                $db->close();
+                $count = $results->fetch()[0];
 
                 foreach (str_split($count) as $c) {
                     echo "<img src=\"/static/img/counter/$c.png\" alt=\"\" />";

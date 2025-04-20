@@ -1,4 +1,6 @@
 <?php
+include_once "config.php";
+
 function authorize_user()
 {
     session_start();
@@ -11,13 +13,14 @@ function authorize_user()
         return;
     }
 
-    $db = new SQLite3("../../database.db");
+    include_once "config.php";
 
-    $stmt = $db->prepare("SELECT id, username FROM users WHERE secret_key = :secret_key");
-    $stmt->bindValue("secret_key", $_COOKIE["secret_key"]);
-    $results = $stmt->execute();
+    $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
-    if ($row = $results->fetchArray()) {
+    $stmt = $db->prepare("SELECT id, username FROM users WHERE secret_key = ?");
+    $stmt->execute([$_COOKIE["secret_key"]]);
+
+    if ($row = $stmt->fetch()) {
         $_SESSION["user_id"] = $row["id"];
         $_SESSION["user_name"] = $row["username"];
     } else {
@@ -25,5 +28,5 @@ function authorize_user()
         setcookie("secret_key", "", time() - 1000);
     }
 
-    $db->close();
+    $db = null;
 }

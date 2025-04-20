@@ -1,3 +1,6 @@
+<?php
+include_once "../../src/config.php";
+?>
 <html>
 
 <head>
@@ -76,17 +79,16 @@
                                 $link = "#";
 
                                 if ($emote->get_uploaded_by()) {
-                                    $db = new SQLite3("../../database.db");
-                                    $stmt = $db->prepare("SELECT username FROM users WHERE id = :id");
-                                    $stmt->bindValue(":id", $emote->get_uploaded_by());
-                                    $results = $stmt->execute();
+                                    $db = new PDO(DB_URL, DB_USER, DB_PASS);
+                                    $stmt = $db->prepare("SELECT username FROM users WHERE id = ?");
+                                    $stmt->execute([$emote->get_uploaded_by()]);
 
-                                    if ($row = $results->fetchArray()) {
+                                    if ($row = $stmt->fetch()) {
                                         $username = $row["username"];
                                         $link = "/users/" . $emote->get_uploaded_by();
                                     }
 
-                                    $db->close();
+                                    $db = null;
                                 }
 
                                 echo "<a href=\"$link\">";

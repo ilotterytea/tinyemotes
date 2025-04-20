@@ -5,7 +5,7 @@ a free, easy-to-install web emote provider for Twitch chats!
 ## Prerequisites
 
 + PHP >= 8.3
-+ SQLite 3
++ MySQL/MariaDB
 
 ## License
 
