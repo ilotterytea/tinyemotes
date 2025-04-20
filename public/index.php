@@ -18,7 +18,7 @@
                 <a href="/software">Chat clients</a>
             </div>
 
-            <form action="/emotes/search.php" method="get">
+            <form action="/emotes/search.php" method="get" class="row">
                 <input type="text" name="q">
                 <button type="submit">Search</button>
             </form>

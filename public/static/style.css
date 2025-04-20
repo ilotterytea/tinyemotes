@@ -44,6 +44,16 @@ input {
     border: 1px solid gray;
 }
 
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.row {
+    flex-direction: row;
+}
+
 .container {
     width: 100%;
     min-height: 100vh;
@@ -129,6 +139,16 @@ button,
     font-size: 14px;
     text-decoration: none;
     color: black;
+}
+
+button:disabled {
+    color: gray;
+}
+
+button:disabled:hover {
+    cursor: not-allowed;
+    background: lightgray;
+    color: gray;
 }
 
 button:hover,
@@ -317,12 +337,6 @@ a.box:hover {
     display: flex;
     flex-direction: column;
     gap: 16px;
-}
-
-.accman form {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
 }
 
 .accman h1 {
