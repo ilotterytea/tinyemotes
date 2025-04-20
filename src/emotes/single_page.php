@@ -17,6 +17,7 @@ include_once "../../src/config.php";
                     <?php html_navigation_search(); ?>
                 </section>
                 <section class="content">
+                    <?php display_alert() ?>
                     <section class="box">
                         <div class="box navtab">
                             Emote - <?php echo $emote->get_code() ?>
@@ -37,11 +38,33 @@ include_once "../../src/config.php";
                         <?php if (isset($_SESSION["user_id"])) {
                             echo '' ?>
                             <div class="items row left full">
-                                <form action="/emotes/add.php" method="POST">
-                                    <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
-                                        style="display: none;">
-                                    <button type="submit" class="green">Add to my channel</button>
-                                </form>
+                                <?php
+                                $db = new PDO(DB_URL, DB_USER, DB_PASS);
+                                $added = false;
+
+                                if (isset($_SESSION["user_emote_set_id"])) {
+                                    $stmt = $db->prepare("SELECT id FROM emote_set_contents WHERE emote_set_id = ? AND emote_id = ?");
+                                    $stmt->execute([$_SESSION["user_emote_set_id"], $emote->get_id()]);
+                                    $added = $stmt->rowCount() > 0;
+                                }
+
+                                $db = null;
+                                ?>
+                                <?php
+                                if ($added) { ?>
+                                    <form action="/emotes/remove.php" method="POST">
+                                        <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
+                                            style="display: none;">
+                                        <button type="submit" class="red">Remove from my channel</button>
+                                    </form><?php
+                                } else { ?>
+                                    <form action="/emotes/add.php" method="POST">
+                                        <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
+                                            style="display: none;">
+                                        <button type="submit" class="green">Add to my channel</button>
+                                    </form><?php
+                                }
+                                ?>
                             </div>
                             <div class="items row right full">
                                 <form action="/emotes/rate.php" method="POST">

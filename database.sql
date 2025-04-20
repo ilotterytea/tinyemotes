@@ -23,3 +23,27 @@ CREATE TABLE IF NOT EXISTS emotes (
     uploaded_by INTEGER REFERENCES users(id),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS emote_sets (
+    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    owner_id INTEGER NOT NULL REFERENCES users(id),
+    linked_to INTEGER REFERENCES emote_sets(id),
+    name TEXT NOT NULL,
+    size INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS emote_set_contents (
+    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    emote_set_id INTEGER NOT NULL REFERENCES emote_sets(id),
+    emote_id INTEGER NOT NULL REFERENCES emotes(id),
+    name TEXT,
+    added_by INTEGER NOT NULL REFERENCES users(id),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS acquired_emote_sets (
+    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    user_id INTEGER NOT NULL,
+    emote_set_id INTEGER NOT NULL,
+    is_default BOOLEAN NOT NULL DEFAULT false
+);

@@ -69,6 +69,8 @@ $emotes = null;
 $emote = null;
 
 include "../../src/partials.php";
+include "../../src/utils.php";
+include "../../src/alert.php";
 
 if ($id == "" || !is_numeric($id)) {
     $page = intval($_GET["p"] ?? "0");
