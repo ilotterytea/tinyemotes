@@ -50,7 +50,7 @@ function display_emote(int $id)
     }
 
     if ($emote == null) {
-        echo "not found";
+        header("Location: /404.php");
         exit;
     }
 
