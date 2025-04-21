@@ -50,21 +50,21 @@ include_once "../../src/config.php";
 
                                 $db = null;
                                 ?>
-                                <?php
-                                if ($added) { ?>
-                                    <form action="/emotes/remove.php" method="POST">
-                                        <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
-                                            style="display: none;">
+                                <form action="/emotes/setmanip.php" method="POST">
+                                    <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
+                                        style="display: none;">
+                                    <?php
+                                    if ($added) { ?>
+                                        <input type="text" name="action" value="remove" style="display: none;">
                                         <button type="submit" class="red">Remove from my channel</button>
-                                    </form><?php
-                                } else { ?>
-                                    <form action="/emotes/add.php" method="POST">
-                                        <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
-                                            style="display: none;">
+                                        <?php
+                                    } else { ?>
+                                        <input type="text" name="action" value="add" style="display: none;">
                                         <button type="submit" class="green">Add to my channel</button>
-                                    </form><?php
-                                }
-                                ?>
+                                        <?php
+                                    }
+                                    ?>
+                                </form>
                             </div>
                             <div class="items row right full">
                                 <form action="/emotes/rate.php" method="POST">

@@ -7,6 +7,11 @@ if (!authorize_user(true)) {
     return;
 }
 
+if (!isset($_POST["id"], $_POST["action"])) {
+    generate_alert("/emotes/$emote_id", "Not enough POST fields");
+    exit;
+}
+
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
 // checking emote
@@ -54,14 +59,31 @@ $_SESSION["user_emote_set_id"] = $emote_set_id;
 $stmt = $db->prepare("SELECT id FROM emote_set_contents WHERE emote_set_id = ? AND emote_id = ?");
 $stmt->execute([$emote_set_id, $emote_id]);
 
-if ($stmt->rowCount() != 0) {
-    generate_alert("/emotes/$emote_id", "This emote has been already added!");
-    exit;
+$action = $_POST["action"];
+
+if ($action == "add") {
+    if ($stmt->rowCount() != 0) {
+        generate_alert("/emotes/$emote_id", "This emote has been already added!");
+        exit;
+    }
+
+    $stmt = $db->prepare("INSERT INTO emote_set_contents(emote_set_id, emote_id, added_by) VALUES (?, ?, ?)");
+    $stmt->execute([$emote_set_id, $emote_id, $user_id]);
+
+    $db = null;
+
+    generate_alert("/emotes/$emote_id", "This emote has been added to your set. Enjoy!", 200);
+} else {
+    if ($row = $stmt->fetch()) {
+        $stmt = $db->prepare("DELETE FROM emote_set_contents WHERE id = ?");
+        $stmt->execute([$row["id"]]);
+    } else {
+        generate_alert("/emotes/$emote_id", "This emote wasn't added!");
+        $db = null;
+        exit;
+    }
+
+    $db = null;
+
+    generate_alert("/emotes/$emote_id", "This emote has been removed from your set.", 200);
 }
-
-$stmt = $db->prepare("INSERT INTO emote_set_contents(emote_set_id, emote_id, added_by) VALUES (?, ?, ?)");
-$stmt->execute([$emote_set_id, $emote_id, $user_id]);
-
-$db = null;
-
-generate_alert("/emotes/$emote_id", "This emote has been added to your set. Enjoy!", 200);
