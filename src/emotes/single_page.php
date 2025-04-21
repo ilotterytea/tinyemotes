@@ -130,11 +130,31 @@ include_once "../../src/config.php";
 
                     <section class="box">
                         <div class="content">
-                            <p>Added in <?php echo 20 ?> channels</p>
+                            <?php
+                            $db = new PDO(DB_URL, DB_USER, DB_PASS);
+                            $stmt = $db->prepare("SELECT users.id, users.username
+                            FROM users
+                            INNER JOIN emote_sets AS es ON es.owner_id = users.id
+                            INNER JOIN emote_set_contents AS ec ON ec.emote_set_id = es.id
+                            WHERE ec.emote_id = ?");
+
+                            $stmt->execute([$emote->get_id()]);
+                            $count = $stmt->rowCount();
+
+                            $db = null;
+
+                            if ($count > 0) {
+                                echo "<p>Added in $count channels</p>";
+                            } else {
+                                echo "No one has added this emote yet... :'(";
+                            }
+                            ?>
                             <div class="items row">
-                                <a href="/users/1">forsen</a>
-                                <a href="/users/2">not_forsen</a>
-                                <a href="/users/3">lidl_forsen</a>
+                                <?php
+                                while ($row = $stmt->fetch()) {
+                                    echo '<a href="/users/' . $row["id"] . '">' . $row["username"] . '</a>';
+                                }
+                                ?>
                             </div>
                         </div>
                     </section>
