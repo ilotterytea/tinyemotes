@@ -6,14 +6,16 @@ class Emote
     public string $ext;
     public string|null $uploaded_by;
     public int $created_at;
+    public bool $is_in_user_set;
 
-    function __construct($id, $code, $ext, $created_at, $uploaded_by)
+    function __construct($id, $code, $ext, $created_at, $uploaded_by, $is_in_user_set)
     {
         $this->id = $id;
         $this->code = $code;
         $this->ext = $ext;
         $this->created_at = $created_at;
         $this->uploaded_by = $uploaded_by;
+        $this->is_in_user_set = $is_in_user_set;
     }
 
     function get_id()
@@ -39,5 +41,10 @@ class Emote
     function get_uploaded_by()
     {
         return $this->uploaded_by;
+    }
+
+    function is_added_by_user()
+    {
+        return $this->is_in_user_set;
     }
 }

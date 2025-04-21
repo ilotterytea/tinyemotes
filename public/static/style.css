@@ -330,6 +330,19 @@ a.box:hover {
     border-color: #9f5050;
 }
 
+.emote-check {
+    position: relative;
+    left: 35px;
+    top: 10px;
+    width: 24px;
+    height: 24px;
+    z-index: 2;
+}
+
+.emote:has(.emote-check) img {
+    margin-top: -15px;
+}
+
 /** 
 -------------
    ACCOUNTS

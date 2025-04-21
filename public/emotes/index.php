@@ -7,11 +7,23 @@ authorize_user();
 
 function display_list_emotes(int $page, int $limit): array
 {
+    $user_id = $_SESSION["user_id"] ?? "-1";
     $offset = $page * $limit;
     $db = new PDO(DB_URL, DB_USER, DB_PASS);
-    $stmt = $db->prepare("SELECT * FROM emotes ORDER BY created_at ASC LIMIT ? OFFSET ?");
-    $stmt->bindParam(1, $limit, PDO::PARAM_INT);
-    $stmt->bindParam(2, $offset, PDO::PARAM_INT);
+    $stmt = $db->prepare("SELECT e.*,
+    CASE WHEN EXISTS (
+        SELECT 1
+        FROM emote_set_contents ec
+        INNER JOIN emote_sets es ON es.id = ec.emote_set_id
+        WHERE ec.emote_id = e.id AND es.owner_id = ?
+    ) THEN 1 ELSE 0 END AS is_in_user_set
+    FROM emotes e
+    ORDER BY e.created_at ASC
+    LIMIT ? OFFSET ?
+    ");
+    $stmt->bindParam(1, $user_id, PDO::PARAM_INT);
+    $stmt->bindParam(2, $limit, PDO::PARAM_INT);
+    $stmt->bindParam(3, $offset, PDO::PARAM_INT);
     $stmt->execute();
 
     $emotes = [];
@@ -24,7 +36,8 @@ function display_list_emotes(int $page, int $limit): array
             $row["code"],
             $row["ext"],
             intval(strtotime($row["created_at"])),
-            $row["uploaded_by"]
+            $row["uploaded_by"],
+            $row["is_in_user_set"]
         ));
     }
 
@@ -45,7 +58,8 @@ function display_emote(int $id)
             $row["code"],
             $row["ext"],
             intval(strtotime($row["created_at"])),
-            $row["uploaded_by"]
+            $row["uploaded_by"],
+            false
         );
     }
 

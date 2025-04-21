@@ -23,6 +23,11 @@
                             if (isset($emotes)) {
                                 foreach ($emotes as $e) {
                                     echo "<a class=\"box emote\" href=\"/emotes/" . $e->get_id() . "\">";
+
+                                    if ($e->is_added_by_user()) {
+                                        echo '<img src="/static/img/icons/yes.png" class="emote-check" />';
+                                    }
+
                                     echo "<img src=\"/static/userdata/emotes/" . $e->get_id() . "/2x." . $e->get_ext() . "\" alt=\"" . $e->get_code() . "\"/>";
                                     echo "<p>" . $e->get_code() . "</p>";
                                     echo "</a>";
