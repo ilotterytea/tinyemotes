@@ -38,6 +38,9 @@ function authorize_user(bool $required = false): bool
     if ($row = $stmt->fetch()) {
         $_SESSION["user_id"] = $row["id"];
         $_SESSION["user_name"] = $row["username"];
+
+        $stmt = $db->prepare("UPDATE users SET last_active_at = UTC_TIMESTAMP WHERE id = ?");
+        $stmt->execute([$row["id"]]);
     } else {
         session_regenerate_id();
         session_unset();
