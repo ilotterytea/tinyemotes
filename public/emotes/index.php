@@ -7,6 +7,7 @@ authorize_user();
 
 function display_list_emotes(int $page, int $limit): array
 {
+    $search = $_GET["q"] ?? "";
     $user_id = $_SESSION["user_id"] ?? "-1";
     $offset = $page * $limit;
     $db = new PDO(DB_URL, DB_USER, DB_PASS);
@@ -17,13 +18,26 @@ function display_list_emotes(int $page, int $limit): array
         INNER JOIN emote_sets es ON es.id = ec.emote_set_id
         WHERE ec.emote_id = e.id AND es.owner_id = ?
     ) THEN 1 ELSE 0 END AS is_in_user_set
-    FROM emotes e
+    FROM emotes e " .
+        (($search != "") ? "WHERE e.code LIKE ?" : "")
+        .
+        "
     ORDER BY e.created_at ASC
     LIMIT ? OFFSET ?
     ");
-    $stmt->bindParam(1, $user_id, PDO::PARAM_INT);
-    $stmt->bindParam(2, $limit, PDO::PARAM_INT);
-    $stmt->bindParam(3, $offset, PDO::PARAM_INT);
+
+    if ($search == "") {
+        $stmt->bindParam(1, $user_id, PDO::PARAM_INT);
+        $stmt->bindParam(2, $limit, PDO::PARAM_INT);
+        $stmt->bindParam(3, $offset, PDO::PARAM_INT);
+    } else {
+        $search = "%$search%";
+        $stmt->bindParam(1, $user_id, PDO::PARAM_INT);
+        $stmt->bindParam(2, $search, PDO::PARAM_STR);
+        $stmt->bindParam(3, $limit, PDO::PARAM_INT);
+        $stmt->bindParam(4, $offset, PDO::PARAM_INT);
+    }
+
     $stmt->execute();
 
     $emotes = [];

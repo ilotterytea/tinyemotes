@@ -35,8 +35,8 @@ function html_navigation_search()
             Search...
         </div>
         <div class="box content">
-            <form action="/emotes/search.php" method="get">
-                <input type="text" name="q" style="padding:4px;"><br>
+            <form action="<?php echo $_SERVER["REQUEST_URI"] ?>" method="GET">
+                <input type="text" name="q" style="padding:4px;" value="<?php echo $_GET["q"] ?? "" ?>"><br>
                 <button type="submit" style="width:100%;margin-top:6px;">Find</button>
             </form>
         </div>

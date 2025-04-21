@@ -17,12 +17,23 @@ if ($id == "") {
     $page = $_GET["p"] ?? "0";
     $limit = 50;
     $offset = $page * $limit;
-    $stmt = $db->prepare("SELECT id, username, joined_at, last_active_at FROM users ORDER BY last_active_at DESC LIMIT ? OFFSET ?");
-    $stmt->bindParam(1, $limit, PDO::PARAM_INT);
-    $stmt->bindParam(2, $offset, PDO::PARAM_INT);
+    $search = $_GET["q"] ?? "";
+    $stmt = $db->prepare("SELECT id, username, joined_at, last_active_at
+    FROM users
+    " . ($search != "" ? " WHERE username LIKE ? " : "") . "
+    ORDER BY last_active_at DESC LIMIT ? OFFSET ?");
+    if ($search == "") {
+        $stmt->bindParam(1, $limit, PDO::PARAM_INT);
+        $stmt->bindParam(2, $offset, PDO::PARAM_INT);
+    } else {
+        $search = "%$search%";
+        $stmt->bindParam(1, $search, PDO::PARAM_STR);
+        $stmt->bindParam(2, $limit, PDO::PARAM_INT);
+        $stmt->bindParam(3, $offset, PDO::PARAM_INT);
+    }
     $stmt->execute();
 
-    $all_user_count = $db->query("SELECT COUNT(*) FROM users")->fetch()[0];
+    $all_user_count = $search ? $stmt->rowCount() : $db->query("SELECT COUNT(*) FROM users")->fetch()[0];
 
     if ($is_json) {
         header("Content-Type: application/json");
