@@ -31,3 +31,21 @@ function str_safe(string $s, int|null $max_length, bool $remove_new_lines = true
 
     return $output;
 }
+
+function format_timestamp(int $timestamp_secs)
+{
+    $days = floor($timestamp_secs / (60 * 60 * 24));
+    $hours = floor($timestamp_secs / (60 * 60) % 24);
+    $minutes = floor($timestamp_secs % (60 * 60) / 60);
+    $seconds = floor($timestamp_secs % 60);
+
+    if ($days == 0 && $hours == 0 && $minutes == 0) {
+        return "$seconds second" . ($seconds > 1 ? "s" : "");
+    } else if ($days == 0 && $hours == 0) {
+        return "$minutes minute" . ($minutes > 1 ? "s" : "");
+    } else if ($days == 0) {
+        return "$hours hour" . ($hours > 1 ? "s" : "");
+    } else {
+        return "$days day" . ($days > 1 ? "s" : "");
+    }
+}

@@ -118,7 +118,9 @@ include_once "../../src/config.php";
                                 echo $username;
                                 echo "</a>";
 
-                                echo ", " . date("d M Y", $emote->get_created_at());
+                                echo ', <span title="';
+                                echo date("M d, Y H:i:s", $emote->get_created_at());
+                                echo ' UTC">about ' . format_timestamp(time() - $emote->get_created_at()) . " ago</span>";
                                 ?></td>
                             </tr>
                             <tr>
