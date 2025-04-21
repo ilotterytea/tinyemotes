@@ -1,11 +1,14 @@
 :root {
-    --background-color: #d7dfcd;
+    --background-color: #c4d1b5;
     --background-color-hover: #e4eed8;
     --background-color-disabled: #bec6b3;
-    --border-color: #b0b9a5;
+    --border-color: #95a186;
 
-    --foreground-color: #7f9c3c;
-    --foreground-color-hover: #4b5632;
+    --background-color-2: #cfdfbd;
+    --border-color-2: #849275;
+
+    --foreground-color: #425514;
+    --foreground-color-hover: #1c220c;
 }
 
 * {
@@ -15,12 +18,32 @@
     font-family: Arial, Helvetica, sans-serif;
 }
 
+h1 {
+    font-size: 26px;
+}
+
+h2 {
+    font-size: 20px;
+}
+
+h3 {
+    font-size: 16px;
+}
+
 div {
     display: unset;
 }
 
+table {
+    text-align: left;
+}
+
 table.vertical th {
     text-align: right;
+}
+
+table.vertical.left th {
+    text-align: left;
 }
 
 table.vertical th,
@@ -50,9 +73,6 @@ form {
     gap: 4px;
 }
 
-.row {
-    flex-direction: row;
-}
 
 .container {
     width: 100%;
@@ -66,7 +86,7 @@ form {
     flex-direction: column;
 }
 
-section.content {
+.content {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
@@ -77,15 +97,6 @@ section.content {
 .page {
     display: flex;
     flex-direction: row;
-}
-
-.big-gap {
-    gap: 32px;
-}
-
-.center {
-    justify-content: center;
-    align-items: center;
 }
 
 /** 
@@ -236,12 +247,6 @@ button.purple:hover,
     flex-grow: 1;
 }
 
-.row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
-
 .right {
     justify-content: flex-end;
 }
@@ -280,6 +285,16 @@ button.purple:hover,
     flex-grow: 1;
     margin: 0;
     padding: 16px;
+}
+
+.box .content .box {
+    background: var(--background-color-2);
+    border-color: var(--border-color-2);
+}
+
+.box .content a.box:hover {
+    background: linear-gradient(0deg, var(--background-color-hover), var(--background-color-2));
+    cursor: pointer;
 }
 
 .box hr {
@@ -358,14 +373,29 @@ a.box:hover {
     gap: 16px;
 }
 
-.accman h1 {
-    font-size: 26px;
+.row {
+    display: flex;
+    flex-direction: row;
 }
 
-.accman h2 {
-    font-size: 20px;
+.column {
+    display: flex;
+    flex-direction: column;
 }
 
-.accman h3 {
-    font-size: 16px;
+.flex {
+    flex-grow: 1;
+}
+
+.small-gap {
+    gap: 8px;
+}
+
+.big-gap {
+    gap: 32px;
+}
+
+.center {
+    justify-content: center;
+    align-items: center;
 }

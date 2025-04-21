@@ -108,7 +108,7 @@ include_once "../../src/config.php";
 
                                     if ($row = $stmt->fetch()) {
                                         $username = $row["username"];
-                                        $link = "/users/" . $emote->get_uploaded_by();
+                                        $link = "/users.php?id=" . $emote->get_uploaded_by();
                                     }
 
                                     $db = null;
@@ -154,7 +154,7 @@ include_once "../../src/config.php";
                             <div class="items row">
                                 <?php
                                 while ($row = $stmt->fetch()) {
-                                    echo '<a href="/users/' . $row["id"] . '">' . $row["username"] . '</a>';
+                                    echo '<a href="/users.php?id=' . $row["id"] . '">' . $row["username"] . '</a>';
                                 }
                                 ?>
                             </div>

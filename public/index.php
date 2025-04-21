@@ -15,7 +15,7 @@ include_once "../src/config.php";
 
             <div class="items row" style="gap:32px;">
                 <a href="/emotes">Emotes</a>
-                <a href="/users">Users</a>
+                <a href="/users.php">Users</a>
                 <a href="/emotes/upload.php">Upload</a>
                 <a href="/account">Account</a>
                 <a href="/software">Chat clients</a>
