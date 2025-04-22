@@ -15,6 +15,8 @@ function html_navigation_bar()
             <?php
             if (isset($_SESSION["user_id"])) {
                 $db = new PDO(DB_URL, DB_USER, DB_PASS);
+
+                // getting inbox
                 $stmt = $db->prepare("SELECT COUNT(*) FROM inbox_messages WHERE recipient_id = ? AND has_read = false");
                 $stmt->execute([$_SESSION["user_id"]]);
                 $unread_count = intval($stmt->fetch()[0]);
@@ -24,6 +26,19 @@ function html_navigation_bar()
                 </a>
                 <?php ;
                 $stmt = null;
+
+                // getting reports
+                $stmt = $db->prepare("SELECT COUNT(*) FROM reports WHERE sender_id = ? AND resolved_by IS NULL");
+                $stmt->execute([$_SESSION["user_id"]]);
+                $unread_count = intval($stmt->fetch()[0]);
+                echo '' ?>
+                <a href="/report/list.php" class="button">
+                    Reports <?php echo $unread_count > 0 ? "($unread_count)" : "" ?>
+                </a>
+                <?php ;
+                $stmt = null;
+
+
                 $db = null;
             }
             ?>

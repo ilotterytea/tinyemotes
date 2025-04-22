@@ -217,7 +217,7 @@ if (CLIENT_REQUIRES_JSON) {
                                         }
                                     }
                                     ?>
-                                    <a class="button red" href="/emotes/report.php?id=<?php echo $emote->get_id() ?>">Report
+                                    <a class="button red" href="/report?emote_id=<?php echo $emote->get_id() ?>">Report
                                         emote</a>
                                 </div>
                                 <?php

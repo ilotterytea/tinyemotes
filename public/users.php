@@ -323,7 +323,7 @@ if ($is_json) {
                     <!-- ACTIONS -->
                     <section class="box column">
                         <a href="/message/send.php?user=<?php echo $user->id() ?>">Send a message</a>
-                        <a href="/report.php?user=<?php echo $user->id() ?>">Report user</a>
+                        <a href="/report?user_id=<?php echo $user->id() ?>">Report user</a>
                     </section>
                 </section>
 

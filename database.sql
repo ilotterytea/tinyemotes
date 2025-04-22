@@ -66,3 +66,12 @@ CREATE TABLE IF NOT EXISTS inbox_messages (
     sent_at TIMESTAMP NOT NULL DEFAULT UTC_TIMESTAMP,
     has_read BOOLEAN NOT NULL DEFAULT false
 );
+
+CREATE TABLE IF NOT EXISTS reports (
+    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    sender_id INTEGER NOT NULL REFERENCES users(id),
+    contents TEXT NOT NULL,
+    sent_at TIMESTAMP NOT NULL DEFAULT UTC_TIMESTAMP,
+    resolved_by INTEGER REFERENCES users(id),
+    response_message TEXT
+);
