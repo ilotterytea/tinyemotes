@@ -48,3 +48,11 @@ CREATE TABLE IF NOT EXISTS acquired_emote_sets (
     emote_set_id INTEGER NOT NULL,
     is_default BOOLEAN NOT NULL DEFAULT false
 );
+
+CREATE TABLE IF NOT EXISTS ratings (
+    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    emote_id INTEGER NOT NULL REFERENCES emotes(id),
+    rate INTEGER NOT NULL,
+    rated_at TIMESTAMP NOT NULL DEFAULT UTC_TIMESTAMP
+);

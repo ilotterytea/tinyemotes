@@ -8,12 +8,13 @@ include "../../src/alert.php";
 
 authorize_user();
 
-function display_list_emotes(int $page, int $limit): array
+$db = new PDO(DB_URL, DB_USER, DB_PASS);
+
+function display_list_emotes(PDO &$db, int $page, int $limit): array
 {
     $search = $_GET["q"] ?? "";
     $user_id = $_SESSION["user_id"] ?? "-1";
     $offset = $page * $limit;
-    $db = new PDO(DB_URL, DB_USER, DB_PASS);
     $stmt = $db->prepare("SELECT e.*,
     CASE WHEN EXISTS (
         SELECT 1
@@ -61,9 +62,8 @@ function display_list_emotes(int $page, int $limit): array
     return $emotes;
 }
 
-function display_emote(int $id)
+function display_emote(PDO &$db, int $id)
 {
-    $db = new PDO(DB_URL, DB_USER, DB_PASS);
     $stmt = $db->prepare("SELECT * FROM emotes WHERE id = ?");
     $stmt->execute([$id]);
 
@@ -93,12 +93,14 @@ $emote = null;
 
 $id = $_GET["id"] ?? "";
 
+$db = new PDO(DB_URL, DB_USER, DB_PASS);
+
 if ($id == "" || !is_numeric($id)) {
     $page = intval($_GET["p"] ?? "0");
     $limit = 50;
-    $emotes = display_list_emotes($page, $limit);
+    $emotes = display_list_emotes($db, $page, $limit);
 } else {
-    $emote = display_emote(intval($id));
+    $emote = display_emote($db, intval($id));
 }
 ?>
 
@@ -144,7 +146,6 @@ if ($id == "" || !is_numeric($id)) {
                                 echo '' ?>
                                 <div class="items row left full">
                                     <?php
-                                    $db = new PDO(DB_URL, DB_USER, DB_PASS);
                                     $added = false;
 
                                     if (isset($_SESSION["user_emote_set_id"])) {
@@ -152,8 +153,6 @@ if ($id == "" || !is_numeric($id)) {
                                         $stmt->execute([$_SESSION["user_emote_set_id"], $emote->get_id()]);
                                         $added = $stmt->rowCount() > 0;
                                     }
-
-                                    $db = null;
                                     ?>
                                     <form action="/emotes/setmanip.php" method="POST">
                                         <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
@@ -172,20 +171,26 @@ if ($id == "" || !is_numeric($id)) {
                                     </form>
                                 </div>
                                 <div class="items row right full">
-                                    <form action="/emotes/rate.php" method="POST">
-                                        <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
-                                            style="display: none;">
-                                        <input type="text" name="rate" value="5" style="display:none;">
-                                        <button type="submit" class="transparent gem"><img src="/static/img/icons/gem.png"
-                                                alt="GEM!" title="IT'S A GEM!"></button>
-                                    </form>
-                                    <form action="/emotes/rate.php" method="POST">
-                                        <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
-                                            style="display: none;">
-                                        <input type="text" name="rate" value="1" style="display:none;">
-                                        <button type="submit" class="transparent coal"><img src="/static/img/icons/coal.png"
-                                                alt="COAL!" title="IT'S A COAL!"></button>
-                                    </form>
+                                    <?php
+                                    $stmt = $db->prepare("SELECT rate FROM ratings WHERE user_id = ? AND emote_id = ?");
+                                    $stmt->execute([$_SESSION["user_id"], $id]);
+
+                                    if ($row = $stmt->fetch()) {
+                                        echo 'You gave <img src="/static/img/icons/ratings/' . $row["rate"] . '.png" width="16" height="16"';
+                                        echo 'title="' . RATING_NAMES[$row["rate"]] . '">';
+                                    } else {
+                                        foreach (RATING_NAMES as $key => $value) {
+                                            echo '<form action="/emotes/rate.php" method="POST">';
+                                            echo '<input type="text" name="id" value="' . $emote->get_id() . '"style="display: none;">';
+                                            echo "<input type=\"text\" name=\"rate\" value=\"$key\" style=\"display:none;\">";
+                                            echo '<button type="submit" class="transparent">';
+                                            echo "<img
+                                                    src=\"/static/img/icons/ratings/$key.png\" alt=\"$value!\"
+                                                    title=\"IT'S A $value!\">";
+                                            echo '</button></form>';
+                                        }
+                                    }
+                                    ?>
                                     <a class="button red" href="/emotes/report.php?id=<?php echo $emote->get_id() ?>">Report
                                         emote</a>
                                 </div>
