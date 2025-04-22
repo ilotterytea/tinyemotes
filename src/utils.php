@@ -1,4 +1,13 @@
 <?php
+define("CLIENT_REQUIRES_JSON", isset($_SERVER["HTTP_ACCEPT"]) && $_SERVER["HTTP_ACCEPT"] == "application/json");
+
+function json_response(mixed $response, int $status = 200)
+{
+    http_response_code($status);
+    header("Content-Type: application/json");
+    echo json_encode($response);
+}
+
 function generate_random_string(int $length): string
 {
     $chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -48,4 +57,8 @@ function format_timestamp(int $timestamp_secs)
     } else {
         return "$days day" . ($days > 1 ? "s" : "");
     }
+}
+function clamp(int $current, int $min, int $max): int
+{
+    return max($min, min($max, $current));
 }

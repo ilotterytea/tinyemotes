@@ -4,6 +4,7 @@ function generate_alert(string $path, string $error, int $status = 400)
     http_response_code($status);
 
     if (isset($_SERVER["HTTP_ACCEPT"]) && $_SERVER["HTTP_ACCEPT"] == "application/json") {
+        header("Content-Type: application/json");
         echo json_encode([
             "status_code" => $status,
             "message" => $error,
