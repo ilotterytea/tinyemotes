@@ -12,6 +12,21 @@ function html_navigation_bar()
             <a href="/users.php" class="button">Users</a>
             <a href="/emotes/upload.php" class="button">Upload</a>
             <a href="/account" class="button">Account</a>
+            <?php
+            if (isset($_SESSION["user_id"])) {
+                $db = new PDO(DB_URL, DB_USER, DB_PASS);
+                $stmt = $db->prepare("SELECT COUNT(*) FROM inbox_messages WHERE recipient_id = ? AND has_read = false");
+                $stmt->execute([$_SESSION["user_id"]]);
+                $unread_count = intval($stmt->fetch()[0]);
+                echo '' ?>
+                <a href="/inbox.php" class="button">
+                    Inbox <?php echo $unread_count > 0 ? "($unread_count)" : "" ?>
+                </a>
+                <?php ;
+                $stmt = null;
+                $db = null;
+            }
+            ?>
         </div>
         <?php
         if (isset($_SESSION["user_id"])) {
