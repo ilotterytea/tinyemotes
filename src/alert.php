@@ -22,7 +22,7 @@ function display_alert()
     }
 
     $status = $_GET["error_status"];
-    $reason = str_safe($_GET["error_reason"], 50);
+    $reason = str_safe($_GET["error_reason"], 100);
     $ok = substr($status, 0, 1) == '2';
 
     echo '' ?>
