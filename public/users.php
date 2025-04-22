@@ -189,13 +189,25 @@ $actions = [];
 // calculating contributions
 $stmt = $db->prepare("SELECT COUNT(*) FROM emotes WHERE uploaded_by = ?");
 $stmt->execute([$user->id()]);
-$contributions = $stmt->fetch()[0];
+$contributions = intval($stmt->fetch()[0]);
+
+$stmt = $db->prepare("SELECT COUNT(*) FROM ratings WHERE user_id = ?");
+$stmt->execute([$user->id()]);
+
+$contributions += intval($stmt->fetch()[0]);
 
 // getting status
 $status = 1;
 
 // getting favorite reaction
-$fav_reaction = 1;
+$fav_reaction = null;
+
+$stmt = $db->prepare("SELECT rate, COUNT(*) AS c FROM ratings WHERE user_id = ? GROUP BY rate ORDER BY c DESC LIMIT 1");
+$stmt->execute([$user->id()]);
+
+if ($row = $stmt->fetch()) {
+    $fav_reaction = $row;
+}
 
 // getting favorite emote
 $fav_emote = 1;
@@ -285,21 +297,21 @@ if ($is_json) {
                                 ?>
                             </tr>
                             <tr>
-                                <th><img src="/static/img/icons/star.png"> Contributed emotes</th>
+                                <th><img src="/static/img/icons/star.png"> Contributions</th>
                                 <td><?php echo $contributions ?></td>
                             </tr>
-                            <tr>
-                                <th><img src="/static/img/icons/emoticon_happy.png"> Favorite reaction</th>
-                                <td>
-                                    <?php
-                                    if ($fav_reaction == 1) {
-                                        echo 'Gem <img src="/static/img/icons/gem.png">';
-                                    } else {
-                                        echo 'Coal <img src="/static/img/icons/coal.png">';
-                                    }
-                                    ?>
-                                </td>
-                            </tr>
+                            <?php
+                            if ($fav_reaction != null) { ?>
+                                <tr>
+                                    <th><img src="/static/img/icons/emoticon_happy.png"> Favorite reaction</th>
+                                    <td>
+                                        <?php
+                                        echo $fav_reaction["c"] . ' <img src="/static/img/icons/ratings/' . $fav_reaction["rate"] . '.png" alt="' . RATING_NAMES[$fav_reaction["rate"]] . '" title="' . RATING_NAMES[$fav_reaction["rate"]] . '">';
+                                        ?>
+                                    </td>
+                                </tr><?php
+                            }
+                            ?>
                             <?php
                             $stmt = $db->prepare("SELECT code, ext FROM emotes WHERE id = ?");
                             $stmt->execute([$fav_emote]);
@@ -370,7 +382,7 @@ if ($is_json) {
                                 <?php
                                 if (!empty($active_emote_set["emotes"])) {
                                     foreach ($active_emote_set["emotes"] as $emote_row) {
-                                        echo '<a class="box emote" href="/emotes/' . $emote_row["id"] . '">';
+                                        echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
                                         echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.' . $emote_row["ext"] . '" alt="' . $emote_row["code"] . '"/>';
                                         echo '<p>' . $emote_row["code"] . '</p>';
                                         echo '</a>';
@@ -395,7 +407,7 @@ if ($is_json) {
                             <div class="box content items">
                                 <?php
                                 foreach ($uploaded_emotes as $emote_row) {
-                                    echo '<a class="box emote" href="/emotes/' . $emote_row["id"] . '">';
+                                    echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
                                     echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.' . $emote_row["ext"] . '" alt="' . $emote_row["code"] . '"/>';
                                     echo '<p>' . $emote_row["code"] . '</p>';
                                     echo '</a>';
