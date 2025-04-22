@@ -193,15 +193,11 @@ $contributions += intval($stmt->fetch()[0]);
 // getting status
 $status = 1;
 
-// getting favorite reaction
-$fav_reaction = null;
-
-$stmt = $db->prepare("SELECT rate, COUNT(*) AS c FROM ratings WHERE user_id = ? GROUP BY rate ORDER BY c DESC LIMIT 1");
+// getting reactions
+$stmt = $db->prepare("SELECT rate, COUNT(*) AS c FROM ratings WHERE user_id = ? GROUP BY rate ORDER BY c DESC");
 $stmt->execute([$user->id()]);
 
-if ($row = $stmt->fetch()) {
-    $fav_reaction = $row;
-}
+$fav_reactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // getting favorite emote
 $fav_emote = 1;
@@ -295,12 +291,14 @@ if ($is_json) {
                                 <td><?php echo $contributions ?></td>
                             </tr>
                             <?php
-                            if ($fav_reaction != null) { ?>
+                            if ($fav_reactions != null) { ?>
                                 <tr>
-                                    <th><img src="/static/img/icons/emoticon_happy.png"> Favorite reaction</th>
+                                    <th><img src="/static/img/icons/emoticon_happy.png"> Reactions</th>
                                     <td>
                                         <?php
-                                        echo $fav_reaction["c"] . ' <img src="/static/img/icons/ratings/' . $fav_reaction["rate"] . '.png" alt="' . RATING_NAMES[$fav_reaction["rate"]] . '" title="' . RATING_NAMES[$fav_reaction["rate"]] . '">';
+                                        foreach ($fav_reactions as $reaction) {
+                                            echo $reaction["c"] . ' <img src="/static/img/icons/ratings/' . $reaction["rate"] . '.png" alt="' . RATING_NAMES[$reaction["rate"]] . '" title="' . RATING_NAMES[$reaction["rate"]] . '">';
+                                        }
                                         ?>
                                     </td>
                                 </tr><?php
