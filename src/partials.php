@@ -37,6 +37,23 @@ function html_navigation_search()
         <div class="box content">
             <form action="<?php echo $_SERVER["REQUEST_URI"] ?>" method="GET">
                 <input type="text" name="q" style="padding:4px;" value="<?php echo $_GET["q"] ?? "" ?>"><br>
+                <?php
+                if (str_starts_with($_SERVER["REQUEST_URI"], "/emotes")) {
+                    ?>
+                    <label for="sort_by">Sort by</label>
+                    <select name="sort_by">
+                        <option value="high_ratings" <?php echo ($_GET["sort_by"] ?? "") == "high_ratings" ? "selected" : "" ?>>
+                            High ratings</option>
+                        <option value="low_ratings" <?php echo ($_GET["sort_by"] ?? "") == "low_ratings" ? "selected" : "" ?>>Low
+                            ratings</option>
+                        <option value="recent" <?php echo ($_GET["sort_by"] ?? "") == "recent" ? "selected" : "" ?>>Recent
+                        </option>
+                        <option value="oldest" <?php echo ($_GET["sort_by"] ?? "") == "oldest" ? "selected" : "" ?>>Oldest
+                        </option>
+                    </select>
+                    <?php
+                }
+                ?>
                 <button type="submit" style="width:100%;margin-top:6px;">Find</button>
             </form>
         </div>

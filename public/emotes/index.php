@@ -15,15 +15,27 @@ function display_list_emotes(PDO &$db, int $page, int $limit): array
     $search = "%" . ($_GET["q"] ?? "") . "%";
     $user_id = $_SESSION["user_id"] ?? "-1";
     $offset = $page * $limit;
+
+    $sort = match ($_GET["sort_by"] ?? "") {
+        "low_ratings" => "rating ASC",
+        "recent" => "e.created_at DESC",
+        "oldest" => "e.created_at ASC",
+        default => "rating DESC"
+    };
+
     $stmt = $db->prepare("SELECT e.*,
     CASE WHEN EXISTS (
         SELECT 1
         FROM emote_set_contents ec
         INNER JOIN emote_sets es ON es.id = ec.emote_set_id
         WHERE ec.emote_id = e.id AND es.owner_id = ?
-    ) THEN 1 ELSE 0 END AS is_in_user_set
-    FROM emotes e WHERE e.code LIKE ?
-    ORDER BY e.created_at ASC
+    ) THEN 1 ELSE 0 END AS is_in_user_set, COALESCE(SUM(r.rate), 0) AS rating
+    FROM emotes e
+    LEFT JOIN ratings AS r ON r.emote_id = e.id
+    WHERE e.code LIKE ? 
+    GROUP BY 
+    e.id, e.code, e.created_at
+    ORDER BY $sort
     LIMIT ? OFFSET ?
     ");
 
