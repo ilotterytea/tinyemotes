@@ -57,7 +57,8 @@ function display_list_emotes(PDO &$db, int $page, int $limit): array
             $row["ext"],
             intval(strtotime($row["created_at"])),
             $row["uploaded_by"],
-            $row["is_in_user_set"]
+            $row["is_in_user_set"],
+            $row["rating"]
         ));
     }
 
@@ -66,8 +67,12 @@ function display_list_emotes(PDO &$db, int $page, int $limit): array
 
 function display_emote(PDO &$db, int $id)
 {
-    $stmt = $db->prepare("SELECT * FROM emotes WHERE id = ?");
-    $stmt->execute([$id]);
+    $stmt = $db->prepare("SELECT e.*, COALESCE(COUNT(r.rate), 0) as total_rating,
+    COALESCE(ROUND(AVG(r.rate), 2), 0) AS average_rating
+    FROM emotes e
+    LEFT JOIN ratings AS r ON r.emote_id = ?
+    WHERE e.id = ?");
+    $stmt->execute([$id, $id]);
 
     $emote = null;
 
@@ -78,7 +83,8 @@ function display_emote(PDO &$db, int $id)
             $row["ext"],
             intval(strtotime($row["created_at"])),
             $row["uploaded_by"],
-            false
+            false,
+            ["total" => $row["total_rating"], "average" => $row["average_rating"]]
         );
     }
 
@@ -222,8 +228,6 @@ if ($id == "" || !is_numeric($id)) {
                                             $username = $row["username"];
                                             $link = "/users.php?id=" . $emote->get_uploaded_by();
                                         }
-
-                                        $db = null;
                                     }
 
                                     echo "<a href=\"$link\">";
@@ -237,7 +241,48 @@ if ($id == "" || !is_numeric($id)) {
                                 </tr>
                                 <tr>
                                     <th>Rating</th>
-                                    <td>Not rated</td>
+                                    <?php
+                                    if ($emote->get_rating()["total"] < 10) {
+                                        echo '<td>Not rated (' . $emote->get_rating()["total"] . ')</td>';
+                                    } else {
+
+                                        $rating = $emote->get_rating()["average"];
+
+                                        // TODO: make it customizable
+                                        list($rating_classname, $rating_name) = match (true) {
+                                            in_range($rating, 0.75, 1.0) => [
+                                                "gemerald",
+                                                "<img src='/static/img/icons/ratings/1.png'>
+                                        <img src='/static/img/icons/ratings/1.png'>
+                                        <img src='/static/img/icons/ratings/1.png'> Shiny Gemerald! 
+                                        <img src='/static/img/icons/ratings/1.png'>
+                                        <img src='/static/img/icons/ratings/1.png'>
+                                        <img src='/static/img/icons/ratings/1.png'>
+                                        "
+                                            ],
+                                            in_range($rating, 0.25, 0.75) => ["gem", "<img src='/static/img/icons/ratings/1.png'> Gem <img src='/static/img/icons/ratings/1.png'>"],
+                                            in_range($rating, -0.25, 0.25) => ["iron", "Iron"],
+                                            in_range($rating, -0.75, -0.25) => ["coal", "<img src='/static/img/icons/ratings/-1.png'> Coal <img src='/static/img/icons/ratings/-1.png'>"],
+                                            in_range($rating, -1.0, -0.75) => [
+                                                "brimstone",
+                                                "
+                                        <img src='/static/img/icons/ratings/brimstone.webp'>
+                                        <img src='/static/img/icons/ratings/-1.png'>
+                                        <img src='/static/img/icons/ratings/brimstone.webp'>
+                                        !!!AVOID THIS CANCER-GIVING BRIMSTONE!!!
+                                        <img src='/static/img/icons/ratings/brimstone.webp'>
+                                        <img src='/static/img/icons/ratings/-1.png'>
+                                        <img src='/static/img/icons/ratings/brimstone.webp'>
+                                        "
+                                            ]
+                                        };
+
+                                        echo '<td>';
+                                        echo "<span class=\"rating $rating_classname\">$rating_name</span>";
+                                        echo ' (' . $emote->get_rating()["total"] . ')';
+                                        echo '</td>';
+                                    }
+                                    ?>
                                 </tr>
                             </table>
                         </section>

@@ -58,7 +58,13 @@ function format_timestamp(int $timestamp_secs)
         return "$days day" . ($days > 1 ? "s" : "");
     }
 }
+
 function clamp(int $current, int $min, int $max): int
 {
     return max($min, min($max, $current));
+}
+
+function in_range(float $value, float $min, float $max): bool
+{
+    return $min <= $value && $value <= $max;
 }

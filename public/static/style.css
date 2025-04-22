@@ -358,6 +358,34 @@ a.box:hover {
     margin-top: -15px;
 }
 
+/** RATINGS */
+.rating.gemerald {
+    font-weight: bolder;
+    text-shadow: 0 0 5px blue;
+    color: #b4dbeb;
+}
+
+.rating.gemerald img {
+    filter: hue-rotate(50deg) brightness(1.5);
+}
+
+.rating.gem {
+    font-weight: bold;
+    color: #2e7b99;
+}
+
+.rating.coal {
+    font-weight: bold;
+    color: #2d3335;
+    text-shadow: 0 0 2px black;
+}
+
+.rating.brimstone {
+    font-weight: bolder;
+    color: orange;
+    text-shadow: 0 0 4px red;
+}
+
 /** 
 -------------
    ACCOUNTS
