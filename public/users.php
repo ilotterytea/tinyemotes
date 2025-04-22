@@ -308,7 +308,7 @@ if ($is_json) {
                                 echo '<tr>';
                                 echo '<th><img src="/static/img/icons/heart.png"> Favorite emote</th>';
                                 echo '<td>';
-                                echo "<a href=\"/emotes/$fav_emote\">";
+                                echo "<a href=\"/emotes?id=$fav_emote\">";
                                 echo $row["code"] . ' <img src="/static/userdata/emotes/' . $fav_emote . '/1x.' . $row["ext"] . '" width="16" height="16">';
                                 echo '</a></td></tr>';
                             }

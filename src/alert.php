@@ -10,7 +10,7 @@ function generate_alert(string $path, string $error, int $status = 400)
             "data" => null
         ]);
     } else {
-        header("Location: $path?error_status=$status&error_reason=$error");
+        header("Location: $path" . (str_contains($path, "?") ? "&" : "?") . "error_status=$status&error_reason=$error");
     }
 }
 

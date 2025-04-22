@@ -127,7 +127,7 @@ if (isset($_SERVER["HTTP_ACCEPT"]) && $_SERVER["HTTP_ACCEPT"] == "application/js
     exit;
 }
 
-header("Location: /emotes/$id", true, 307);
+header("Location: /emotes?id=$id", true, 307);
 
 function echo_upload_page()
 {

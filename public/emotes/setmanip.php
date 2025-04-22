@@ -8,7 +8,7 @@ if (!authorize_user(true)) {
 }
 
 if (!isset($_POST["id"], $_POST["action"])) {
-    generate_alert("/emotes/$emote_id", "Not enough POST fields");
+    generate_alert("/emotes", "Not enough POST fields");
     exit;
 }
 
@@ -19,7 +19,7 @@ $emote_id = $_POST["id"];
 $stmt = $db->prepare("SELECT id FROM emotes WHERE id = ?");
 $stmt->execute([$emote_id]);
 if ($stmt->rowCount() == 0) {
-    generate_alert("/emotes/$emote_id", "Emote not found", 404);
+    generate_alert("/emotes", "Emote not found", 404);
     exit;
 }
 
@@ -39,7 +39,7 @@ if ($row = $stmt->fetch()) {
 
     if ($stmt->rowCount() == 0) {
         $_SESSION["user_emote_set_id"] = "";
-        generate_alert("/emotes/$emote_id", "Bad ownership permissions on active emoteset", 403);
+        generate_alert("/emotes?id=$emote_id", "Bad ownership permissions on active emoteset", 403);
         exit;
     }
 }
@@ -63,7 +63,7 @@ $action = $_POST["action"];
 
 if ($action == "add") {
     if ($stmt->rowCount() != 0) {
-        generate_alert("/emotes/$emote_id", "This emote has been already added!");
+        generate_alert("/emotes?id=$emote_id", "This emote has been already added!");
         exit;
     }
 
@@ -72,18 +72,18 @@ if ($action == "add") {
 
     $db = null;
 
-    generate_alert("/emotes/$emote_id", "This emote has been added to your set. Enjoy!", 200);
+    generate_alert("/emotes?id=$emote_id", "This emote has been added to your set. Enjoy!", 200);
 } else {
     if ($row = $stmt->fetch()) {
         $stmt = $db->prepare("DELETE FROM emote_set_contents WHERE id = ?");
         $stmt->execute([$row["id"]]);
     } else {
-        generate_alert("/emotes/$emote_id", "This emote wasn't added!");
+        generate_alert("/emotes?id=$emote_id", "This emote wasn't added!");
         $db = null;
         exit;
     }
 
     $db = null;
 
-    generate_alert("/emotes/$emote_id", "This emote has been removed from your set.", 200);
+    generate_alert("/emotes?id=$emote_id", "This emote has been removed from your set.", 200);
 }
