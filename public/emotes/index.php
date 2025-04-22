@@ -29,7 +29,7 @@ function display_list_emotes(PDO &$db, int $page, int $limit): array
         FROM emote_set_contents ec
         INNER JOIN emote_sets es ON es.id = ec.emote_set_id
         WHERE ec.emote_id = e.id AND es.owner_id = ?
-    ) THEN 1 ELSE 0 END AS is_in_user_set, COALESCE(SUM(r.rate), 0) AS rating
+    ) THEN 1 ELSE 0 END AS is_in_user_set, COALESCE(COUNT(r.rate), 0) AS rating
     FROM emotes e
     LEFT JOIN ratings AS r ON r.emote_id = e.id
     WHERE e.code LIKE ? 
@@ -89,6 +89,15 @@ function display_emote(PDO &$db, int $id)
     }
 
     if ($emote == null) {
+        if (CLIENT_REQUIRES_JSON) {
+            json_response([
+                "status_code" => 404,
+                "message" => "Emote ID $id does not exist",
+                "data" => null
+            ], 404);
+            exit;
+        }
+
         header("Location: /404.php");
         exit;
     }
@@ -109,6 +118,15 @@ if ($id == "" || !is_numeric($id)) {
     $emotes = display_list_emotes($db, $page, $limit);
 } else {
     $emote = display_emote($db, intval($id));
+}
+
+if (CLIENT_REQUIRES_JSON) {
+    json_response([
+        "status_code" => 200,
+        "message" => null,
+        "data" => $emotes ?? $emote
+    ]);
+    exit;
 }
 ?>
 
