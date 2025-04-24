@@ -9,6 +9,7 @@ function html_navigation_bar()
         </a>
         <div class="links">
             <a href="/emotes" class="button">Emotes</a>
+            <a href="/emotesets.php" class="button">Emotesets</a>
             <a href="/users.php" class="button">Users</a>
             <a href="/emotes/upload.php" class="button">Upload</a>
             <a href="/account" class="button">Account</a>
