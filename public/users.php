@@ -10,10 +10,11 @@ session_start();
 $is_json = isset($_SERVER["HTTP_ACCEPT"]) && $_SERVER["HTTP_ACCEPT"] == "application/json";
 
 $id = $_GET["id"] ?? "";
+$alias_id = $_GET["alias_id"] ?? "";
 
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
-if ($id == "") {
+if ($id == "" && $alias_id == "") {
     $page = $_GET["p"] ?? "0";
     $limit = 50;
     $offset = $page * $limit;
@@ -103,8 +104,18 @@ if ($id == "") {
     exit;
 }
 
+$stmt = null;
+
+if ($id != "") {
 $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
-$stmt->execute([$id]);
+    $stmt->execute([intval($id)]);
+} else if ($alias_id != "") {
+    $stmt = $db->prepare("SELECT u.* FROM users u
+    INNER JOIN connections co ON (co.alias_id = ? AND co.platform = 'twitch')
+    WHERE co.user_id = u.id
+    ");
+    $stmt->execute([intval($alias_id)]);
+}
 
 $user = null;
 
@@ -338,7 +349,7 @@ if ($is_json) {
                             <?php
                             if (!empty($emote_sets)) {
                                 foreach ($emote_sets as $set_row) { ?>
-                                    <a href="/emotesets/<?php echo $set_row["id"] ?>" class="box">
+                                    <a href="/emotesets?id=<?php echo $set_row["id"] ?>" class="box">
                                         <div>
                                             <?php
                                             echo '<p>' . $set_row["name"] . '</p>';
