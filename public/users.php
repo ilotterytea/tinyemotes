@@ -107,7 +107,7 @@ if ($id == "" && $alias_id == "") {
 $stmt = null;
 
 if ($id != "") {
-$stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
+    $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
     $stmt->execute([intval($id)]);
 } else if ($alias_id != "") {
     $stmt = $db->prepare("SELECT u.* FROM users u
@@ -145,7 +145,7 @@ while ($row = $stmt->fetch()) {
 
     // getting info about emote set content
     $em_stmt = $db->prepare(
-        "SELECT e.id, e.code, e.ext FROM emotes e
+        "SELECT e.id, e.code, e.mime, e.ext, e.created_at, e.uploaded_by FROM emotes e
         INNER JOIN emote_set_contents AS esc
         ON esc.emote_set_id = ?
         WHERE esc.emote_id = e.id
@@ -153,11 +153,20 @@ while ($row = $stmt->fetch()) {
     );
     $em_stmt->execute([$row["emote_set_id"]]);
 
+    $emote_set_emotes = $em_stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($emote_set_emotes as &$e) {
+        if ($e["uploaded_by"]) {
+            $uploaded_by_stmt = $db->prepare("SELECT id, username FROM users WHERE id = ?");
+            $uploaded_by_stmt->execute([$e["uploaded_by"]]);
+            $e["uploaded_by"] = $uploaded_by_stmt->fetch(PDO::FETCH_ASSOC);
+        }
+    }
+
     $emote_set = [
         "id" => $set["id"],
         "name" => $set["name"],
         "size" => $set["size"],
-        "emotes" => $em_stmt->fetchAll(PDO::FETCH_ASSOC)
+        "emotes" => $emote_set_emotes
     ];
 
     if ($row["is_default"]) {
