@@ -371,7 +371,8 @@ if ($is_json) {
 
                                         <div>
                                             <?php
-                                            foreach ($set_row["emotes"] as $e) {
+                                            for ($i = 0; $i < clamp(count($set_row["emotes"]), 0, 5); $i++) {
+                                                $e = &$set_row["emotes"][$i];
                                                 echo '<img src="/static/userdata/emotes/' . $e["id"] . '/1x.' . $e["ext"] . '">';
                                             }
                                             ?>
