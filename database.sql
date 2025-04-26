@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS emote_sets (
     owner_id INTEGER NOT NULL REFERENCES users(id),
     linked_to INTEGER REFERENCES emote_sets(id),
     name TEXT NOT NULL,
-    size INTEGER
+    size INTEGER,
+    is_global BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS emote_set_contents (
