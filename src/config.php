@@ -9,3 +9,7 @@ define("RATING_NAMES", [
     "-1" => "COAL",
     "1" => "GEM",
 ]);
+
+// UPLOADS
+define("ANONYMOUS_UPLOAD", false);
+define("ANONYMOUS_DEFAULT_NAME", "chud");

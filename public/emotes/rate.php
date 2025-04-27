@@ -8,6 +8,11 @@ if (!authorize_user(true)) {
     exit;
 }
 
+if (isset($_SESSION["user_role"]) && !$_SESSION["user_role"]["permission_rate"]) {
+    generate_alert("/404.php", "Not enough permissions", 403);
+    exit;
+}
+
 $id = intval(str_safe($_POST["id"] ?? "0", 10));
 $rate = intval(str_safe($_POST["rate"] ?? "0", 2));
 

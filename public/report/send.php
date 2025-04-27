@@ -8,6 +8,11 @@ if (!authorize_user(true)) {
     exit;
 }
 
+if (isset($_SESSION["user_role"]) && !$_SESSION["user_role"]["permission_report"]) {
+    generate_alert("/404.php", "Not enough permissions", 403);
+    exit;
+}
+
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
 if (!isset($_POST["contents"])) {

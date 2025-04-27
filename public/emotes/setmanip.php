@@ -7,6 +7,11 @@ if (!authorize_user(true)) {
     return;
 }
 
+if (isset($_SESSION["user_role"]) && !$_SESSION["user_role"]["permission_emoteset_own"]) {
+    generate_alert("/404.php", "Not enough permissions", 403);
+    exit;
+}
+
 if (!isset($_POST["id"], $_POST["action"])) {
     generate_alert("/emotes", "Not enough POST fields");
     exit;

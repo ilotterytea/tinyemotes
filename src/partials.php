@@ -11,7 +11,9 @@ function html_navigation_bar()
             <a href="/emotes" class="button">Emotes</a>
             <a href="/emotesets.php" class="button">Emotesets</a>
             <a href="/users.php" class="button">Users</a>
-            <a href="/emotes/upload.php" class="button">Upload</a>
+            <?php if (ANONYMOUS_UPLOAD || (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_upload"])) {
+                echo '<a href="/emotes/upload.php" class="button">Upload</a>';
+            } ?>
             <a href="/account" class="button">Account</a>
             <?php
             if (isset($_SESSION["user_id"])) {
@@ -28,18 +30,20 @@ function html_navigation_bar()
                 <?php ;
                 $stmt = null;
 
-                // getting reports
-                $stmt = $db->prepare("SELECT COUNT(*) FROM reports WHERE sender_id = ? AND resolved_by IS NULL");
-                $stmt->execute([$_SESSION["user_id"]]);
-                $unread_count = intval($stmt->fetch()[0]);
-                echo '' ?>
-                <a href="/report/list.php" class="button">
-                    Reports <?php echo $unread_count > 0 ? "($unread_count)" : "" ?>
-                </a>
-                <?php ;
+                if (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_report"]) {
+                    // getting reports
+                    $stmt = $db->prepare("SELECT COUNT(*) FROM reports WHERE sender_id = ? AND resolved_by IS NULL");
+                    $stmt->execute([$_SESSION["user_id"]]);
+                    $unread_count = intval($stmt->fetch()[0]);
+
+                    echo '' ?>
+                    <a href="/report/list.php" class="button">
+                        Reports <?php echo $unread_count > 0 ? "($unread_count)" : "" ?>
+                    </a>
+                    <?php ;
+                }
+
                 $stmt = null;
-
-
                 $db = null;
             }
             ?>

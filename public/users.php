@@ -4,6 +4,7 @@ include_once "../src/user.php";
 include_once "../src/partials.php";
 include_once "../src/utils.php";
 include_once "../src/accounts.php";
+include_once "../src/alert.php";
 authorize_user();
 session_start();
 
@@ -124,7 +125,7 @@ if ($row = $stmt->fetch()) {
 }
 
 if ($user == null) {
-    header("Location: /404.php");
+    generate_alert("/404.php", "The user you requested cannot be found", 404);
     exit;
 }
 
@@ -211,7 +212,39 @@ $stmt->execute([$user->id()]);
 $contributions += intval($stmt->fetch()[0]);
 
 // getting status
-$status = 1;
+$status = "... i don't know who am i";
+
+$stmt = $db->prepare("SELECT * FROM roles r INNER JOIN role_assigns ra ON ra.user_id = ? WHERE ra.role_id = r.id");
+$stmt->execute([$user->id()]);
+
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $status = '<span class="badge" style="color: rgba('
+        . $row["foreground_color"] . ');';
+
+    $bg_color_parts = explode(":", $row["background_color"]);
+
+    switch ($bg_color_parts[0]) {
+        case "solid": {
+            $status .= "background: rgba($bg_color_parts[1]);";
+            break;
+        }
+        case "gradient": {
+            $status .= "background: linear-gradient(0deg, rgba($bg_color_parts[1]), rgba($bg_color_parts[2]));";
+            break;
+        }
+        case "img": {
+            $status .= "background-image: url('$bg_color_parts[1]');";
+            break;
+        }
+        default:
+            break;
+    }
+
+    $status .= '">';
+    $status .= '<img src="/static/img/icons/badges/' . $row["badge_id"] . '.webp" alt="">';
+    $status .= $row["name"];
+    $status .= '</span>';
+}
 
 // getting reactions
 $stmt = $db->prepare("SELECT rate, COUNT(*) AS c FROM ratings WHERE user_id = ? GROUP BY rate ORDER BY c DESC");
@@ -277,13 +310,7 @@ if ($is_json) {
                         <table class="vertical left">
                             <tr>
                                 <th><img src="/static/img/icons/user.png"> I am </th>
-                                <td><?php
-                                if ($status == 1) {
-                                    echo "Gemposter";
-                                } else {
-                                    echo "Unknown";
-                                }
-                                ?></td>
+                                <td><?php echo $status ?></td>
                             </tr>
                             <tr>
                                 <th><img src="/static/img/icons/door_in.png"> Joined</th>
@@ -343,7 +370,11 @@ if ($is_json) {
                     <!-- ACTIONS -->
                     <section class="box column">
                         <a href="/message/send.php?user=<?php echo $user->id() ?>">Send a message</a>
-                        <a href="/report?user_id=<?php echo $user->id() ?>">Report user</a>
+                        <?php
+                        if (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_report"]) {
+                            echo '<a href="/report?user_id=<?php echo $user->id() ?>">Report user</a>';
+                        }
+                        ?>
                     </section>
                 </section>
 

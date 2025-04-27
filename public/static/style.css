@@ -401,6 +401,19 @@ a.box:hover {
     gap: 16px;
 }
 
+.badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    border-width: 1px;
+    border-style: solid;
+}
+
+.badge img {
+    max-width: 16px;
+    max-height: 16px;
+    vertical-align: middle;
+}
+
 .row {
     display: flex;
     flex-direction: row;

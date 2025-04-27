@@ -41,6 +41,19 @@ function authorize_user(bool $required = false): bool
 
         $stmt = $db->prepare("UPDATE users SET last_active_at = UTC_TIMESTAMP WHERE id = ?");
         $stmt->execute([$row["id"]]);
+
+        // fetching role
+        $stmt = $db->prepare("SELECT * FROM roles r
+        INNER JOIN role_assigns ra ON ra.user_id = ?
+        WHERE r.id = ra.role_id
+        ");
+        $stmt->execute([$row["id"]]);
+
+        $_SESSION["user_role"] = null;
+
+        if ($role_row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $_SESSION["user_role"] = $role_row;
+        }
     } else {
         session_regenerate_id();
         session_unset();
@@ -61,5 +74,6 @@ function authorize_user(bool $required = false): bool
     }
 
     $db = null;
+    $stmt = null;
     return isset($_SESSION["user_name"]);
 }

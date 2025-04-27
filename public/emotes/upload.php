@@ -1,8 +1,22 @@
 <?php
 include "../../src/accounts.php";
 include_once "../../src/config.php";
+include_once "../../src/alert.php";
 
 authorize_user();
+
+if (!ANONYMOUS_UPLOAD && isset($_SESSION["user_role"]) && !$_SESSION["user_role"]["permission_upload"]) {
+    generate_alert("/404.php", "Not enough permissions", 403);
+    exit;
+}
+
+$uploaded_by = null;
+$uploader_name = ANONYMOUS_DEFAULT_NAME;
+
+if (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_upload"]) {
+    $uploaded_by = $_SESSION["user_id"] ?? null;
+    $uploader_name = $_SESSION["user_name"] ?? ANONYMOUS_DEFAULT_NAME;
+}
 
 function abort_upload(string $path, PDO $db, string $id, string $response_text, int $response_code = 400)
 {
@@ -24,113 +38,6 @@ $max_width = max(128, 1);
 $max_height = max(128, 1);
 
 if ($_SERVER['REQUEST_METHOD'] != "POST") {
-    echo_upload_page();
-    exit;
-}
-
-if (!isset($_FILES["file"])) {
-    http_response_code(400);
-    echo json_encode([
-        "status_code" => 400,
-        "message" => "No file set",
-        "data" => null
-    ]);
-    exit;
-}
-
-$code = str_safe($_POST["code"] ?? "", 500);
-
-if ($code == "") {
-    http_response_code(400);
-    echo json_encode([
-        "status_code" => 400,
-        "message" => "Invalid code",
-        "data" => null
-    ]);
-    exit;
-}
-
-$image = $_FILES["file"];
-
-if (is_null(list($mime, $ext) = get_mime_and_ext($image["tmp_name"]))) {
-    http_response_code(400);
-    echo json_encode([
-        "status_code" => 400,
-        "message" => "Not a valid image",
-        "data" => null
-    ]);
-    exit;
-}
-
-// creating a new emote record
-$db = new PDO(DB_URL, DB_USER, DB_PASS);
-
-$uploaded_by = $_SESSION["user_id"] ?? null;
-
-$stmt = $db->prepare("INSERT INTO emotes(code, mime, ext, uploaded_by) VALUES (?, ?, ?, ?)");
-$stmt->execute([$code, $mime, $ext, $uploaded_by]);
-
-$id = $db->lastInsertId();
-
-if ($id == 0) {
-    $db = null;
-    http_response_code(500);
-    echo json_encode([
-        "status_code" => 500,
-        "message" => "Failed to create an emote record",
-        "data" => null
-    ]);
-    exit;
-}
-
-$path = "../static/userdata/emotes/$id";
-
-if (!is_dir($path)) {
-    mkdir($path, 0777, true);
-}
-
-// resizing the image
-
-// 3x image
-$resized_image = resize_image($image["tmp_name"], "$path/3x", $max_width, $max_height);
-if ($resized_image) {
-    abort_upload($path, $db, $id, $resized_image);
-}
-
-// 2x image
-$resized_image = resize_image($image["tmp_name"], "$path/2x", $max_width / 2, $max_height / 2);
-if ($resized_image) {
-    abort_upload($path, $db, $id, $resized_image);
-}
-
-// 1x image
-$resized_image = resize_image($image["tmp_name"], "$path/1x", $max_width / 4, $max_height / 4);
-if ($resized_image) {
-    abort_upload($path, $db, $id, $resized_image);
-}
-
-$db = null;
-
-if (isset($_SERVER["HTTP_ACCEPT"]) && $_SERVER["HTTP_ACCEPT"] == "application/json") {
-    http_response_code(201);
-    echo json_encode([
-        "status_code" => 201,
-        "message" => null,
-        "data" => [
-            "id" => $id,
-            "code" => $code,
-            "ext" => $ext,
-            "mime" => $mime,
-            "uploaded_by" => $uploaded_by
-        ]
-    ]);
-    exit;
-}
-
-header("Location: /emotes?id=$id", true, 307);
-
-function echo_upload_page()
-{
     include "../../src/partials.php";
 
     echo '' ?>
@@ -174,7 +81,7 @@ function echo_upload_page()
 
 
                                 <button type="submit" id="upload-button">Upload as
-                                    <?php echo $_SESSION["user_name"] ?? "anonymous" ?></button>
+                                    <?php echo $uploader_name ?></button>
                             </form>
                         </div>
                     </section>
@@ -260,4 +167,104 @@ function echo_upload_page()
     </html>
 
     <?php
+    exit;
 }
+
+if (!isset($_FILES["file"])) {
+    http_response_code(400);
+    echo json_encode([
+        "status_code" => 400,
+        "message" => "No file set",
+        "data" => null
+    ]);
+    exit;
+}
+
+$code = str_safe($_POST["code"] ?? "", 500);
+
+if ($code == "") {
+    http_response_code(400);
+    echo json_encode([
+        "status_code" => 400,
+        "message" => "Invalid code",
+        "data" => null
+    ]);
+    exit;
+}
+
+$image = $_FILES["file"];
+
+if (is_null(list($mime, $ext) = get_mime_and_ext($image["tmp_name"]))) {
+    http_response_code(400);
+    echo json_encode([
+        "status_code" => 400,
+        "message" => "Not a valid image",
+        "data" => null
+    ]);
+    exit;
+}
+
+// creating a new emote record
+$db = new PDO(DB_URL, DB_USER, DB_PASS);
+
+$stmt = $db->prepare("INSERT INTO emotes(code, mime, ext, uploaded_by) VALUES (?, ?, ?, ?)");
+$stmt->execute([$code, $mime, $ext, $uploaded_by]);
+
+$id = $db->lastInsertId();
+
+if ($id == 0) {
+    $db = null;
+    http_response_code(500);
+    echo json_encode([
+        "status_code" => 500,
+        "message" => "Failed to create an emote record",
+        "data" => null
+    ]);
+    exit;
+}
+
+$path = "../static/userdata/emotes/$id";
+
+if (!is_dir($path)) {
+    mkdir($path, 0777, true);
+}
+
+// resizing the image
+
+// 3x image
+$resized_image = resize_image($image["tmp_name"], "$path/3x", $max_width, $max_height);
+if ($resized_image) {
+    abort_upload($path, $db, $id, $resized_image);
+}
+
+// 2x image
+$resized_image = resize_image($image["tmp_name"], "$path/2x", $max_width / 2, $max_height / 2);
+if ($resized_image) {
+    abort_upload($path, $db, $id, $resized_image);
+}
+
+// 1x image
+$resized_image = resize_image($image["tmp_name"], "$path/1x", $max_width / 4, $max_height / 4);
+if ($resized_image) {
+    abort_upload($path, $db, $id, $resized_image);
+}
+
+$db = null;
+
+if (isset($_SERVER["HTTP_ACCEPT"]) && $_SERVER["HTTP_ACCEPT"] == "application/json") {
+    http_response_code(201);
+    echo json_encode([
+        "status_code" => 201,
+        "message" => null,
+        "data" => [
+            "id" => $id,
+            "code" => $code,
+            "ext" => $ext,
+            "mime" => $mime,
+            "uploaded_by" => $uploaded_by
+        ]
+    ]);
+    exit;
+}
+
+header("Location: /emotes?id=$id", true, 307);

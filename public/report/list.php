@@ -3,8 +3,14 @@ include_once "../../src/accounts.php";
 include_once "../../src/config.php";
 include_once "../../src/partials.php";
 include_once "../../src/utils.php";
+include_once "../../src/alert.php";
 
 if (!authorize_user(true)) {
+    exit;
+}
+
+if (isset($_SESSION["user_role"]) && !$_SESSION["user_role"]["permission_report"]) {
+    generate_alert("/404.php", "Not enough permissions", 403);
     exit;
 }
 

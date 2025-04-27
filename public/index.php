@@ -1,5 +1,8 @@
 <?php
 include_once "../src/config.php";
+include_once "../src/accounts.php";
+authorize_user();
+
 ?>
 <html>
 
@@ -17,7 +20,9 @@ include_once "../src/config.php";
                 <a href="/emotes">Emotes</a>
                 <a href="/emotesets.php">Emotesets</a>
                 <a href="/users.php">Users</a>
-                <a href="/emotes/upload.php">Upload</a>
+                <?php if (ANONYMOUS_UPLOAD || (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_upload"])) {
+                    echo '<a href="/emotes/upload.php">Upload</a>';
+                } ?>
                 <a href="/account">Account</a>
                 <a href="/software">Chat clients</a>
             </div>

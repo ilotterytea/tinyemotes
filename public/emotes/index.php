@@ -179,46 +179,57 @@ if (CLIENT_REQUIRES_JSON) {
                                         $stmt->execute([$_SESSION["user_emote_set_id"], $emote->get_id()]);
                                         $added = $stmt->rowCount() > 0;
                                     }
-                                    ?>
-                                    <form action="/emotes/setmanip.php" method="POST">
-                                        <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
-                                            style="display: none;">
+
+                                    if (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_emoteset_own"]) {
+                                        echo '' ?>
+                                        <form action="/emotes/setmanip.php" method="POST">
+                                            <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
+                                                style="display: none;">
+                                            <?php
+                                            if ($added) { ?>
+                                                <input type="text" name="action" value="remove" style="display: none;">
+                                                <button type="submit" class="red">Remove from my channel</button>
+                                                <?php
+                                            } else { ?>
+                                                <input type="text" name="action" value="add" style="display: none;">
+                                                <button type="submit" class="green">Add to my channel</button>
+                                                <?php
+                                            }
+                                            ?>
+                                        </form>
                                         <?php
-                                        if ($added) { ?>
-                                            <input type="text" name="action" value="remove" style="display: none;">
-                                            <button type="submit" class="red">Remove from my channel</button>
-                                            <?php
-                                        } else { ?>
-                                            <input type="text" name="action" value="add" style="display: none;">
-                                            <button type="submit" class="green">Add to my channel</button>
-                                            <?php
-                                        }
-                                        ?>
-                                    </form>
+                                        ;
+                                    }
+                                    ?>
                                 </div>
                                 <div class="items row right full">
                                     <?php
-                                    $stmt = $db->prepare("SELECT rate FROM ratings WHERE user_id = ? AND emote_id = ?");
-                                    $stmt->execute([$_SESSION["user_id"], $id]);
+                                    if (isset($_SESSION["user_role"])) {
+                                        if ($_SESSION["user_role"]["permission_rate"]) {
+                                            $stmt = $db->prepare("SELECT rate FROM ratings WHERE user_id = ? AND emote_id = ?");
+                                            $stmt->execute([$_SESSION["user_id"], $id]);
 
-                                    if ($row = $stmt->fetch()) {
-                                        echo 'You gave <img src="/static/img/icons/ratings/' . $row["rate"] . '.png" width="16" height="16"';
-                                        echo 'title="' . RATING_NAMES[$row["rate"]] . '">';
-                                    } else {
-                                        foreach (RATING_NAMES as $key => $value) {
-                                            echo '<form action="/emotes/rate.php" method="POST">';
-                                            echo '<input type="text" name="id" value="' . $emote->get_id() . '"style="display: none;">';
-                                            echo "<input type=\"text\" name=\"rate\" value=\"$key\" style=\"display:none;\">";
-                                            echo '<button type="submit" class="transparent">';
-                                            echo "<img
+                                            if ($row = $stmt->fetch()) {
+                                                echo 'You gave <img src="/static/img/icons/ratings/' . $row["rate"] . '.png" width="16" height="16"';
+                                                echo 'title="' . RATING_NAMES[$row["rate"]] . '">';
+                                            } else {
+                                                foreach (RATING_NAMES as $key => $value) {
+                                                    echo '<form action="/emotes/rate.php" method="POST">';
+                                                    echo '<input type="text" name="id" value="' . $emote->get_id() . '"style="display: none;">';
+                                                    echo "<input type=\"text\" name=\"rate\" value=\"$key\" style=\"display:none;\">";
+                                                    echo '<button type="submit" class="transparent">';
+                                                    echo "<img
                                                     src=\"/static/img/icons/ratings/$key.png\" alt=\"$value!\"
                                                     title=\"IT'S A $value!\">";
-                                            echo '</button></form>';
+                                                    echo '</button></form>';
+                                                }
+                                            }
+                                        }
+                                        if ($_SESSION["user_role"]["permission_report"]) {
+                                            echo '<a class="button red" href="/report?emote_id=<?php echo $emote->get_id() ?>">Report emote</a>';
                                         }
                                     }
                                     ?>
-                                    <a class="button red" href="/report?emote_id=<?php echo $emote->get_id() ?>">Report
-                                        emote</a>
                                 </div>
                                 <?php
                             } else {
@@ -234,7 +245,7 @@ if (CLIENT_REQUIRES_JSON) {
                                 <tr>
                                     <th>Uploader</th>
                                     <td><?php
-                                    $username = "anonymous";
+                                    $username = ANONYMOUS_DEFAULT_NAME;
                                     $link = "#";
 
                                     if ($emote->get_uploaded_by()) {
