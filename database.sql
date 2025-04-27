@@ -76,3 +76,30 @@ CREATE TABLE IF NOT EXISTS reports (
     resolved_by INTEGER REFERENCES users(id),
     response_message TEXT
 );
+
+CREATE TABLE IF NOT EXISTS roles (
+    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    priority INTEGER NOT NULL DEFAULT 0,
+    name TEXT NOT NULL,
+    foreground_color TEXT NOT NULL DEFAULT '000,000,000',
+    background_color TEXT NOT NULL DEFAULT 'solid:255,255,255',
+    badge_id INTEGER NOT NULL DEFAULT 0,
+
+    -- permissions
+    permission_upload BOOLEAN NOT NULL DEFAULT true,
+    permission_rate BOOLEAN NOT NULL DEFAULT true,
+    permission_emoteset_own BOOLEAN NOT NULL DEFAULT true,
+    permission_emoteset_all BOOLEAN NOT NULL DEFAULT false,
+    permission_report BOOLEAN NOT NULL DEFAULT true,
+    permission_report_review BOOLEAN NOT NULL DEFAULT false,
+    permission_approve_emotes BOOLEAN NOT NULL DEFAULT false,
+    permission_useredit_own BOOLEAN NOT NULL DEFAULT true,
+    permission_useredit_all BOOLEAN NOT NULL DEFAULT false,
+    permission_modsystem BOOLEAN NOT NULL DEFAULT false
+);
+
+CREATE TABLE IF NOT EXISTS role_assigns(
+    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    user_id INTEGER NOT NULL UNIQUE REFERENCES users(id),
+    role_id INTEGER NOT NULL REFERENCES roles(id)
+);
