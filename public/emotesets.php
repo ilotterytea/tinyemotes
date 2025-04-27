@@ -55,6 +55,13 @@ if ($id == "global") {
         $stmt->execute([$e["id"]]);
 
         $e["emotes"] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($e["emotes"] as &$em) {
+            if ($em["uploaded_by"]) {
+                $stmt = $db->prepare("SELECT id, username FROM users WHERE id = ?");
+                $stmt->execute([$em["uploaded_by"]]);
+                $em["uploaded_by"] = $stmt->fetch(PDO::FETCH_ASSOC);
+            }
+        }
     }
 } else if (intval($alias_id) > 0) {
     $alias_id = intval($alias_id);
@@ -96,6 +103,13 @@ if ($id == "global") {
         $stmt->execute([$emote_set["id"]]);
 
         $emote_set["emotes"] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($emote_set["emotes"] as &$e) {
+            if ($e["uploaded_by"]) {
+                $stmt = $db->prepare("SELECT id, username FROM users WHERE id = ?");
+                $stmt->execute([$e["uploaded_by"]]);
+                $e["uploaded_by"] = $stmt->fetch(PDO::FETCH_ASSOC);
+            }
+        }
     }
 }
 
@@ -175,7 +189,8 @@ if (CLIENT_REQUIRES_JSON) {
                                 foreach ($emote_set["emotes"] as $emote_row) {
                                     echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
                                     echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.' . $emote_row["ext"] . '" alt="' . $emote_row["code"] . '"/>';
-                                    echo '<p>' . $emote_row["code"] . '</p>';
+                                    echo '<h1>' . $emote_row["code"] . '</h1>';
+                                    echo '<p>' . ($emote_row["uploaded_by"] == null ? (ANONYMOUS_DEFAULT_NAME . "*") : $emote_row["uploaded_by"]["username"]) . '</p>';
                                     echo '</a>';
                                 }
                             }

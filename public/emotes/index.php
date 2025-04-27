@@ -51,12 +51,20 @@ function display_list_emotes(PDO &$db, int $page, int $limit): array
     $rows = $stmt->fetchAll();
 
     foreach ($rows as $row) {
+        $uploader = null;
+
+        if ($row["uploaded_by"]) {
+            $stmt = $db->prepare("SELECT id, username FROM users WHERE id = ?");
+            $stmt->execute([$row["uploaded_by"]]);
+            $uploader = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+
         array_push($emotes, new Emote(
             $row["id"],
             $row["code"],
             $row["ext"],
             intval(strtotime($row["created_at"])),
-            $row["uploaded_by"],
+            $uploader,
             $row["is_in_user_set"],
             $row["rating"]
         ));
@@ -357,7 +365,8 @@ if (CLIENT_REQUIRES_JSON) {
                                     }
 
                                     echo '<img src="/static/userdata/emotes/' . $e->get_id() . '/2x.' . $e->get_ext() . '" alt="' . $e->get_code() . '"/>';
-                                    echo '<p>' . $e->get_code() . '</p>';
+                                    echo '<h1>' . $e->get_code() . '</h1>';
+                                    echo '<p>' . ($e->get_uploaded_by() == null ? (ANONYMOUS_DEFAULT_NAME . "*") : $e->get_uploaded_by()["username"]) . '</p>';
                                     echo '</a>';
                                 }
                                 ?>

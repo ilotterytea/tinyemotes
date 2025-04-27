@@ -428,7 +428,9 @@ if ($is_json) {
                                     foreach ($active_emote_set["emotes"] as $emote_row) {
                                         echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
                                         echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.' . $emote_row["ext"] . '" alt="' . $emote_row["code"] . '"/>';
-                                        echo '<p>' . $emote_row["code"] . '</p>';
+                                        echo '<h1>' . $emote_row["code"] . '</h1>';
+                                        echo '<p>' . ($emote_row["uploaded_by"] == null ? (ANONYMOUS_DEFAULT_NAME . "*") : $emote_row["uploaded_by"]["username"]) . '</p>';
+                                        echo '</a>';
                                         echo '</a>';
                                     }
                                 } else {
@@ -453,7 +455,7 @@ if ($is_json) {
                                 foreach ($uploaded_emotes as $emote_row) {
                                     echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
                                     echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.' . $emote_row["ext"] . '" alt="' . $emote_row["code"] . '"/>';
-                                    echo '<p>' . $emote_row["code"] . '</p>';
+                                    echo '<h1>' . $emote_row["code"] . '</h1>';
                                     echo '</a>';
                                 }
                                 ?>

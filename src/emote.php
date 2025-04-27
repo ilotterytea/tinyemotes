@@ -4,7 +4,7 @@ class Emote
     public string $id;
     public string $code;
     public string $ext;
-    public string|null $uploaded_by;
+    public mixed $uploaded_by;
     public int $created_at;
     public mixed $rating;
     public bool $is_in_user_set;
