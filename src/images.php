@@ -1,5 +1,5 @@
 <?php
-function resize_image(string $src_path, string $dst_path, int $max_width, int $max_height): string|null
+function resize_image(string $src_path, string $dst_path, int $max_width, int $max_height, bool $set_format = true): string|null
 {
     if ($src_path == "" || !getimagesize($src_path)) {
         return json_encode([
@@ -12,7 +12,11 @@ function resize_image(string $src_path, string $dst_path, int $max_width, int $m
     $imagick = new Imagick();
 
     $imagick->readImage($src_path);
-    $format = strtolower($imagick->getImageFormat());
+    $format = "." . strtolower($imagick->getImageFormat());
+
+    if (!$set_format) {
+        $format = "";
+    }
 
     if ($imagick->getNumberImages() > 1) {
         $imagick = $imagick->coalesceImages();
@@ -29,7 +33,7 @@ function resize_image(string $src_path, string $dst_path, int $max_width, int $m
         }
 
         $imagick = $imagick->deconstructImages();
-        $imagick->writeImages("$dst_path.$format", true);
+        $imagick->writeImages("$dst_path$format", true);
     } else {
         $width = $imagick->getImageWidth();
         $height = $imagick->getImageHeight();
@@ -38,7 +42,7 @@ function resize_image(string $src_path, string $dst_path, int $max_width, int $m
         $new_height = (int) ($height * $ratio);
 
         $imagick->resizeImage($new_width, $new_height, Imagick::FILTER_TRIANGLE, 1);
-        $imagick->writeImage("$dst_path.$format");
+        $imagick->writeImage("$dst_path$format");
     }
 
     $imagick->clear();

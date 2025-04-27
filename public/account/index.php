@@ -1,5 +1,11 @@
 <?php
+include_once "../../src/alert.php";
 include "../../src/accounts.php";
+include "../../src/partials.php";
+include_once "../../src/config.php";
+include_once "../../src/utils.php";
+include_once "../../src/images.php";
+
 authorize_user();
 
 if (!isset($_SESSION["user_id"], $_SESSION["user_name"])) {
@@ -7,7 +13,44 @@ if (!isset($_SESSION["user_id"], $_SESSION["user_name"])) {
     exit;
 }
 
-include "../../src/partials.php";
+if ($_SERVER['REQUEST_METHOD'] == "POST") {
+    $db = new PDO(DB_URL, DB_USER, DB_PASS);
+
+    $username = str_safe($_POST["username"], ACCOUNT_USERNAME_MAX_LENGTH);
+
+    if (!empty($username) && $username != $_SESSION["user_name"]) {
+        if (!preg_match(ACCOUNT_USERNAME_REGEX, $username)) {
+            generate_alert("/account", "Bad username");
+            exit;
+        }
+
+        $stmt = $db->prepare("SELECT id FROM users WHERE username = ?");
+        $stmt->execute([$username]);
+
+        if ($stmt->rowCount() == 0) {
+            $stmt = $db->prepare("UPDATE users SET username = ? WHERE id = ?");
+            $stmt->execute([$username, $_SESSION["user_id"]]);
+        } else {
+            generate_alert("/account", "The username has already taken");
+            exit;
+        }
+    }
+
+    if (isset($_FILES["pfp"])) {
+        $pfp = $_FILES["pfp"];
+        resize_image(
+            $pfp["tmp_name"],
+            "../static/userdata/avatars/" . $_SESSION["user_id"],
+            ACCOUNT_PFP_MAX_SIZE[0],
+            ACCOUNT_PFP_MAX_SIZE[1],
+            false
+        );
+    }
+
+    $db = null;
+    generate_alert("/account", "Your changes have been applied!", 200);
+    exit;
+}
 
 ?>
 
@@ -24,10 +67,11 @@ include "../../src/partials.php";
             <?php html_navigation_bar() ?>
 
             <section class="content">
+                <?php display_alert() ?>
                 <section class="box accman">
                     <h1>Account management</h1>
 
-                    <form action="/account.php" method="POST" enctype="multipart/form-data">
+                    <form action="/account" method="POST" enctype="multipart/form-data">
                         <h2>Profile</h2>
                         <h3>Profile picture</h3>
                         <img src="/static/userdata/avatars/<?php echo $_SESSION["user_id"] ?>" id="pfp" width="64"
@@ -35,7 +79,7 @@ include "../../src/partials.php";
                         <input type="file" name="pfp" id="pfp">
 
                         <h3>Username</h3>
-                        <input type="text" name="username" value="<?php echo $_SESSION["user_name"] ?>">
+                        <input type="text" name="username" id="username" value="<?php echo $_SESSION["user_name"] ?>">
 
                         <button type="submit">Save</button>
                     </form>
@@ -55,5 +99,20 @@ include "../../src/partials.php";
         </div>
     </div>
 </body>
+
+<script>
+    const username = document.getElementById("username");
+    let validUsername = "";
+
+    username.addEventListener("input", (e) => {
+        const regex = <?php echo ACCOUNT_USERNAME_REGEX ?>;
+
+        if (regex.test(e.target.value) && e.target.value.length <= <?php echo ACCOUNT_USERNAME_MAX_LENGTH ?>) {
+            validUsername = e.target.value;
+        } else {
+            e.target.value = validUsername;
+        }
+    });
+</script>
 
 </html>

@@ -13,3 +13,8 @@ define("RATING_NAMES", [
 // UPLOADS
 define("ANONYMOUS_UPLOAD", false);
 define("ANONYMOUS_DEFAULT_NAME", "chud");
+
+// ACCOUNTS
+define("ACCOUNT_USERNAME_REGEX", "/^[A-Za-z0-9_]+$/");
+define("ACCOUNT_USERNAME_MAX_LENGTH", 20);
+define("ACCOUNT_PFP_MAX_SIZE", [128, 128]);
