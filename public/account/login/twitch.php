@@ -127,14 +127,16 @@ if (!is_dir($path)) {
     mkdir($path, 0777, true);
 }
 
-$fp = fopen("$path/$user_id", "wb");
-$request = curl_init();
-curl_setopt($request, CURLOPT_URL, $twitch_user["profile_image_url"]);
-curl_setopt($request, CURLOPT_FILE, $fp);
-curl_setopt($request, CURLOPT_HEADER, 0);
+if (!is_file("$path/$user_id")) {
+    $fp = fopen("$path/$user_id", "wb");
+    $request = curl_init();
+    curl_setopt($request, CURLOPT_URL, $twitch_user["profile_image_url"]);
+    curl_setopt($request, CURLOPT_FILE, $fp);
+    curl_setopt($request, CURLOPT_HEADER, 0);
 
-curl_exec($request);
-curl_close($request);
-fclose($fp);
+    curl_exec($request);
+    curl_close($request);
+    fclose($fp);
+}
 
 header("Location: /account");
