@@ -299,7 +299,8 @@ if ($is_json) {
                         <div class="box navtab">
                             <p>User #<?php echo $user->id() ?></p>
                         </div>
-                        <div class="box content">
+                        <div class="box content background"
+                            style="background-image: url('/static/userdata/banners/<?php echo $user->id() ?>');">
                             <img src="/static/userdata/avatars/<?php echo $user->id() ?>" width="96" height="96">
                             <h1><?php echo $user->username() ?></h1>
                         </div>

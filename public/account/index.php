@@ -16,7 +16,7 @@ if (!isset($_SESSION["user_id"], $_SESSION["user_name"])) {
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
-    $username = str_safe($_POST["username"], ACCOUNT_USERNAME_MAX_LENGTH);
+    $username = str_safe($_POST["username"] ?? "", ACCOUNT_USERNAME_MAX_LENGTH);
 
     if (!empty($username) && $username != $_SESSION["user_name"]) {
         if (!preg_match(ACCOUNT_USERNAME_REGEX, $username)) {
@@ -43,7 +43,20 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             "../static/userdata/avatars/" . $_SESSION["user_id"],
             ACCOUNT_PFP_MAX_SIZE[0],
             ACCOUNT_PFP_MAX_SIZE[1],
-            false
+            false,
+            true
+        );
+    }
+
+    if (isset($_FILES["banner"])) {
+        $banner = $_FILES["banner"];
+        resize_image(
+            $banner["tmp_name"],
+            "../static/userdata/banners/" . $_SESSION["user_id"],
+            ACCOUNT_BANNER_MAX_SIZE[0],
+            ACCOUNT_BANNER_MAX_SIZE[1],
+            false,
+            true
         );
     }
 
@@ -76,7 +89,12 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                         <h3>Profile picture</h3>
                         <img src="/static/userdata/avatars/<?php echo $_SESSION["user_id"] ?>" id="pfp" width="64"
                             height="64">
-                        <input type="file" name="pfp" id="pfp">
+                        <input type="file" name="pfp">
+
+                        <h3>Profile banner</h3>
+                        <img src="/static/userdata/banners/<?php echo $_SESSION["user_id"] ?>" id="banner" width="192"
+                            height="108">
+                        <input type="file" name="banner">
 
                         <h3>Username</h3>
                         <input type="text" name="username" id="username" value="<?php echo $_SESSION["user_name"] ?>">

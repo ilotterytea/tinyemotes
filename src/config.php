@@ -18,3 +18,4 @@ define("ANONYMOUS_DEFAULT_NAME", "chud");
 define("ACCOUNT_USERNAME_REGEX", "/^[A-Za-z0-9_]+$/");
 define("ACCOUNT_USERNAME_MAX_LENGTH", 20);
 define("ACCOUNT_PFP_MAX_SIZE", [128, 128]);
+define("ACCOUNT_BANNER_MAX_SIZE", [1920, 1080]);

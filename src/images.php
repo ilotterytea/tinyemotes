@@ -1,5 +1,5 @@
 <?php
-function resize_image(string $src_path, string $dst_path, int $max_width, int $max_height, bool $set_format = true): string|null
+function resize_image(string $src_path, string $dst_path, int $max_width, int $max_height, bool $set_format = true, bool $stretch = false): string|null
 {
     if ($src_path == "" || !getimagesize($src_path)) {
         return json_encode([
@@ -28,6 +28,11 @@ function resize_image(string $src_path, string $dst_path, int $max_width, int $m
             $new_width = (int) ($width * $ratio);
             $new_height = (int) ($height * $ratio);
 
+            if ($stretch) {
+                $new_width = $max_width;
+                $new_height = $max_height;
+            }
+
             $frame->resizeImage($new_width, $new_height, Imagick::FILTER_TRIANGLE, 1);
             $frame->setImagePage($new_width, $new_height, 0, 0);
         }
@@ -40,6 +45,11 @@ function resize_image(string $src_path, string $dst_path, int $max_width, int $m
         $ratio = min($max_width / $width, $max_height / $height);
         $new_width = (int) ($width * $ratio);
         $new_height = (int) ($height * $ratio);
+
+        if ($stretch) {
+            $new_width = $max_width;
+            $new_height = $max_height;
+        }
 
         $imagick->resizeImage($new_width, $new_height, Imagick::FILTER_TRIANGLE, 1);
         $imagick->writeImage("$dst_path$format");
