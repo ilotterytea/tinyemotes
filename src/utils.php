@@ -1,6 +1,4 @@
 <?php
-define("CLIENT_REQUIRES_JSON", isset($_SERVER["HTTP_ACCEPT"]) && $_SERVER["HTTP_ACCEPT"] == "application/json");
-
 function json_response(mixed $response, int $status = 200)
 {
     http_response_code($status);

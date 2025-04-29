@@ -13,6 +13,10 @@ $db = new PDO(DB_URL, DB_USER, DB_PASS);
 $emote_sets = null;
 $emote_set = null;
 
+$page = max(1, intval($_GET["p"] ?? "0"));
+$total_emotesets = 1;
+$total_pages = 1;
+
 if ($id == "global") {
     $stmt = $db->prepare("SELECT * FROM emote_sets WHERE is_global = true");
     $stmt->execute();
@@ -36,9 +40,8 @@ if ($id == "global") {
         }
     }
 } else if (intval($id) <= 0 && intval($alias_id) <= 0) {
-    $page = intval($_GET["p"] ?? "0");
     $limit = 20;
-    $offset = $page * $limit;
+    $offset = ($page - 1) * $limit;
 
     $stmt = $db->prepare("SELECT * FROM emote_sets LIMIT ? OFFSET ?");
     $stmt->bindParam(1, $limit, PDO::PARAM_INT);
@@ -63,6 +66,10 @@ if ($id == "global") {
             }
         }
     }
+    $count_stmt = $db->prepare("SELECT COUNT(*) FROM emote_sets");
+    $count_stmt->execute();
+    $total_emotesets = intval($count_stmt->fetch()[0]);
+    $total_pages = ceil($total_emotesets / $limit);
 } else if (intval($alias_id) > 0) {
     $alias_id = intval($alias_id);
     $stmt = $db->prepare("SELECT es.* FROM emote_sets es
@@ -153,18 +160,16 @@ if (CLIENT_REQUIRES_JSON) {
         <div class="wrapper">
             <?php html_navigation_bar() ?>
             <section class="content row">
-                <section class="sidebar">
-                    <?php html_navigation_search() ?>
-                </section>
                 <section class="content">
                     <section class="box">
                         <div class="box navtab">
-                            <?php echo $emote_sets != null ? (count($emote_sets) . " emotesets") : ('"' . $emote_set["name"] . '" emoteset') ?>
+                            <?php echo $emote_sets != null ? ("$total_emotesets emotesets - Page $page/$total_pages") : ('"' . $emote_set["name"] . '" emoteset') ?>
                         </div>
                         <div class="box content items">
                             <?php
                             if ($emote_sets != null) {
-                                foreach ($emote_sets as $set_row) { ?>
+                                foreach ($emote_sets as $set_row) {
+                                    ?>
                                     <a href="/emotesets.php?id=<?php echo $set_row["id"] ?>" class="box">
                                         <div>
                                             <?php
@@ -178,13 +183,24 @@ if (CLIENT_REQUIRES_JSON) {
 
                                         <div>
                                             <?php
-                                            foreach ($set_row["emotes"] as $e) {
-                                                echo '<img src="/static/userdata/emotes/' . $e["id"] . '/1x.' . $e["ext"] . '">';
+                                            foreach ($set_row["emotes"] as $emm) {
+                                                echo '<img src="/static/userdata/emotes/' . $emm["id"] . '/1x.' . $emm["ext"] . '">';
                                             }
                                             ?>
                                         </div>
                                     </a>
                                 <?php }
+
+                                echo '</div></section>';
+
+                                if ($total_pages > 1) {
+                                    echo '' ?>
+                                    <section class="box center row">
+                                        <?php
+                                        html_pagination($total_pages, $page, "/emotesets.php");
+                                        ?>
+                                        <?php
+                                }
                             } else {
                                 foreach ($emote_set["emotes"] as $emote_row) {
                                     echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
@@ -195,10 +211,9 @@ if (CLIENT_REQUIRES_JSON) {
                                 }
                             }
                             ?>
-                        </div>
+                            </section>
                     </section>
                 </section>
-            </section>
         </div>
     </div>
 </body>

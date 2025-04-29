@@ -10,13 +10,12 @@ authorize_user();
 
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
-function display_list_emotes(PDO &$db, int $page, int $limit): array
+function display_list_emotes(PDO &$db, string $search, string $sort_by, int $page, int $limit): array
 {
-    $search = "%" . ($_GET["q"] ?? "") . "%";
     $user_id = $_SESSION["user_id"] ?? "-1";
-    $offset = $page * $limit;
+    $offset = ($page - 1) * $limit;
 
-    $sort = match ($_GET["sort_by"] ?? "") {
+    $sort = match ($sort_by) {
         "low_ratings" => "rating ASC",
         "recent" => "e.created_at DESC",
         "oldest" => "e.created_at ASC",
@@ -120,10 +119,19 @@ $id = $_GET["id"] ?? "";
 
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
+$page = max(1, intval($_GET["p"] ?? "1"));
+$limit = 50;
+$total_emotes = 0;
+$total_pages = 0;
+$search = "%" . ($_GET["q"] ?? "") . "%";
+$sort_by = $_GET["sort_by"] ?? "";
+
 if ($id == "" || !is_numeric($id)) {
-    $page = intval($_GET["p"] ?? "0");
-    $limit = 50;
-    $emotes = display_list_emotes($db, $page, $limit);
+    $emotes = display_list_emotes($db, $search, $sort_by, $page, $limit);
+    $stmt = $db->prepare("SELECT COUNT(*) FROM emotes WHERE code LIKE ?");
+    $stmt->execute([$search]);
+    $total_emotes = $stmt->fetch()[0];
+    $total_pages = ceil($total_emotes / $limit);
 } else {
     $emote = display_emote($db, intval($id));
 }
@@ -160,7 +168,7 @@ if (CLIENT_REQUIRES_JSON) {
                     <?php display_alert() ?>
                     <section class="box">
                         <div class="box navtab">
-                            <?php echo empty($emotes) ? "Emote - " . $emote->get_code() : "Emotes" ?>
+                            <?php echo empty($emotes) ? "Emote - " . $emote->get_code() : "$total_emotes Emotes - Page $page/$total_pages" ?>
                         </div>
                         <?php
                         if (empty($emotes)) { ?>
@@ -371,7 +379,17 @@ if (CLIENT_REQUIRES_JSON) {
                                 }
                                 ?>
                             </div>
-                            <?php
+                            <?php if ($total_pages > 1) {
+                                echo '' ?>
+                            </section>
+                            <section class="box center row">
+                                <?php
+                                html_pagination(
+                                    $total_pages,
+                                    $page,
+                                    "/emotes?q=" . substr($search, 1, strlen($search) - 2) . "&sort_by=$sort_by"
+                                );
+                            }
                         }
                         ?>
                     </section>

@@ -16,9 +16,9 @@ $alias_id = $_GET["alias_id"] ?? "";
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
 if ($id == "" && $alias_id == "") {
-    $page = $_GET["p"] ?? "0";
-    $limit = 50;
-    $offset = $page * $limit;
+    $page = max(1, intval($_GET["p"] ?? "1"));
+    $limit = 25;
+    $offset = ($page - 1) * $limit;
     $search = "%" . ($_GET["q"] ?? "") . "%";
     $stmt = $db->prepare("SELECT id, username, joined_at, last_active_at
     FROM users
@@ -29,7 +29,11 @@ if ($id == "" && $alias_id == "") {
     $stmt->bindParam(3, $offset, PDO::PARAM_INT);
     $stmt->execute();
 
-    $all_user_count = $search ? $stmt->rowCount() : $db->query("SELECT COUNT(*) FROM users")->fetch()[0];
+    $count_stmt = $db->prepare("SELECT COUNT(*) FROM users WHERE username LIKE ?");
+    $count_stmt->execute([$search]);
+
+    $total_users = $count_stmt->fetch()[0];
+    $total_pages = ceil($total_users / $limit);
 
     if ($is_json) {
         header("Content-Type: application/json");
@@ -63,11 +67,11 @@ if ($id == "" && $alias_id == "") {
                     <section class="content">
                         <section class="box">
                             <div class="box navtab">
-                                <p><?php echo $all_user_count ?> Users</p>
+                                <p><?php echo $total_users ?> Users - <?php echo "Page $page/$total_pages" ?></p>
                             </div>
                             <div class="box content">
                                 <?php
-                                if ($stmt->rowCount() != 0) {
+                                if ($total_users != 0) {
                                     echo '<table>';
                                     echo '<tr>';
                                     echo '<th></th><th style="width:80%;">Username</th><th>Last active</th>';
@@ -94,8 +98,18 @@ if ($id == "" && $alias_id == "") {
                                 ?>
                             </div>
                         </section>
+                        <?php if ($total_pages > 1) {
+                            echo '' ?>
+
+                            <section class="box center row">
+                                <?php
+                                html_pagination($total_pages, $page, "/users.php?q=" . substr($search, 1, strlen($search) - 2));
+                                ?>
+                            </section>
+                            <?php
+                        }
+                        ?>
                     </section>
-                </section>
             </div>
         </div>
     </body>

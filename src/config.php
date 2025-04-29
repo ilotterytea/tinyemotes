@@ -1,4 +1,6 @@
 <?php
+define("CLIENT_REQUIRES_JSON", isset($_SERVER["HTTP_ACCEPT"]) && $_SERVER["HTTP_ACCEPT"] == "application/json");
+
 // DATABASE
 define("DB_USER", "kochan");
 define("DB_PASS", "kochan");

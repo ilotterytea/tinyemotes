@@ -95,3 +95,26 @@ function html_navigation_search()
     </section>
     <?php ;
 }
+
+function html_pagination(int $total_pages, int $current_page, string $redirect)
+{
+    if (str_contains($redirect, "?")) {
+        $redirect .= "&p=";
+    } else {
+        $redirect .= "?p=";
+    }
+
+    if ($total_pages > 1) {
+        echo '' ?>
+        <div class="pagination">
+            <?php if ($current_page > 1): ?>
+                <a href="<?php echo $redirect . ($current_page - 1) ?>">[ prev ]</a>
+            <?php endif; ?>
+            <?php if ($current_page < $total_pages): ?>
+                <a href="<?php echo $redirect . ($current_page + 1) ?>">[ next ]</a>
+            <?php endif; ?>
+
+        </div>
+        <?php ;
+    }
+}
