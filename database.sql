@@ -23,7 +23,9 @@ CREATE TABLE IF NOT EXISTS emotes (
     ext TEXT NOT NULL,
     uploaded_by INTEGER REFERENCES users(id),
     created_at TIMESTAMP NOT NULL DEFAULT UTC_TIMESTAMP,
-    visibility INTEGER NOT NULL
+    updated_at TIMESTAMP NOT NULL,
+    visibility INTEGER NOT NULL,
+    is_featured BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS emote_sets (
