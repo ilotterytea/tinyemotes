@@ -166,7 +166,10 @@ if (CLIENT_REQUIRES_JSON) {
 
             <section class="content row">
                 <section class="sidebar">
-                    <?php html_navigation_search() ?>
+                    <?php
+                    html_navigation_search();
+                    html_random_emote($db);
+                    ?>
                 </section>
                 <section class="content">
                     <?php display_alert() ?>
