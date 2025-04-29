@@ -31,7 +31,7 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
     ) THEN 1 ELSE 0 END AS is_in_user_set, COALESCE(COUNT(r.rate), 0) AS rating
     FROM emotes e
     LEFT JOIN ratings AS r ON r.emote_id = e.id
-    WHERE e.code LIKE ? 
+    WHERE e.code LIKE ? AND e.visibility = 1
     GROUP BY 
     e.id, e.code, e.created_at
     ORDER BY $sort
@@ -65,7 +65,8 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
             intval(strtotime($row["created_at"])),
             $uploader,
             $row["is_in_user_set"],
-            $row["rating"]
+            $row["rating"],
+            $row["visibility"]
         ));
     }
 
@@ -84,15 +85,18 @@ function display_emote(PDO &$db, int $id)
     $emote = null;
 
     if ($row = $stmt->fetch()) {
-        $emote = new Emote(
-            $row["id"],
-            $row["code"],
-            $row["ext"],
-            intval(strtotime($row["created_at"])),
-            $row["uploaded_by"],
-            false,
-            ["total" => $row["total_rating"], "average" => $row["average_rating"]]
-        );
+        if ($row["id"] != null) {
+            $emote = new Emote(
+                $row["id"],
+                $row["code"],
+                $row["ext"],
+                intval(strtotime($row["created_at"])),
+                $row["uploaded_by"],
+                false,
+                ["total" => $row["total_rating"], "average" => $row["average_rating"]],
+                $row["visibility"]
+            );
+        }
     }
 
     if ($emote == null) {
@@ -128,7 +132,7 @@ $sort_by = $_GET["sort_by"] ?? "";
 
 if ($id == "" || !is_numeric($id)) {
     $emotes = display_list_emotes($db, $search, $sort_by, $page, $limit);
-    $stmt = $db->prepare("SELECT COUNT(*) FROM emotes WHERE code LIKE ?");
+    $stmt = $db->prepare("SELECT COUNT(*) FROM emotes WHERE code LIKE ? AND visibility = 1");
     $stmt->execute([$search]);
     $total_emotes = $stmt->fetch()[0];
     $total_pages = ceil($total_emotes / $limit);
@@ -328,6 +332,16 @@ if (CLIENT_REQUIRES_JSON) {
                                         echo '</td>';
                                     }
                                     ?>
+                                </tr>
+                                <tr>
+                                    <th>Visibility</th>
+                                    <td><?php
+                                    if ($emote->get_visibility() == 1) {
+                                        echo 'Public';
+                                    } else {
+                                        echo 'Unlisted';
+                                    }
+                                    ?></td>
                                 </tr>
                             </table>
                         </section>

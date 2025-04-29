@@ -70,15 +70,14 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
 
                                 <div>
                                     <label for="visibility">Emote visibility: </label>
-                                    <select name="visibility">
-                                        <option value="0">Public</option>
-                                        <option value="1">Unlisted</option>
-                                        <option value="0">Private</option>
+                                    <select name="visibility" id="form-visibility">
+                                        <option value="1">Public</option>
+                                        <option value="0">Unlisted</option>
                                     </select><br>
-                                    <label for="visibility">Do you accept <a href="/rules">the rules</a>?</label>
+                                    <p id="form-visibility-description" style="font-size: 10px;">test</p>
+                                    <label for="tos">Do you accept <a href="/rules">the rules</a>?</label>
                                     <input type="checkbox" name="tos" required>
                                 </div>
-
 
                                 <button type="submit" id="upload-button">Upload as
                                     <?php echo $uploader_name ?></button>
@@ -162,6 +161,23 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
                 e.target.value = validCode;
             }
         });
+
+        const visibility = document.getElementById("form-visibility");
+        visibility.addEventListener("change", (e) => {
+            set_form_visibility_description(visibility.value);
+        });
+
+        function set_form_visibility_description(visibility) {
+            const p = document.getElementById("form-visibility-description");
+
+            if (visibility == 1) {
+                p.innerHTML = "Emote won't appear on the public list until it passes a moderator's review. It still can be added to chats.";
+            } else {
+                p.innerHTML = "Emote doesn't appear on the public list and won't be subject to moderation checks. It still can be added to chats.";
+            }
+        }
+
+        set_form_visibility_description(visibility.value);
     </script>
 
     </html>
@@ -204,11 +220,13 @@ if (is_null(list($mime, $ext) = get_mime_and_ext($image["tmp_name"]))) {
     exit;
 }
 
+$visibility = intval($_GET["visibility"], "0");
+
 // creating a new emote record
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
-$stmt = $db->prepare("INSERT INTO emotes(code, mime, ext, uploaded_by) VALUES (?, ?, ?, ?)");
-$stmt->execute([$code, $mime, $ext, $uploaded_by]);
+$stmt = $db->prepare("INSERT INTO emotes(code, mime, ext, uploaded_by, visibility) VALUES (?, ?, ?, ?, ?)");
+$stmt->execute([$code, $mime, $ext, $uploaded_by, $visibility]);
 
 $id = $db->lastInsertId();
 

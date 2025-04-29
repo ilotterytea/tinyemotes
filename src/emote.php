@@ -8,8 +8,9 @@ class Emote
     public int $created_at;
     public mixed $rating;
     public bool $is_in_user_set;
+    public int $visibility;
 
-    function __construct($id, $code, $ext, $created_at, $uploaded_by, $is_in_user_set, $rating)
+    function __construct($id, $code, $ext, $created_at, $uploaded_by, $is_in_user_set, $rating, $visibility)
     {
         $this->id = $id;
         $this->code = $code;
@@ -18,6 +19,7 @@ class Emote
         $this->uploaded_by = $uploaded_by;
         $this->is_in_user_set = $is_in_user_set;
         $this->rating = $rating;
+        $this->visibility = $visibility;
     }
 
     function get_id()
@@ -53,5 +55,10 @@ class Emote
     function get_rating()
     {
         return $this->rating;
+    }
+
+    function get_visibility()
+    {
+        return $this->visibility;
     }
 }
