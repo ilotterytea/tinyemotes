@@ -2,6 +2,7 @@
 include_once "../../src/config.php";
 include "../../src/accounts.php";
 include "../../src/alert.php";
+include_once "../../src/utils.php";
 
 if (!authorize_user(true)) {
     return;
@@ -66,29 +67,58 @@ $stmt->execute([$emote_set_id, $emote_id]);
 
 $action = $_POST["action"];
 
-if ($action == "add") {
-    if ($stmt->rowCount() != 0) {
-        generate_alert("/emotes?id=$emote_id", "This emote has been already added!");
-        exit;
-    }
+switch ($action) {
+    case "add": {
+        if ($stmt->rowCount() != 0) {
+            generate_alert("/emotes?id=$emote_id", "This emote has been already added!");
+            exit;
+        }
 
-    $stmt = $db->prepare("INSERT INTO emote_set_contents(emote_set_id, emote_id, added_by) VALUES (?, ?, ?)");
-    $stmt->execute([$emote_set_id, $emote_id, $user_id]);
+        $stmt = $db->prepare("INSERT INTO emote_set_contents(emote_set_id, emote_id, added_by) VALUES (?, ?, ?)");
+        $stmt->execute([$emote_set_id, $emote_id, $user_id]);
 
-    $db = null;
-
-    generate_alert("/emotes?id=$emote_id", "This emote has been added to your set. Enjoy!", 200);
-} else {
-    if ($row = $stmt->fetch()) {
-        $stmt = $db->prepare("DELETE FROM emote_set_contents WHERE id = ?");
-        $stmt->execute([$row["id"]]);
-    } else {
-        generate_alert("/emotes?id=$emote_id", "This emote wasn't added!");
         $db = null;
-        exit;
+
+        generate_alert("/emotes?id=$emote_id", "This emote has been added to your set. Enjoy!", 200);
+        break;
     }
+    case "remove": {
+        if ($row = $stmt->fetch()) {
+            $stmt = $db->prepare("DELETE FROM emote_set_contents WHERE id = ?");
+            $stmt->execute([$row["id"]]);
+        } else {
+            generate_alert("/emotes?id=$emote_id", "This emote wasn't added!");
+            $db = null;
+            exit;
+        }
 
-    $db = null;
+        $db = null;
 
-    generate_alert("/emotes?id=$emote_id", "This emote has been removed from your set.", 200);
+        generate_alert("/emotes?id=$emote_id", "This emote has been removed from your set.", 200);
+        break;
+    }
+    case "alias": {
+        if (!isset($_POST["value"])) {
+            generate_alert("/emotes?id=$emote_id", "No value field");
+            exit;
+        }
+
+        $value = str_safe($_POST["value"], EMOTE_NAME_MAX_LENGTH);
+
+        if (empty($value)) {
+            $value = null;
+        }
+
+        $stmt = $db->prepare("UPDATE emote_set_contents SET name = ? WHERE emote_set_id = ? AND emote_id = ?");
+        $stmt->execute([$value, $emote_set_id, $emote_id]);
+
+        $db = null;
+
+        generate_alert("/emotes?id=$emote_id", "Updated emote name!", 200);
+        break;
+    }
+    default: {
+        generate_alert("/emotes?id=$emote_id", "Unknown action");
+        break;
+    }
 }

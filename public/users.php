@@ -160,7 +160,16 @@ while ($row = $stmt->fetch()) {
 
     // getting info about emote set content
     $em_stmt = $db->prepare(
-        "SELECT e.id, e.code, e.mime, e.ext, e.created_at, e.uploaded_by FROM emotes e
+        "SELECT e.id, e.mime, e.ext, e.created_at, e.uploaded_by, 
+        CASE 
+            WHEN esc.name IS NOT NULL THEN esc.name 
+            ELSE e.code
+        END AS code,
+        CASE 
+            WHEN esc.name IS NOT NULL THEN e.code 
+            ELSE NULL 
+        END AS original_code
+        FROM emotes e
         INNER JOIN emote_set_contents AS esc
         ON esc.emote_set_id = ?
         WHERE esc.emote_id = e.id

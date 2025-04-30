@@ -24,9 +24,19 @@ if ($id == "global") {
     if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $emote_set = $row;
 
-        $stmt = $db->prepare("SELECT e.* FROM emotes e
+        $stmt = $db->prepare("SELECT 
+        e.*, 
+        CASE 
+            WHEN esc.name IS NOT NULL THEN esc.name 
+            ELSE e.code
+        END AS code,
+        CASE 
+            WHEN esc.name IS NOT NULL THEN e.code 
+            ELSE NULL 
+        END AS original_code
+        FROM emotes e
         JOIN emote_set_contents esc ON esc.emote_id = e.id
-        WHERE emote_set_id = ?");
+        WHERE esc.emote_set_id = ?");
         $stmt->execute([$emote_set["id"]]);
 
         $emote_set["emotes"] = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -51,10 +61,18 @@ if ($id == "global") {
     $emote_sets = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($emote_sets as &$e) {
-        $stmt = $db->prepare("SELECT e.* FROM emotes e
+        $stmt = $db->prepare("SELECT e.*, 
+        CASE 
+            WHEN esc.name IS NOT NULL THEN esc.name 
+            ELSE e.code
+        END AS code,
+        CASE 
+            WHEN esc.name IS NOT NULL THEN e.code 
+            ELSE NULL 
+        END AS original_code
+        FROM emotes e
         JOIN emote_set_contents esc ON esc.emote_set_id = ?
-        WHERE e.id = esc.emote_id
-        LIMIT 5");
+        WHERE e.id = esc.emote_id");
         $stmt->execute([$e["id"]]);
 
         $e["emotes"] = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -81,7 +99,16 @@ if ($id == "global") {
     if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $emote_set = $row;
 
-        $stmt = $db->prepare("SELECT e.* FROM emotes e
+        $stmt = $db->prepare("SELECT e.*, 
+        CASE 
+            WHEN esc.name IS NOT NULL THEN esc.name 
+            ELSE e.code
+        END AS code,
+        CASE 
+            WHEN esc.name IS NOT NULL THEN e.code 
+            ELSE NULL 
+        END AS original_code
+        FROM emotes e
         JOIN emote_set_contents esc ON esc.emote_set_id = ?
         WHERE esc.emote_id = e.id");
         $stmt->execute([$emote_set["id"]]);
@@ -104,7 +131,16 @@ if ($id == "global") {
     if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $emote_set = $row;
 
-        $stmt = $db->prepare("SELECT e.* FROM emotes e
+        $stmt = $db->prepare("SELECT e.*, 
+        CASE 
+            WHEN esc.name IS NOT NULL THEN esc.name 
+            ELSE e.code
+        END AS code,
+        CASE 
+            WHEN esc.name IS NOT NULL THEN e.code 
+            ELSE NULL 
+        END AS original_code
+        FROM emotes e
         JOIN emote_set_contents esc ON esc.emote_set_id = ?
         WHERE esc.emote_id = e.id");
         $stmt->execute([$emote_set["id"]]);

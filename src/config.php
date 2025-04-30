@@ -16,6 +16,9 @@ define("RATING_NAMES", [
 define("ANONYMOUS_UPLOAD", false);
 define("ANONYMOUS_DEFAULT_NAME", "chud");
 
+// EMOTES
+define("EMOTE_NAME_MAX_LENGTH", 100);
+
 // ACCOUNTS
 define("ACCOUNT_USERNAME_REGEX", "/^[A-Za-z0-9_]+$/");
 define("ACCOUNT_USERNAME_MAX_LENGTH", 20);

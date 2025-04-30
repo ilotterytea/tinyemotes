@@ -199,9 +199,15 @@ if (CLIENT_REQUIRES_JSON) {
                                     $added = false;
 
                                     if (isset($_SESSION["user_emote_set_id"])) {
-                                        $stmt = $db->prepare("SELECT id FROM emote_set_contents WHERE emote_set_id = ? AND emote_id = ?");
+                                        $stmt = $db->prepare("SELECT id, name FROM emote_set_contents WHERE emote_set_id = ? AND emote_id = ?");
                                         $stmt->execute([$_SESSION["user_emote_set_id"], $emote->get_id()]);
-                                        $added = $stmt->rowCount() > 0;
+
+                                        $added = false;
+
+                                        if ($row = $stmt->fetch()) {
+                                            $added = true;
+                                            $emote_current_name = $row["name"] ?? $emote->get_code();
+                                        }
                                     }
 
                                     if (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_emoteset_own"]) {
@@ -210,9 +216,20 @@ if (CLIENT_REQUIRES_JSON) {
                                             <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
                                                 style="display: none;">
                                             <?php
-                                            if ($added) { ?>
+                                            if ($added) {
+                                                ?>
                                                 <input type="text" name="action" value="remove" style="display: none;">
                                                 <button type="submit" class="red">Remove from my channel</button>
+                                            </form>
+                                            <form action="/emotes/setmanip.php" method="POST" class="row">
+                                                <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
+                                                    style="display: none;">
+                                                <input type="text" name="value" id="emote-alias-input"
+                                                    value="<?php echo $emote_current_name ?>"
+                                                    placeholder="<?php echo $emote->get_code() ?>">
+                                                <input type="text" name="action" value="alias" style="display: none;">
+                                                <button type="submit" class="transparent"><img src="/static/img/icons/pencil.png"
+                                                        alt="Rename" title="Rename"></button>
                                                 <?php
                                             } else { ?>
                                                 <input type="text" name="action" value="add" style="display: none;">
