@@ -61,6 +61,7 @@ if ($contents == "") {
     <title><?php echo ($report == null ? "Send a message to MODS" : "A message to MODS") . ' - ' . INSTANCE_NAME ?>
     </title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
 </head>
 
 <body>

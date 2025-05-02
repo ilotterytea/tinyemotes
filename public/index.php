@@ -11,6 +11,7 @@ authorize_user();
 <head>
     <title><?php echo INSTANCE_NAME ?></title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
 </head>
 
 <body>

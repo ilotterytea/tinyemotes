@@ -1,6 +1,8 @@
 <?php
 function html_navigation_bar()
 {
+    include_once "config.php";
+
     echo '' ?>
     <section class="navbar">
         <a href="/" class="brand" style="color:black;text-decoration:none;">

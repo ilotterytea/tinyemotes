@@ -157,6 +157,7 @@ if (CLIENT_REQUIRES_JSON) {
     echo (empty($emotes) ? "Emote " . $emote->get_code() : "Emotes") . ' - ' . INSTANCE_NAME
         ?></title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
 </head>
 
 <body>

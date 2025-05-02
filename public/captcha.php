@@ -45,6 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["h-captcha-response"]))
 <head>
     <title>Resolving a hCaptcha - <?php echo INSTANCE_NAME ?></title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
     <script src='https://www.hCaptcha.com/1/api.js' async defer></script>
 </head>
 

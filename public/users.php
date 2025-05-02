@@ -54,6 +54,7 @@ if ($id == "" && $alias_id == "") {
     <head>
         <title>User list - <?php echo INSTANCE_NAME ?></title>
         <link rel="stylesheet" href="/static/style.css">
+        <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
     </head>
 
     <body>
@@ -309,6 +310,7 @@ if ($is_json) {
 <head>
     <title><?php echo sprintf("%s - %s", $user->username(), INSTANCE_NAME) ?></title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
 </head>
 
 <body>
