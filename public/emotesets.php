@@ -202,11 +202,11 @@ if (CLIENT_REQUIRES_JSON) {
                 <section class="content">
                     <section class="box">
                         <div class="box navtab">
-                            <?php echo $emote_sets != null ? ("$total_emotesets emotesets - Page $page/$total_pages") : ('"' . $emote_set["name"] . '" emoteset') ?>
+                            <?php echo $emote_set != null ? ('"' . $emote_set["name"] . '" emoteset') : "$total_emotesets emotesets - Page $page/$total_pages" ?>
                         </div>
                         <div class="box content items">
                             <?php
-                            if ($emote_sets != null) {
+                            if (!empty($emote_sets)) {
                                 foreach ($emote_sets as $set_row) {
                                     ?>
                                     <a href="/emotesets.php?id=<?php echo $set_row["id"] ?>" class="box">
@@ -240,7 +240,7 @@ if (CLIENT_REQUIRES_JSON) {
                                         ?>
                                         <?php
                                 }
-                            } else {
+                            } else if (!empty($emote_set)) {
                                 foreach ($emote_set["emotes"] as $emote_row) {
                                     echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
                                     echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.' . $emote_row["ext"] . '" alt="' . $emote_row["code"] . '"/>';
@@ -248,6 +248,8 @@ if (CLIENT_REQUIRES_JSON) {
                                     echo '<p>' . ($emote_row["uploaded_by"] == null ? (ANONYMOUS_DEFAULT_NAME . "*") : $emote_row["uploaded_by"]["username"]) . '</p>';
                                     echo '</a>';
                                 }
+                            } else {
+                                echo 'No emotesets found...';
                             }
                             ?>
                             </section>

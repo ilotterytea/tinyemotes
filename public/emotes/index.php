@@ -154,7 +154,7 @@ if (CLIENT_REQUIRES_JSON) {
 
 <head>
     <title><?php
-    echo (empty($emotes) ? "Emote " . $emote->get_code() : "Emotes") . ' - ' . INSTANCE_NAME
+    echo ($emote != null ? "Emote " . $emote->get_code() : "Emotes") . ' - ' . INSTANCE_NAME
         ?></title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
@@ -177,7 +177,7 @@ if (CLIENT_REQUIRES_JSON) {
                     <?php display_alert() ?>
                     <section class="box">
                         <div class="box navtab">
-                            <?php echo empty($emotes) ? "Emote - " . $emote->get_code() : "$total_emotes Emotes - Page $page/$total_pages" ?>
+                            <?php echo $emote != null ? "Emote - " . $emote->get_code() : "$total_emotes Emotes - Page $page/$total_pages" ?>
                         </div>
                         <?php
                         if (empty($emotes)) { ?>

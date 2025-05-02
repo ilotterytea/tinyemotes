@@ -5,8 +5,8 @@ include_once "../src/partials.php";
 include_once "../src/utils.php";
 include_once "../src/accounts.php";
 include_once "../src/alert.php";
+
 authorize_user();
-session_start();
 
 $is_json = isset($_SERVER["HTTP_ACCEPT"]) && $_SERVER["HTTP_ACCEPT"] == "application/json";
 
