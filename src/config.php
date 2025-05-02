@@ -18,6 +18,12 @@ define("ANONYMOUS_DEFAULT_NAME", "chud");
 
 // EMOTES
 define("EMOTE_NAME_MAX_LENGTH", 100);
+define("EMOTE_COMMENT_MAX_LENGTH", 100);
+define("EMOTE_VISIBILITY_DEFAULT", 2);
+
+// MODERATION
+define("MOD_SYSTEM_DASHBOARD", true);
+define("MOD_EMOTES_APPROVE", true);
 
 // ACCOUNTS
 define("ACCOUNT_USERNAME_REGEX", "/^[A-Za-z0-9_]+$/");

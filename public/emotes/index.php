@@ -357,10 +357,19 @@ if (CLIENT_REQUIRES_JSON) {
                                 <tr>
                                     <th>Visibility</th>
                                     <td><?php
-                                    if ($emote->get_visibility() == 1) {
-                                        echo 'Public';
-                                    } else {
-                                        echo 'Unlisted';
+                                    switch ($emote->get_visibility()) {
+                                        case 0:
+                                            echo 'Unlisted';
+                                            break;
+                                        case 1:
+                                            echo 'Public';
+                                            break;
+                                        case 2:
+                                            echo 'Pending approval (unlisted for a moment)';
+                                            break;
+                                        default:
+                                            echo 'N/A';
+                                            break;
                                     }
                                     ?></td>
                                 </tr>

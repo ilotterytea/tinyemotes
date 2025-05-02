@@ -30,17 +30,37 @@ function html_navigation_bar()
                 <?php ;
                 $stmt = null;
 
-                if (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_report"]) {
-                    // getting reports
-                    $stmt = $db->prepare("SELECT COUNT(*) FROM reports WHERE sender_id = ? AND resolved_by IS NULL");
-                    $stmt->execute([$_SESSION["user_id"]]);
-                    $unread_count = intval($stmt->fetch()[0]);
+                if (isset($_SESSION["user_role"])) {
+                    if ($_SESSION["user_role"]["permission_report"]) {
+                        // getting reports
+                        $stmt = $db->prepare("SELECT COUNT(*) FROM reports WHERE sender_id = ? AND resolved_by IS NULL");
+                        $stmt->execute([$_SESSION["user_id"]]);
+                        $unread_count = intval($stmt->fetch()[0]);
 
-                    echo '' ?>
-                    <a href="/report/list.php" class="button">
-                        Reports <?php echo $unread_count > 0 ? "($unread_count)" : "" ?>
-                    </a>
-                    <?php ;
+                        echo '' ?>
+                        <a href="/report/list.php" class="button">
+                            Reports <?php echo $unread_count > 0 ? "($unread_count)" : "" ?>
+                        </a>
+                        <?php ;
+                    }
+
+                    if (MOD_SYSTEM_DASHBOARD && ($_SESSION["user_role"]["permission_approve_emotes"] || $_SESSION["user_role"]["permission_report_review"])) {
+                        $system_count = 0;
+
+                        if ($_SESSION["user_role"]["permission_approve_emotes"] && MOD_EMOTES_APPROVE) {
+                            $system_count += intval($db->query("SELECT COUNT(*) FROM emotes WHERE visibility = 2")->fetch()[0]);
+                        }
+
+                        if ($_SESSION["user_role"]["permission_report_review"]) {
+                            $system_count += intval($db->query("SELECT COUNT(*) FROM reports WHERE resolved_by IS NULL")->fetch()[0]);
+                        }
+
+                        echo '<a href="/system" class="button">System';
+                        if ($system_count > 0) {
+                            echo " ($system_count)";
+                        }
+                        echo '</a>';
+                    }
                 }
 
                 $stmt = null;

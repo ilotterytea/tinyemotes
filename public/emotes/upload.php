@@ -220,7 +220,11 @@ if (is_null(list($mime, $ext) = get_mime_and_ext($image["tmp_name"]))) {
     exit;
 }
 
-$visibility = intval($_GET["visibility"], "0");
+$visibility = clamp(intval($_POST["visibility"], EMOTE_VISIBILITY_DEFAULT), 0, 2);
+
+if (MOD_EMOTES_APPROVE && $visibility == 1 && EMOTE_VISIBILITY_DEFAULT != 1) {
+    $visibility = 2;
+}
 
 // creating a new emote record
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
