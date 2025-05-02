@@ -5,13 +5,13 @@ function html_navigation_bar()
     <section class="navbar">
         <a href="/" class="brand" style="color:black;text-decoration:none;">
             <img src="/static/img/brand/mini.webp" alt="">
-            <h2 style="margin-left:8px;font-size:24px;"><b><?php echo "alright.party" ?></b></h2>
+            <h2 style="margin-left:8px;font-size:24px;"><b><?php echo INSTANCE_NAME ?></b></h2>
         </a>
         <div class="links">
             <a href="/emotes" class="button">Emotes</a>
             <a href="/emotesets.php" class="button">Emotesets</a>
             <a href="/users.php" class="button">Users</a>
-            <?php if (ANONYMOUS_UPLOAD || (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_upload"])) {
+            <?php if (EMOTE_UPLOAD && (ANONYMOUS_UPLOAD || (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_upload"]))) {
                 echo '<a href="/emotes/upload.php" class="button">Upload</a>';
             } ?>
             <a href="/account" class="button">Account</a>
@@ -31,7 +31,7 @@ function html_navigation_bar()
                 $stmt = null;
 
                 if (isset($_SESSION["user_role"])) {
-                    if ($_SESSION["user_role"]["permission_report"]) {
+                    if (REPORTS_ENABLE && $_SESSION["user_role"]["permission_report"]) {
                         // getting reports
                         $stmt = $db->prepare("SELECT COUNT(*) FROM reports WHERE sender_id = ? AND resolved_by IS NULL");
                         $stmt->execute([$_SESSION["user_id"]]);

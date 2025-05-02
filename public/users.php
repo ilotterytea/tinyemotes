@@ -52,7 +52,7 @@ if ($id == "" && $alias_id == "") {
     <html>
 
     <head>
-        <title>User list - alright.party</title>
+        <title>User list - <?php echo INSTANCE_NAME ?></title>
         <link rel="stylesheet" href="/static/style.css">
     </head>
 
@@ -307,7 +307,7 @@ if ($is_json) {
 <html>
 
 <head>
-    <title><?php echo $user->username() ?> - alright.party</title>
+    <title><?php echo sprintf("%s - %s", $user->username(), INSTANCE_NAME) ?></title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 

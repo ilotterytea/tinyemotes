@@ -43,7 +43,7 @@ if ($emote_id > 0) {
 <html>
 
 <head>
-    <title>System panel - alright.party</title>
+    <title>System panel - <?php echo INSTANCE_NAME ?></title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 

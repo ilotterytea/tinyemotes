@@ -154,8 +154,8 @@ if (CLIENT_REQUIRES_JSON) {
 
 <head>
     <title><?php
-    echo empty($emotes) ? "Emote " . $emote->get_code() : "Emotes"
-        ?> - alright.party</title>
+    echo (empty($emotes) ? "Emote " . $emote->get_code() : "Emotes") . ' - ' . INSTANCE_NAME
+        ?></title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
@@ -309,33 +309,34 @@ if (CLIENT_REQUIRES_JSON) {
                                     echo ' UTC">about ' . format_timestamp(time() - $emote->get_created_at()) . " ago</span>";
                                     ?></td>
                                 </tr>
-                                <tr>
-                                    <th>Rating</th>
-                                    <?php
-                                    if ($emote->get_rating()["total"] < 10) {
-                                        echo '<td>Not rated (' . $emote->get_rating()["total"] . ')</td>';
-                                    } else {
+                                <?php if (RATING_ENABLE): ?>
+                                    <tr>
+                                        <th>Rating</th>
+                                        <?php
+                                        if ($emote->get_rating()["total"] < 10) {
+                                            echo '<td>Not rated (' . $emote->get_rating()["total"] . ')</td>';
+                                        } else {
 
-                                        $rating = $emote->get_rating()["average"];
+                                            $rating = $emote->get_rating()["average"];
 
-                                        // TODO: make it customizable
-                                        list($rating_classname, $rating_name) = match (true) {
-                                            in_range($rating, 0.75, 1.0) => [
-                                                "gemerald",
-                                                "<img src='/static/img/icons/ratings/1.png'>
+                                            // TODO: make it customizable
+                                            list($rating_classname, $rating_name) = match (true) {
+                                                in_range($rating, 0.75, 1.0) => [
+                                                    "gemerald",
+                                                    "<img src='/static/img/icons/ratings/1.png'>
                                         <img src='/static/img/icons/ratings/1.png'>
                                         <img src='/static/img/icons/ratings/1.png'> Shiny Gemerald! 
                                         <img src='/static/img/icons/ratings/1.png'>
                                         <img src='/static/img/icons/ratings/1.png'>
                                         <img src='/static/img/icons/ratings/1.png'>
                                         "
-                                            ],
-                                            in_range($rating, 0.25, 0.75) => ["gem", "<img src='/static/img/icons/ratings/1.png'> Gem <img src='/static/img/icons/ratings/1.png'>"],
-                                            in_range($rating, -0.25, 0.25) => ["iron", "Iron"],
-                                            in_range($rating, -0.75, -0.25) => ["coal", "<img src='/static/img/icons/ratings/-1.png'> Coal <img src='/static/img/icons/ratings/-1.png'>"],
-                                            in_range($rating, -1.0, -0.75) => [
-                                                "brimstone",
-                                                "
+                                                ],
+                                                in_range($rating, 0.25, 0.75) => ["gem", "<img src='/static/img/icons/ratings/1.png'> Gem <img src='/static/img/icons/ratings/1.png'>"],
+                                                in_range($rating, -0.25, 0.25) => ["iron", "Iron"],
+                                                in_range($rating, -0.75, -0.25) => ["coal", "<img src='/static/img/icons/ratings/-1.png'> Coal <img src='/static/img/icons/ratings/-1.png'>"],
+                                                in_range($rating, -1.0, -0.75) => [
+                                                    "brimstone",
+                                                    "
                                         <img src='/static/img/icons/ratings/brimstone.webp'>
                                         <img src='/static/img/icons/ratings/-1.png'>
                                         <img src='/static/img/icons/ratings/brimstone.webp'>
@@ -344,16 +345,17 @@ if (CLIENT_REQUIRES_JSON) {
                                         <img src='/static/img/icons/ratings/-1.png'>
                                         <img src='/static/img/icons/ratings/brimstone.webp'>
                                         "
-                                            ]
-                                        };
+                                                ]
+                                            };
 
-                                        echo '<td>';
-                                        echo "<span class=\"rating $rating_classname\">$rating_name</span>";
-                                        echo ' (' . $emote->get_rating()["total"] . ')';
-                                        echo '</td>';
-                                    }
-                                    ?>
-                                </tr>
+                                            echo '<td>';
+                                            echo "<span class=\"rating $rating_classname\">$rating_name</span>";
+                                            echo ' (' . $emote->get_rating()["total"] . ')';
+                                            echo '</td>';
+                                        }
+                                        ?>
+                                    </tr>
+                                <?php endif; ?>
                                 <tr>
                                     <th>Visibility</th>
                                     <td><?php

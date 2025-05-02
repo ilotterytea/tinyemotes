@@ -7,20 +7,20 @@ authorize_user();
 <html>
 
 <head>
-    <title>alright.party</title>
+    <title><?php echo INSTANCE_NAME ?></title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
     <div class="container">
         <div class="wrapper center big-gap">
-            <h1><img src="/static/img/brand/big.webp" alt="<?php echo $_SERVER['HTTP_HOST']; ?>"></h1>
+            <h1><img src="/static/img/brand/big.webp" alt="<?php echo INSTANCE_NAME; ?>"></h1>
 
             <div class="items row" style="gap:32px;">
                 <a href="/emotes">Emotes</a>
                 <a href="/emotesets.php">Emotesets</a>
                 <a href="/users.php">Users</a>
-                <?php if (ANONYMOUS_UPLOAD || (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_upload"])) {
+                <?php if (EMOTE_UPLOAD && (ANONYMOUS_UPLOAD || (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_upload"]))) {
                     echo '<a href="/emotes/upload.php">Upload</a>';
                 } ?>
                 <a href="/account">Account</a>

@@ -4,6 +4,11 @@ include_once "../../src/utils.php";
 include_once "../../src/config.php";
 include_once "../../src/accounts.php";
 
+if (!RATING_ENABLE) {
+    generate_alert("/404.php", "Emote ratings are disabled", 403);
+    exit;
+}
+
 if (!authorize_user(true)) {
     exit;
 }

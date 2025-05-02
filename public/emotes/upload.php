@@ -3,6 +3,11 @@ include "../../src/accounts.php";
 include_once "../../src/config.php";
 include_once "../../src/alert.php";
 
+if (!EMOTE_UPLOAD) {
+    generate_alert("/404.php", "Emote upload is disabled", 403);
+    exit;
+}
+
 authorize_user();
 
 if (!ANONYMOUS_UPLOAD && isset($_SESSION["user_role"]) && !$_SESSION["user_role"]["permission_upload"]) {
@@ -33,9 +38,8 @@ function abort_upload(string $path, PDO $db, string $id, string $response_text, 
 include "../../src/utils.php";
 include "../../src/images.php";
 
-// TODO: make it configurable later
-$max_width = max(128, 1);
-$max_height = max(128, 1);
+$max_width = EMOTE_MAX_SIZE[0];
+$max_height = EMOTE_MAX_SIZE[1];
 
 if ($_SERVER['REQUEST_METHOD'] != "POST") {
     include "../../src/partials.php";
@@ -44,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
     <html>
 
     <head>
-        <title>Upload an emote at alright.party</title>
+        <title>Upload an emote - <?php echo INSTANCE_NAME ?></title>
         <link rel="stylesheet" href="/static/style.css">
     </head>
 
@@ -58,14 +62,14 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
                         <div class="box navtab">
                             <div>
                                 <b>Upload a new emote</b>
-                                <p style="font-size:8px;">Btw, you can upload anything. Anything you want.</p>
+                                <p style="font-size:8px;">You can just upload, btw. Anything you want.</p>
                             </div>
                         </div>
                         <div class="box content">
                             <form action="/emotes/upload.php" method="POST" enctype="multipart/form-data">
                                 <h3>Emote name</h3>
                                 <input type="text" name="code" id="code" required>
-                                <h3>Image </h3>
+                                <h3>Image</h3>
                                 <input type="file" name="file" id="file" accept=".gif,.jpg,.jpeg,.png,.webp" required>
 
                                 <div>
@@ -123,8 +127,8 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
                 image.src = e.target.result;
                 image.onload = () => {
                     let m = 1;
-                    let max_width = 128;
-                    let max_height = 128;
+                    let max_width = <?php echo EMOTE_MAX_SIZE[0] ?>;
+                    let max_height = <?php echo EMOTE_MAX_SIZE[1] ?>;
                     isImage = true;
 
                     for (let i = 3; i > 0; i--) {
@@ -153,9 +157,9 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
         let validCode = "";
 
         code.addEventListener("input", (e) => {
-            const regex = /^[a-zA-Z0-9]*$/;
+            const regex = <?php echo EMOTE_NAME_REGEX ?>;
 
-            if (regex.test(e.target.value) && e.target.value.length <= 100) {
+            if (regex.test(e.target.value) && e.target.value.length <= <?php echo EMOTE_NAME_MAX_LENGTH ?>) {
                 validCode = e.target.value;
             } else {
                 e.target.value = validCode;
@@ -196,9 +200,9 @@ if (!isset($_FILES["file"])) {
     exit;
 }
 
-$code = str_safe($_POST["code"] ?? "", 500);
+$code = str_safe($_POST["code"] ?? "", EMOTE_NAME_MAX_LENGTH);
 
-if ($code == "") {
+if ($code == "" || !preg_match(EMOTE_NAME_REGEX, $code)) {
     http_response_code(400);
     echo json_encode([
         "status_code" => 400,
@@ -273,7 +277,7 @@ if ($resized_image) {
 
 $db = null;
 
-if (isset($_SERVER["HTTP_ACCEPT"]) && $_SERVER["HTTP_ACCEPT"] == "application/json") {
+if (CLIENT_REQUIRES_JSON) {
     http_response_code(201);
     echo json_encode([
         "status_code" => 201,

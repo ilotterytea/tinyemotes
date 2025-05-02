@@ -185,8 +185,10 @@ if (CLIENT_REQUIRES_JSON) {
 
 <head>
     <title>
-        <?php echo $emote_sets != null ? (count($emote_sets) . " emotesets") : ('"' . $emote_set["name"] . '" emoteset') ?>
-        - alright.party
+        <?php
+        echo $emote_sets != null ? (count($emote_sets) . " emotesets") : ('"' . $emote_set["name"] . '" emoteset');
+        echo ' - ' . INSTANCE_NAME;
+        ?>
     </title>
     <link rel="stylesheet" href="/static/style.css">
 </head>

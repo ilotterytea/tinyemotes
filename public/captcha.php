@@ -2,12 +2,13 @@
 include_once "../src/config.php";
 include_once "../src/alert.php";
 
+session_start();
+
 if (!HCAPTCHA_ENABLE) {
-    generate_alert("/404.php", "Captcha is not enabled on this instance", 404);
+    $_SESSION["captcha_solved"] = true;
+    header("Location: /");
     exit;
 }
-
-session_start();
 
 if (isset($_SESSION["captcha_solved"]) && $_SESSION["captcha_solved"]) {
     header("Location: /");
@@ -18,7 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["h-captcha-response"]))
     // sending a request to captcha api
     $request = curl_init("https://hcaptcha.com/siteverify");
     curl_setopt($request, CURLOPT_POST, 1);
-    curl_setopt($request, CURLOPT_HTTPHEADER, ['User-Agent: alright.party/1.0']);
+    curl_setopt($request, CURLOPT_HTTPHEADER, [sprintf("User-Agent: %s/1.0", INSTANCE_NAME)]);
     curl_setopt(
         $request,
         CURLOPT_POSTFIELDS,
@@ -42,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["h-captcha-response"]))
 <html>
 
 <head>
-    <title>Resolving a hCaptcha for alright.party</title>
+    <title>Resolving a hCaptcha - <?php echo INSTANCE_NAME ?></title>
     <link rel="stylesheet" href="/static/style.css">
     <script src='https://www.hCaptcha.com/1/api.js' async defer></script>
 </head>

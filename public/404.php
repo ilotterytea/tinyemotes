@@ -1,10 +1,11 @@
 <?php
+include "../src/config.php";
 http_response_code(404);
 ?>
 <html>
 
 <head>
-    <title>Not found - alright.party</title>
+    <title>Not found - <?php echo INSTANCE_NAME ?></title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 

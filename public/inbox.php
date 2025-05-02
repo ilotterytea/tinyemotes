@@ -23,7 +23,7 @@ $stmt->execute([$_SESSION["user_id"]]);
 <html>
 
 <head>
-    <title>Inbox - alright.party</title>
+    <title>Inbox - <?php echo INSTANCE_NAME ?></title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 

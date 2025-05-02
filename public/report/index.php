@@ -5,6 +5,11 @@ include_once "../../src/partials.php";
 include_once "../../src/utils.php";
 include_once "../../src/alert.php";
 
+if (!REPORTS_ENABLE) {
+    generate_alert("/404.php", "Reports are disabled", 403);
+    exit;
+}
+
 if (!authorize_user(true)) {
     exit;
 }
@@ -53,7 +58,8 @@ if ($contents == "") {
 <html>
 
 <head>
-    <title><?php echo $report == null ? "Send a message to MODS" : "A message to MODS" ?> - alright.party</title>
+    <title><?php echo ($report == null ? "Send a message to MODS" : "A message to MODS") . ' - ' . INSTANCE_NAME ?>
+    </title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 

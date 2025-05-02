@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 <html>
 
 <head>
-    <title>Account management - alright.party</title>
+    <title>Account management - <?php echo INSTANCE_NAME ?></title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 

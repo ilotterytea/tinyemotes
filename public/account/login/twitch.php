@@ -1,10 +1,16 @@
 <?php
 include "../../../src/utils.php";
 include_once "../../../src/config.php";
+include_once "../../../src/utils.php";
 
-$client_id = "472prq7kqn0a21l5um2lz7374471pp";
-$client_secret = "koho369mw8p51di4fx34jm2ogdmbj2";
-$redirect_uri = "http://localhost:8000/account/login/twitch.php";
+if (!TWITCH_REGISTRATION_ENABLE) {
+    generate_alert("/404.php", "Registration via Twitch is disabled", 405);
+    exit;
+}
+
+$client_id = TWITCH_CLIENT_ID;
+$client_secret = TWITCH_SECRET_KEY;
+$redirect_uri = TWITCH_REDIRECT_URI;
 
 if (isset($_GET["error"])) {
     header("Location: /account/login");

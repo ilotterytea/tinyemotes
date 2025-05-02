@@ -5,6 +5,11 @@ include_once "../../src/partials.php";
 include_once "../../src/utils.php";
 include_once "../../src/alert.php";
 
+if (!REPORTS_ENABLE) {
+    generate_alert("/404.php", "Reports are disabled", 403);
+    exit;
+}
+
 if (!authorize_user(true)) {
     exit;
 }
@@ -25,7 +30,7 @@ $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <html>
 
 <head>
-    <title>Report list - alright.party</title>
+    <title>Report list - <?php echo INSTANCE_NAME ?></title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 

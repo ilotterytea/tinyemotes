@@ -4,6 +4,11 @@ include_once "../../src/config.php";
 include_once "../../src/utils.php";
 include_once "../../src/alert.php";
 
+if (!REPORTS_ENABLE) {
+    generate_alert("/404.php", "Reports are disabled", 403);
+    exit;
+}
+
 if (!authorize_user(true)) {
     exit;
 }
