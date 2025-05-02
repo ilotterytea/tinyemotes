@@ -1,6 +1,8 @@
 <?php
 include_once "../src/config.php";
 include_once "../src/accounts.php";
+include_once "../src/version.php";
+
 authorize_user();
 
 ?>
@@ -44,8 +46,21 @@ authorize_user();
                 ?>
             </div>
 
-            <p style="font-size:12px;">Serving <?php echo $count ?> gorillion emotes - Running <a
-                    href="https://github.com/ilotterytea/alrighttv">AlrightTV v0.1</a></p>
+            <p style="font-size:12px;">
+                Serving <?php echo $count ?> gorillion emotes -
+                Running
+                <?php
+                echo '<a href="' . TINYEMOTES_LINK . '">';
+                echo sprintf("%s v%s", TINYEMOTES_NAME, TINYEMOTES_VERSION);
+                echo '</a> ';
+
+                if (TINYEMOTES_COMMIT != null) {
+                    echo '<a href="' . sprintf("%s/tree/%s", TINYEMOTES_LINK, TINYEMOTES_COMMIT) . '">(Commit ';
+                    echo substr(TINYEMOTES_COMMIT, 0, 7);
+                    echo ')</a>';
+                }
+                ?>
+            </p>
         </div>
     </div>
 </body>
