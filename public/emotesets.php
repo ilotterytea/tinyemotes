@@ -146,6 +146,7 @@ if ($id == "global") {
 
         $emote_set["emotes"] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($emote_set["emotes"] as &$e) {
+            $e["ext"] = "webp";
             if ($e["uploaded_by"]) {
                 $stmt = $db->prepare("SELECT id, username FROM users WHERE id = ?");
                 $stmt->execute([$e["uploaded_by"]]);

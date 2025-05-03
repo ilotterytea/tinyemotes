@@ -180,6 +180,7 @@ while ($row = $stmt->fetch()) {
 
     $emote_set_emotes = $em_stmt->fetchAll(PDO::FETCH_ASSOC);
     foreach ($emote_set_emotes as &$e) {
+        $e["ext"] = "webp";
         if ($e["uploaded_by"]) {
             $uploaded_by_stmt = $db->prepare("SELECT id, username FROM users WHERE id = ?");
             $uploaded_by_stmt->execute([$e["uploaded_by"]]);
