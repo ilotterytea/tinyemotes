@@ -41,10 +41,10 @@ function str_safe(string $s, int|null $max_length, bool $remove_new_lines = true
 
 function format_timestamp(int $timestamp_secs)
 {
-    $days = floor($timestamp_secs / (60 * 60 * 24));
-    $hours = floor($timestamp_secs / (60 * 60) % 24);
-    $minutes = floor($timestamp_secs % (60 * 60) / 60);
-    $seconds = floor($timestamp_secs % 60);
+    $days = (int) floor($timestamp_secs / (60.0 * 60.0 * 24.0));
+    $hours = (int) floor(round($timestamp_secs / (60 * 60)) % 24);
+    $minutes = (int) floor(round($timestamp_secs % (60 * 60)) / 60);
+    $seconds = (int) floor($timestamp_secs % 60);
 
     if ($days == 0 && $hours == 0 && $minutes == 0) {
         return "$seconds second" . ($seconds > 1 ? "s" : "");
