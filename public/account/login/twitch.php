@@ -104,6 +104,13 @@ if ($row = $stmt->fetch()) {
     $user_name = $twitch_user["login"];
     $user_id = bin2hex(random_bytes(16));
 
+    // checking for duplicates
+    $stmt = $db->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
+    $stmt->execute([$user_name]);
+    $duplicates = intval($stmt->fetch()[0]);
+    if ($duplicates > 0) {
+        $user_name .= $duplicates + 1;
+    }
 
     $stmt = $db->prepare("INSERT INTO users(id, username, secret_key) VALUES (?, ?, ?)");
     if (!$stmt->execute([$user_id, $user_name, $user_secret_key])) {
