@@ -124,13 +124,13 @@ $stmt = null;
 
 if ($id != "") {
     $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
-    $stmt->execute([intval($id)]);
+    $stmt->execute([$id]);
 } else if ($alias_id != "") {
     $stmt = $db->prepare("SELECT u.* FROM users u
     INNER JOIN connections co ON (co.alias_id = ? AND co.platform = 'twitch')
     WHERE co.user_id = u.id
     ");
-    $stmt->execute([intval($alias_id)]);
+    $stmt->execute([$alias_id]);
 }
 
 $user = null;
@@ -155,19 +155,19 @@ $stmt->execute([$user->id()]);
 
 while ($row = $stmt->fetch()) {
     // getting more info about set
-    $set_stmt = $db->prepare("SELECT id, name, size FROM emote_sets WHERE id = ?");
+    $set_stmt = $db->prepare("SELECT id, name FROM emote_sets WHERE id = ?");
     $set_stmt->execute([$row["emote_set_id"]]);
     $set = $set_stmt->fetch();
 
     // getting info about emote set content
     $em_stmt = $db->prepare(
-        "SELECT e.id, e.mime, e.ext, e.created_at, e.uploaded_by, 
+        "SELECT e.id, e.created_at, e.uploaded_by, 
         CASE 
-            WHEN esc.name IS NOT NULL THEN esc.name 
+            WHEN esc.code IS NOT NULL THEN esc.code 
             ELSE e.code
         END AS code,
         CASE 
-            WHEN esc.name IS NOT NULL THEN e.code 
+            WHEN esc.code IS NOT NULL THEN e.code 
             ELSE NULL 
         END AS original_code
         FROM emotes e
@@ -190,7 +190,6 @@ while ($row = $stmt->fetch()) {
     $emote_set = [
         "id" => $set["id"],
         "name" => $set["name"],
-        "size" => $set["size"],
         "emotes" => $emote_set_emotes
     ];
 
@@ -285,7 +284,7 @@ if ($is_json) {
         "status_code" => 200,
         "message" => null,
         "data" => [
-            "id" => intval($user->id()),
+            "id" => $user->id(),
             "username" => $user->username(),
             "joined_at" => $user->joined_at(),
             "last_active_at" => $user->last_active_at(),
@@ -378,7 +377,7 @@ if ($is_json) {
                             }
                             ?>
                             <?php
-                            $stmt = $db->prepare("SELECT code, ext FROM emotes WHERE id = ?");
+                            $stmt = $db->prepare("SELECT code FROM emotes WHERE id = ?");
                             $stmt->execute([$fav_emote]);
 
                             if ($row = $stmt->fetch()) {
@@ -386,7 +385,7 @@ if ($is_json) {
                                 echo '<th><img src="/static/img/icons/heart.png"> Favorite emote</th>';
                                 echo '<td>';
                                 echo "<a href=\"/emotes?id=$fav_emote\">";
-                                echo $row["code"] . ' <img src="/static/userdata/emotes/' . $fav_emote . '/1x.' . $row["ext"] . '" width="16" height="16">';
+                                echo $row["code"] . ' <img src="/static/userdata/emotes/' . $fav_emote . '/1x.webp" width="16" height="16">';
                                 echo '</a></td></tr>';
                             }
                             ?>
@@ -398,7 +397,7 @@ if ($is_json) {
                         <a href="/message/send.php?user=<?php echo $user->id() ?>">Send a message</a>
                         <?php
                         if (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_report"]) {
-                            echo '<a href="/report?user_id=<?php echo $user->id() ?>">Report user</a>';
+                            echo '<a href="/report?user_id=' . $user->id() . '">Report user</a>';
                         }
                         ?>
                     </section>
@@ -415,14 +414,10 @@ if ($is_json) {
                             <?php
                             if (!empty($emote_sets)) {
                                 foreach ($emote_sets as $set_row) { ?>
-                                    <a href="/emotesets?id=<?php echo $set_row["id"] ?>" class="box">
+                                    <a href="/emotesets.php?id=<?php echo $set_row["id"] ?>" class="box">
                                         <div>
                                             <?php
                                             echo '<p>' . $set_row["name"] . '</p>';
-
-                                            if ($set_row["size"]) {
-                                                echo '<p class="circled black">' . $set_row["size"] . '</p>';
-                                            }
                                             ?>
                                         </div>
 
@@ -430,7 +425,7 @@ if ($is_json) {
                                             <?php
                                             for ($i = 0; $i < clamp(count($set_row["emotes"]), 0, 5); $i++) {
                                                 $e = &$set_row["emotes"][$i];
-                                                echo '<img src="/static/userdata/emotes/' . $e["id"] . '/1x.' . $e["ext"] . '">';
+                                                echo '<img src="/static/userdata/emotes/' . $e["id"] . '/1x.webp">';
                                             }
                                             ?>
                                         </div>
@@ -453,7 +448,7 @@ if ($is_json) {
                                 if (!empty($active_emote_set["emotes"])) {
                                     foreach ($active_emote_set["emotes"] as $emote_row) {
                                         echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
-                                        echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.' . $emote_row["ext"] . '" alt="' . $emote_row["code"] . '"/>';
+                                        echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.webp" alt="' . $emote_row["code"] . '"/>';
                                         echo '<h1>' . $emote_row["code"] . '</h1>';
                                         echo '<p>' . ($emote_row["uploaded_by"] == null ? (ANONYMOUS_DEFAULT_NAME . "*") : $emote_row["uploaded_by"]["username"]) . '</p>';
                                         echo '</a>';
@@ -480,7 +475,7 @@ if ($is_json) {
                                 <?php
                                 foreach ($uploaded_emotes as $emote_row) {
                                     echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
-                                    echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.' . $emote_row["ext"] . '" alt="' . $emote_row["code"] . '"/>';
+                                    echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.webp" alt="' . $emote_row["code"] . '"/>';
                                     echo '<h1>' . $emote_row["code"] . '</h1>';
                                     echo '</a>';
                                 }

@@ -69,9 +69,9 @@ if (empty($twitch_user["data"])) {
 $twitch_user = $twitch_user["data"][0];
 
 // saving it
-$_SESSION["twitch_access_token"] = $response["access_token"];
-$_SESSION["twitch_refresh_token"] = $response["refresh_token"];
-$_SESSION["twitch_expires_on"] = time() + intval($response["expires_in"]);
+$twitch_access_token = $response["access_token"];
+$twitch_refresh_token = $response["refresh_token"];
+$twitch_expires_on = time() + intval($response["expires_in"]);
 
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
@@ -102,21 +102,21 @@ if ($row = $stmt->fetch()) {
 } else {
     $user_secret_key = generate_random_string(32);
     $user_name = $twitch_user["login"];
+    $user_id = bin2hex(random_bytes(16));
 
-    $stmt = $db->prepare("INSERT INTO users(username, secret_key) VALUES (?, ?)");
-    if (!$stmt->execute([$user_name, $user_secret_key])) {
+
+    $stmt = $db->prepare("INSERT INTO users(id, username, secret_key) VALUES (?, ?, ?)");
+    if (!$stmt->execute([$user_id, $user_name, $user_secret_key])) {
         $db = null;
         echo "Failed to create a user";
         exit;
     }
 
-    $user_id = $db->lastInsertId();
-
     $stmt = $db->prepare("INSERT INTO connections(user_id, alias_id, platform, data) VALUES (?, ?, 'twitch', ?)");
     $stmt->execute([
         $user_id,
         $twitch_user["id"],
-        $_SESSION["twitch_access_token"] . ":" . $_SESSION["twitch_refresh_token"] . ":" . $_SESSION["twitch_expires_on"]
+        sprintf("%s:%s:%s", $twitch_access_token, $twitch_refresh_token, $twitch_expires_on)
     ]);
 }
 

@@ -27,11 +27,11 @@ if ($id == "global") {
         $stmt = $db->prepare("SELECT 
         e.*, 
         CASE 
-            WHEN esc.name IS NOT NULL THEN esc.name 
+            WHEN esc.code IS NOT NULL THEN esc.code 
             ELSE e.code
         END AS code,
         CASE 
-            WHEN esc.name IS NOT NULL THEN e.code 
+            WHEN esc.code IS NOT NULL THEN e.code 
             ELSE NULL 
         END AS original_code
         FROM emotes e
@@ -63,11 +63,11 @@ if ($id == "global") {
     foreach ($emote_sets as &$e) {
         $stmt = $db->prepare("SELECT e.*, 
         CASE 
-            WHEN esc.name IS NOT NULL THEN esc.name 
+            WHEN esc.code IS NOT NULL THEN esc.code 
             ELSE e.code
         END AS code,
         CASE 
-            WHEN esc.name IS NOT NULL THEN e.code 
+            WHEN esc.code IS NOT NULL THEN e.code 
             ELSE NULL 
         END AS original_code
         FROM emotes e
@@ -101,11 +101,11 @@ if ($id == "global") {
 
         $stmt = $db->prepare("SELECT e.*, 
         CASE 
-            WHEN esc.name IS NOT NULL THEN esc.name 
+            WHEN esc.code IS NOT NULL THEN esc.code 
             ELSE e.code
         END AS code,
         CASE 
-            WHEN esc.name IS NOT NULL THEN e.code 
+            WHEN esc.code IS NOT NULL THEN e.code 
             ELSE NULL 
         END AS original_code
         FROM emotes e
@@ -124,7 +124,6 @@ if ($id == "global") {
         }
     }
 } else {
-    $id = intval($id);
     $stmt = $db->prepare("SELECT * FROM emote_sets WHERE id = ?");
     $stmt->execute([$id]);
 
@@ -133,11 +132,11 @@ if ($id == "global") {
 
         $stmt = $db->prepare("SELECT e.*, 
         CASE 
-            WHEN esc.name IS NOT NULL THEN esc.name 
+            WHEN esc.code IS NOT NULL THEN esc.code 
             ELSE e.code
         END AS code,
         CASE 
-            WHEN esc.name IS NOT NULL THEN e.code 
+            WHEN esc.code IS NOT NULL THEN e.code 
             ELSE NULL 
         END AS original_code
         FROM emotes e
@@ -213,17 +212,13 @@ if (CLIENT_REQUIRES_JSON) {
                                         <div>
                                             <?php
                                             echo '<p>' . $set_row["name"] . '</p>';
-
-                                            if ($set_row["size"]) {
-                                                echo '<p class="circled black">' . $set_row["size"] . '</p>';
-                                            }
                                             ?>
                                         </div>
 
                                         <div>
                                             <?php
                                             foreach ($set_row["emotes"] as $emm) {
-                                                echo '<img src="/static/userdata/emotes/' . $emm["id"] . '/1x.' . $emm["ext"] . '">';
+                                                echo '<img src="/static/userdata/emotes/' . $emm["id"] . '/1x.webp">';
                                             }
                                             ?>
                                         </div>
@@ -243,7 +238,7 @@ if (CLIENT_REQUIRES_JSON) {
                             } else if (!empty($emote_set)) {
                                 foreach ($emote_set["emotes"] as $emote_row) {
                                     echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
-                                    echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.' . $emote_row["ext"] . '" alt="' . $emote_row["code"] . '"/>';
+                                    echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.webp" alt="' . $emote_row["code"] . '"/>';
                                     echo '<h1>' . $emote_row["code"] . '</h1>';
                                     echo '<p>' . ($emote_row["uploaded_by"] == null ? (ANONYMOUS_DEFAULT_NAME . "*") : $emote_row["uploaded_by"]["username"]) . '</p>';
                                     echo '</a>';

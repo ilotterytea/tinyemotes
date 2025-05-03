@@ -60,7 +60,7 @@ if ($emote_id > 0) {
                         <?php
                         foreach ($emote_results as $row) {
                             echo '<a href="/system/emotes?id=' . $row["id"] . '">';
-                            echo '<img src="/static/userdata/emotes/' . $row["id"] . '/1x.' . $row["ext"] . '">';
+                            echo '<img src="/static/userdata/emotes/' . $row["id"] . '/1x.webp">';
                             echo '<b>' . $row["code"] . '</b>';
                             echo '<span style="font-size:10px;"> by ';
 
@@ -86,11 +86,11 @@ if ($emote_id > 0) {
                             <div class="box navtab">Emote - <?php echo $emote["code"] ?></div>
                             <div class="box content">
                                 <div class="emote-showcase">
-                                    <img src="/static/userdata/emotes/<?php echo $emote["id"] . '/' . '1x.' . $emote["ext"] ?>"
+                                    <img src="/static/userdata/emotes/<?php echo $emote["id"] ?>/1x.webp"
                                         alt="<?php echo $emote["id"] ?>">
-                                    <img src="/static/userdata/emotes/<?php echo $emote["id"] . '/' . '2x.' . $emote["ext"] ?>"
+                                    <img src="/static/userdata/emotes/<?php echo $emote["id"] ?>/2x.webp"
                                         alt="<?php echo $emote["id"] ?>">
-                                    <img src="/static/userdata/emotes/<?php echo $emote["id"] . '/' . '3x.' . $emote["ext"] ?>"
+                                    <img src="/static/userdata/emotes/<?php echo $emote["id"] ?>/3x.webp"
                                         alt="<?php echo $emote["id"] ?>">
                                 </div>
                             </div>

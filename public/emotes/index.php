@@ -61,7 +61,7 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
         array_push($emotes, new Emote(
             $row["id"],
             $row["code"],
-            $row["ext"],
+            "webp",
             intval(strtotime($row["created_at"])),
             $uploader,
             $row["is_in_user_set"],
@@ -73,7 +73,7 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
     return $emotes;
 }
 
-function display_emote(PDO &$db, int $id)
+function display_emote(PDO &$db, string $id)
 {
     $stmt = $db->prepare("SELECT e.*, COALESCE(COUNT(r.rate), 0) as total_rating,
     COALESCE(ROUND(AVG(r.rate), 2), 0) AS average_rating
@@ -89,7 +89,7 @@ function display_emote(PDO &$db, int $id)
             $emote = new Emote(
                 $row["id"],
                 $row["code"],
-                $row["ext"],
+                "webp",
                 intval(strtotime($row["created_at"])),
                 $row["uploaded_by"],
                 false,
@@ -130,14 +130,14 @@ $total_pages = 0;
 $search = "%" . ($_GET["q"] ?? "") . "%";
 $sort_by = $_GET["sort_by"] ?? "";
 
-if ($id == "" || !is_numeric($id)) {
+if (empty($id)) {
     $emotes = display_list_emotes($db, $search, $sort_by, $page, $limit);
     $stmt = $db->prepare("SELECT COUNT(*) FROM emotes WHERE code LIKE ? AND visibility = 1");
     $stmt->execute([$search]);
     $total_emotes = $stmt->fetch()[0];
     $total_pages = ceil($total_emotes / $limit);
 } else {
-    $emote = display_emote($db, intval($id));
+    $emote = display_emote($db, $id);
 }
 
 if (CLIENT_REQUIRES_JSON) {
@@ -180,14 +180,14 @@ if (CLIENT_REQUIRES_JSON) {
                             <?php echo $emote != null ? "Emote - " . $emote->get_code() : "$total_emotes Emotes - Page $page/$total_pages" ?>
                         </div>
                         <?php
-                        if (empty($emotes)) { ?>
+                        if ($emote != null) { ?>
                             <div class="box content">
                                 <div class="emote-showcase">
-                                    <img src="/static/userdata/emotes/<?php echo $emote->get_id() . '/' . '1x.' . $emote->get_ext() ?>"
+                                    <img src="/static/userdata/emotes/<?php echo $emote->get_id() ?>/1x.webp"
                                         alt="<?php echo $emote->get_code() ?>">
-                                    <img src="/static/userdata/emotes/<?php echo $emote->get_id() . '/' . '2x.' . $emote->get_ext() ?>"
+                                    <img src="/static/userdata/emotes/<?php echo $emote->get_id() ?>/2x.webp"
                                         alt="<?php echo $emote->get_code() ?>">
-                                    <img src="/static/userdata/emotes/<?php echo $emote->get_id() . '/' . '3x.' . $emote->get_ext() ?>"
+                                    <img src="/static/userdata/emotes/<?php echo $emote->get_id() ?>/3x.webp"
                                         alt="<?php echo $emote->get_code() ?>">
                                 </div>
                             </div>
@@ -200,14 +200,14 @@ if (CLIENT_REQUIRES_JSON) {
                                     $added = false;
 
                                     if (isset($_SESSION["user_emote_set_id"])) {
-                                        $stmt = $db->prepare("SELECT id, name FROM emote_set_contents WHERE emote_set_id = ? AND emote_id = ?");
+                                        $stmt = $db->prepare("SELECT id, code FROM emote_set_contents WHERE emote_set_id = ? AND emote_id = ?");
                                         $stmt->execute([$_SESSION["user_emote_set_id"], $emote->get_id()]);
 
                                         $added = false;
 
                                         if ($row = $stmt->fetch()) {
                                             $added = true;
-                                            $emote_current_name = $row["name"] ?? $emote->get_code();
+                                            $emote_current_name = $row["code"] ?? $emote->get_code();
                                         }
                                     }
 
@@ -419,7 +419,7 @@ if (CLIENT_REQUIRES_JSON) {
                                         echo '<img src="/static/img/icons/yes.png" class="emote-check" />';
                                     }
 
-                                    echo '<img src="/static/userdata/emotes/' . $e->get_id() . '/2x.' . $e->get_ext() . '" alt="' . $e->get_code() . '"/>';
+                                    echo '<img src="/static/userdata/emotes/' . $e->get_id() . '/2x.webp" alt="' . $e->get_code() . '"/>';
                                     echo '<h1>' . $e->get_code() . '</h1>';
                                     echo '<p>' . ($e->get_uploaded_by() == null ? (ANONYMOUS_DEFAULT_NAME . "*") : $e->get_uploaded_by()["username"]) . '</p>';
                                     echo '</a>';

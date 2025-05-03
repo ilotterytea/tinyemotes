@@ -109,7 +109,7 @@ switch ($action) {
             $value = null;
         }
 
-        $stmt = $db->prepare("UPDATE emote_set_contents SET name = ? WHERE emote_set_id = ? AND emote_id = ?");
+        $stmt = $db->prepare("UPDATE emote_set_contents SET code = ? WHERE emote_set_id = ? AND emote_id = ?");
         $stmt->execute([$value, $emote_set_id, $emote_id]);
 
         $db = null;

@@ -225,6 +225,11 @@ if (is_null(list($mime, $ext) = get_mime_and_ext($image["tmp_name"]))) {
     exit;
 }
 
+$notes = str_safe($_POST["notes"] ?? "", EMOTE_COMMENT_MAX_LENGTH);
+if (empty($notes)) {
+    $notes = null;
+}
+
 $visibility = clamp(intval($_POST["visibility"], EMOTE_VISIBILITY_DEFAULT), 0, 2);
 
 if (MOD_EMOTES_APPROVE && $visibility == 1 && EMOTE_VISIBILITY_DEFAULT != 1) {
@@ -234,21 +239,9 @@ if (MOD_EMOTES_APPROVE && $visibility == 1 && EMOTE_VISIBILITY_DEFAULT != 1) {
 // creating a new emote record
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
-$stmt = $db->prepare("INSERT INTO emotes(code, mime, ext, uploaded_by, visibility) VALUES (?, ?, ?, ?, ?)");
-$stmt->execute([$code, $mime, $ext, $uploaded_by, $visibility]);
-
-$id = $db->lastInsertId();
-
-if ($id == 0) {
-    $db = null;
-    http_response_code(500);
-    echo json_encode([
-        "status_code" => 500,
-        "message" => "Failed to create an emote record",
-        "data" => null
-    ]);
-    exit;
-}
+$id = bin2hex(random_bytes(16));
+$stmt = $db->prepare("INSERT INTO emotes(id, code, notes, uploaded_by, visibility) VALUES (?, ?, ?, ?, ?)");
+$stmt->execute([$id, $code, $notes, $uploaded_by, $visibility]);
 
 $path = "../static/userdata/emotes/$id";
 

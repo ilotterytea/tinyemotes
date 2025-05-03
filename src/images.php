@@ -12,7 +12,7 @@ function resize_image(string $src_path, string $dst_path, int $max_width, int $m
     $imagick = new Imagick();
 
     $imagick->readImage($src_path);
-    $format = "." . strtolower($imagick->getImageFormat());
+    $format = ".webp";
 
     if (!$set_format) {
         $format = "";

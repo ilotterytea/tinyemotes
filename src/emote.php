@@ -65,7 +65,7 @@ class Emote
 
 function html_random_emote(PDO &$db)
 {
-    $stmt = $db->prepare("SELECT id, ext, code FROM emotes WHERE visibility = 1 AND is_featured = false ORDER BY RAND() LIMIT 1");
+    $stmt = $db->prepare("SELECT id, code FROM emotes WHERE visibility = 1 ORDER BY RAND() LIMIT 1");
     $stmt->execute();
 
     if ($row = $stmt->fetch()) {
@@ -77,8 +77,8 @@ function html_random_emote(PDO &$db)
             </div>
             <div class="box content center">
                 <a href="/emotes?id=<?php echo $row["id"] ?>">
-                    <img src="/static/userdata/emotes/<?php echo $row["id"] . '/3x.' . $row["ext"] ?>"
-                        alt="<?php echo $row["code"] ?>" width="192">
+                    <img src="/static/userdata/emotes/<?php echo $row["id"] ?>/3x.webp" alt="<?php echo $row["code"] ?>"
+                        width="192">
                 </a>
             </div>
         </section>
@@ -89,7 +89,10 @@ function html_random_emote(PDO &$db)
 
 function html_featured_emote(PDO &$db)
 {
-    $stmt = $db->prepare("SELECT id, ext, code FROM emotes WHERE visibility = 1 AND is_featured = true ORDER BY updated_at DESC LIMIT 1");
+    $stmt = $db->prepare("SELECT e.id, e.code FROM emotes e
+    INNER JOIN emote_sets es ON es.is_featured = TRUE
+    INNER JOIN emote_set_contents esc ON es.id = esc.emote_set_id
+    WHERE e.visibility = 1 AND e.id = esc.emote_id ORDER BY esc.added_at DESC LIMIT 1");
     $stmt->execute();
 
     if ($row = $stmt->fetch()) {
@@ -101,8 +104,8 @@ function html_featured_emote(PDO &$db)
             </div>
             <div class="box content center">
                 <a href="/emotes?id=<?php echo $row["id"] ?>">
-                    <img src="/static/userdata/emotes/<?php echo $row["id"] . '/3x.' . $row["ext"] ?>"
-                        alt="<?php echo $row["code"] ?>" width="192">
+                    <img src="/static/userdata/emotes/<?php echo $row["id"] ?>/3x.webp" alt="<?php echo $row["code"] ?>"
+                        width="192">
                 </a>
             </div>
         </section>

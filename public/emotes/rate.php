@@ -18,7 +18,7 @@ if (isset($_SESSION["user_role"]) && !$_SESSION["user_role"]["permission_rate"])
     exit;
 }
 
-$id = intval(str_safe($_POST["id"] ?? "0", 10));
+$id = str_safe($_POST["id"] ?? "0", 32);
 $rate = intval(str_safe($_POST["rate"] ?? "0", 2));
 
 if ($id == 0 || $rate == 0) {

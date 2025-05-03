@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS users (
-    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    id CHAR(32) NOT NULL PRIMARY KEY DEFAULT REPLACE(UUID(), '-', ''),
     username TEXT NOT NULL UNIQUE,
     password TEXT,
     secret_key TEXT NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS connections (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(id),
+    user_id CHAR(32) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     alias_id TEXT NOT NULL,
     platform TEXT NOT NULL,
     data TEXT NOT NULL,
@@ -17,53 +17,49 @@ CREATE TABLE IF NOT EXISTS connections (
 );
 
 CREATE TABLE IF NOT EXISTS emotes (
-    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    id CHAR(32) NOT NULL PRIMARY KEY DEFAULT REPLACE(UUID(),'-',''),
     code TEXT NOT NULL,
-    mime TEXT NOT NULL,
-    ext TEXT NOT NULL,
-    uploaded_by INTEGER REFERENCES users(id),
+    notes TEXT,
+    uploaded_by CHAR(32) REFERENCES users(id),
     created_at TIMESTAMP NOT NULL DEFAULT UTC_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL,
-    visibility INTEGER NOT NULL,
-    is_featured BOOLEAN NOT NULL DEFAULT false
+    visibility INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS emote_sets (
-    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    owner_id INTEGER NOT NULL REFERENCES users(id),
-    linked_to INTEGER REFERENCES emote_sets(id),
+    id CHAR(32) NOT NULL PRIMARY KEY DEFAULT REPLACE(UUID(),'-',''),
+    owner_id CHAR(32) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
-    size INTEGER,
-    is_global BOOLEAN NOT NULL DEFAULT false
+    is_global BOOLEAN NOT NULL DEFAULT false,
+    is_featured BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS emote_set_contents (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    emote_set_id INTEGER NOT NULL REFERENCES emote_sets(id),
-    emote_id INTEGER NOT NULL REFERENCES emotes(id),
-    name TEXT,
-    added_by INTEGER NOT NULL REFERENCES users(id),
+    emote_set_id CHAR(32) NOT NULL REFERENCES emote_sets(id) ON DELETE CASCADE,
+    emote_id CHAR(32) NOT NULL REFERENCES emotes(id) ON DELETE CASCADE,
+    code TEXT,
+    added_by CHAR(32) REFERENCES users(id),
     added_at TIMESTAMP NOT NULL DEFAULT UTC_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS acquired_emote_sets (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    user_id INTEGER NOT NULL,
-    emote_set_id INTEGER NOT NULL,
+    user_id CHAR(32) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    emote_set_id CHAR(32) NOT NULL REFERENCES emote_sets(id) ON DELETE CASCADE,
     is_default BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS ratings (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(id),
-    emote_id INTEGER NOT NULL REFERENCES emotes(id),
+    user_id CHAR(32) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    emote_id CHAR(32) NOT NULL REFERENCES emotes(id) ON DELETE CASCADE,
     rate INTEGER NOT NULL,
     rated_at TIMESTAMP NOT NULL DEFAULT UTC_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS inbox_messages (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    recipient_id INTEGER NOT NULL REFERENCES users(id),
+    recipient_id CHAR(32) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     message_type INTEGER NOT NULL,
     contents TEXT NOT NULL,
     link TEXT,
@@ -73,10 +69,10 @@ CREATE TABLE IF NOT EXISTS inbox_messages (
 
 CREATE TABLE IF NOT EXISTS reports (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    sender_id INTEGER NOT NULL REFERENCES users(id),
+    sender_id CHAR(32) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     contents TEXT NOT NULL,
     sent_at TIMESTAMP NOT NULL DEFAULT UTC_TIMESTAMP,
-    resolved_by INTEGER REFERENCES users(id),
+    resolved_by CHAR(32) REFERENCES users(id),
     response_message TEXT
 );
 
@@ -103,29 +99,29 @@ CREATE TABLE IF NOT EXISTS roles (
 
 CREATE TABLE IF NOT EXISTS role_assigns(
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    user_id INTEGER NOT NULL UNIQUE REFERENCES users(id),
-    role_id INTEGER NOT NULL REFERENCES roles(id)
+    user_id CHAR(32) NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    role_id INTEGER NOT NULL REFERENCES roles(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS mod_actions(
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(id),
-    emote_id INTEGER NOT NULL REFERENCES emotes(id),
+    user_id CHAR(32) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    emote_id CHAR(32) NOT NULL REFERENCES emotes(id) ON DELETE CASCADE,
     verdict INTEGER NOT NULL,
     comment TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT UTC_TIMESTAMP
 );
 
----------------------------
---       INSERTIONS      --
----------------------------
+-- -------------------------
+--       INSERTIONS      
+-- -------------------------
 
 -- CREATING A ROLE FOR USERS
 INSERT IGNORE INTO roles(id, name) VALUES (1, 'User');
 
----------------------------
---       TRIGGERS        --
----------------------------
+-- -------------------------
+--       TRIGGERS        
+-- -------------------------
 
 -- CREATE EMOTESET AND ASSIGN ROLE FOR NEW USER
 DELIMITER $$

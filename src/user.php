@@ -1,7 +1,7 @@
 <?php
 class User
 {
-    private int $id;
+    private string $id;
     private string $username;
     private int $joined_at;
     private int $last_active_at;
