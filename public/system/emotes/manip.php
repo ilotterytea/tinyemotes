@@ -19,7 +19,7 @@ if (!isset($_POST["id"], $_POST["action"])) {
     exit;
 }
 
-$id = intval($_POST["id"], 0);
+$id = str_safe($_POST["id"], 32);
 $action = $_POST["action"];
 
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
