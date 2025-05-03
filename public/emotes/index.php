@@ -413,7 +413,7 @@ if (CLIENT_REQUIRES_JSON) {
                             <div class="box content items">
                                 <?php
                                 foreach ($emotes as $e) {
-                                    echo '<a class="box emote" href="emotes?id=' . $e->get_id() . '">';
+                                    echo '<a class="box emote" href="/emotes?id=' . $e->get_id() . '">';
 
                                     if ($e->is_added_by_user()) {
                                         echo '<img src="/static/img/icons/yes.png" class="emote-check" />';
