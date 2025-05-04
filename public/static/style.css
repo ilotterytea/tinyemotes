@@ -99,6 +99,10 @@ form {
     flex-direction: row;
 }
 
+.screenshots img {
+    height: 128px;
+}
+
 /** 
 ------------
    COUNTER

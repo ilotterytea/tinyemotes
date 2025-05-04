@@ -27,7 +27,7 @@ authorize_user();
                     echo '<a href="/emotes/upload.php">Upload</a>';
                 } ?>
                 <a href="/account">Account</a>
-                <a href="/software">Chat clients</a>
+                <a href="/software.php">Chat clients & Tools</a>
             </div>
 
             <form action="/emotes/search.php" method="get" class="row">
