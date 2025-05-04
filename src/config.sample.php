@@ -1,6 +1,7 @@
 <?php
 // INSTANCE
 define("INSTANCE_NAME", "TinyEmotes");
+define("INSTANCE_STATIC_FOLDER", "static"); // Static folder. Used only in /404.php.
 
 // DATABASE
 define("DB_USER", "ENTER_DATABASE_USER"); // Database user. MANDATORY!

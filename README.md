@@ -53,6 +53,11 @@ server {
     root /www/tinyemotesinstance/public;
     index index.php;
 
+    location ~ ^/static/?(.*)$ {
+        root /www/tinyemotesinstance/public;
+        try_files /custom_static/$1 /static/$1 =404;
+    }
+
     location / {
 	    try_files $uri $uri/ /index.php?$query_string;
     }

@@ -2,3 +2,4 @@
 userdata/
 *.db
 config.php
+custom_static/

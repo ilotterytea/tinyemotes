@@ -31,7 +31,7 @@ $reason = str_safe($_GET["error_reason"] ?? "Not found", 200);
 
             <section style="position: absolute; right: 6px; bottom: 6px;">
                 <img src="/static/img/404/<?php
-                $files = scandir("static/img/404");
+                $files = scandir(INSTANCE_STATIC_FOLDER . "/img/404");
                 array_splice($files, 0, 2);
                 echo $files[random_int(0, count($files) - 1)];
                 ?>" alt=""></img>
