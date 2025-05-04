@@ -38,7 +38,7 @@ authorize_user();
             <div class="counter">
                 <?php
                 $db = new PDO(DB_URL, DB_USER, DB_PASS);
-                $results = $db->query("SELECT COUNT(*) FROM emotes");
+                $results = $db->query("SELECT COUNT(*) FROM emotes WHERE visibility = 1");
                 $count = $results->fetch()[0];
 
                 foreach (str_split($count) as $c) {
