@@ -23,7 +23,7 @@ if (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_upload"]
     $uploader_name = $_SESSION["user_name"] ?? ANONYMOUS_DEFAULT_NAME;
 }
 
-function abort_upload(string $path, PDO $db, string $id, string $response_text, int $response_code = 400)
+function abort_upload(string $path, PDO $db, string $id)
 {
     $stmt = $db->prepare("DELETE FROM emotes WHERE id = ?");
     $stmt->execute([$id]);
@@ -31,8 +31,6 @@ function abort_upload(string $path, PDO $db, string $id, string $response_text, 
 
     array_map("unlink", glob("$path/*.*"));
     rmdir($path);
-    http_response_code($response_code);
-    exit($response_text);
 }
 
 include "../../src/utils.php";
@@ -59,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
                 <?php html_navigation_bar() ?>
 
                 <section class="content" style="width: 50%;">
+                    <?php display_alert() ?>
                     <section class="box">
                         <div class="box navtab">
                             <div>
@@ -215,16 +214,6 @@ if ($code == "" || !preg_match(EMOTE_NAME_REGEX, $code)) {
 
 $image = $_FILES["file"];
 
-if (is_null(list($mime, $ext) = get_mime_and_ext($image["tmp_name"]))) {
-    http_response_code(400);
-    echo json_encode([
-        "status_code" => 400,
-        "message" => "Not a valid image",
-        "data" => null
-    ]);
-    exit;
-}
-
 $notes = str_safe($_POST["notes"] ?? "", EMOTE_COMMENT_MAX_LENGTH);
 if (empty($notes)) {
     $notes = null;
@@ -250,23 +239,23 @@ if (!is_dir($path)) {
 }
 
 // resizing the image
-
-// 3x image
-$resized_image = resize_image($image["tmp_name"], "$path/3x", $max_width, $max_height);
-if ($resized_image) {
-    abort_upload($path, $db, $id, $resized_image);
+if ($err = resize_image($image["tmp_name"], "$path/3x", $max_width, $max_height)) {
+    error_log("Error processing image: $err");
+    generate_alert("/emotes/upload.php", "Error occurred while processing the image ($err)", 500);
+    abort_upload($path, $db, $id);
+    exit;
 }
-
-// 2x image
-$resized_image = resize_image($image["tmp_name"], "$path/2x", $max_width / 2, $max_height / 2);
-if ($resized_image) {
-    abort_upload($path, $db, $id, $resized_image);
+if ($err = resize_image($image["tmp_name"], "$path/2x", $max_width / 2, $max_height / 2)) {
+    error_log("Error processing image: $err");
+    generate_alert("/emotes/upload.php", "Error occurred while processing the image ($err)", 500);
+    abort_upload($path, $db, $id);
+    exit;
 }
-
-// 1x image
-$resized_image = resize_image($image["tmp_name"], "$path/1x", $max_width / 4, $max_height / 4);
-if ($resized_image) {
-    abort_upload($path, $db, $id, $resized_image);
+if ($err = resize_image($image["tmp_name"], "$path/1x", $max_width / 4, $max_height / 4)) {
+    error_log("Error processing image: $err");
+    generate_alert("/emotes/upload.php", "Error occurred while processing the image ($err)", 500);
+    abort_upload($path, $db, $id);
+    exit;
 }
 
 $db = null;
