@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
             <div class="wrapper">
                 <?php html_navigation_bar() ?>
 
-                <section class="content" style="width: 50%;">
+                <section class="content" style="width: 400px;">
                     <?php display_alert() ?>
                     <section class="box">
                         <div class="box navtab">
@@ -67,20 +67,27 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
                         </div>
                         <div class="box content">
                             <form action="/emotes/upload.php" method="POST" enctype="multipart/form-data">
-                                <h3>Emote name</h3>
+                                <h3>Emote name<span style="color:red;">*</span></h3>
                                 <input type="text" name="code" id="code" required>
-                                <h3>Image</h3>
+                                <h3>Image<span style="color:red;">*</span></h3>
                                 <input type="file" name="file" id="file" accept=".gif,.jpg,.jpeg,.png,.webp" required>
 
                                 <div>
-                                    <label for="visibility">Emote visibility: </label>
+                                    <label for="visibility" class="inline">Emote visibility: </label>
                                     <select name="visibility" id="form-visibility">
                                         <option value="1">Public</option>
                                         <option value="0">Unlisted</option>
                                     </select><br>
                                     <p id="form-visibility-description" style="font-size: 10px;">test</p>
-                                    <label for="tos">Do you accept <a href="/rules">the rules</a>?</label>
-                                    <input type="checkbox" name="tos" required>
+                                </div>
+
+                                <label for="notes">Approval notes (optional)</label>
+                                <textarea name="notes" id="form-notes"></textarea>
+
+                                <div>
+                                    <label for="tos" class="inline">Do you accept <a href="/rules">the rules</a>?<span
+                                            style="color:red;">*</span></label>
+                                    <input type="checkbox" name="tos" value="1" required>
                                 </div>
 
                                 <button type="submit" id="upload-button">Upload as

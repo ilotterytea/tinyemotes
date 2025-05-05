@@ -15,8 +15,6 @@ if (!authorize_user(true) || !$_SESSION["user_role"]["permission_approve_emotes"
     exit;
 }
 
-$emote_id = max(0, intval($_GET["id"] ?? "0"));
-
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
 $emote_results = $db->query("SELECT e.*, u.username as uploader_name
 FROM emotes e
@@ -28,13 +26,13 @@ LIMIT 25
 
 $emote = $emote_results[0] ?? null;
 
-if ($emote_id > 0) {
+if (isset($_GET["id"])) {
     $stmt = $db->prepare("SELECT e.*, u.username as uploader_name
         FROM emotes e
         LEFT JOIN users u ON u.id = e.uploaded_by
         WHERE e.visibility = 2 AND e.id = ?
         LIMIT 1");
-    $stmt->execute([$emote_id]);
+    $stmt->execute([$_GET["id"]]);
     $emote = $stmt->fetch(PDO::FETCH_ASSOC) ?? null;
 }
 
@@ -117,9 +115,9 @@ if ($emote_id > 0) {
                                     $username = ANONYMOUS_DEFAULT_NAME;
                                     $link = "#";
 
-                                    if ($row["uploader_name"] != null) {
-                                        $username = $row["uploader_name"];
-                                        $link = '/users.php?id=' . $row["uploaded_by"];
+                                    if ($emote["uploader_name"] != null) {
+                                        $username = $emote["uploader_name"];
+                                        $link = '/users.php?id=' . $emote["uploaded_by"];
                                     }
 
                                     echo "<a href=\"$link\">";
@@ -127,13 +125,13 @@ if ($emote_id > 0) {
                                     echo "</a>";
 
                                     echo ', <span title="';
-                                    echo date("M d, Y H:i:s", strtotime($row["created_at"]));
-                                    echo ' UTC">about ' . format_timestamp(time() - strtotime($row["created_at"])) . " ago</span>";
+                                    echo date("M d, Y H:i:s", strtotime($emote["created_at"]));
+                                    echo ' UTC">about ' . format_timestamp(time() - strtotime($emote["created_at"])) . " ago</span>";
                                     ?></td>
                                 </tr>
                                 <tr>
                                     <th>Notes</th>
-                                    <td><i>Empty</i></td>
+                                    <td><?php echo isset($emote["notes"]) == true ? $emote["notes"] : '<i>Empty</i>' ?></td>
                                 </tr>
                             </table>
                         </section>

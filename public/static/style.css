@@ -81,6 +81,11 @@ label.inline {
     display: inline;
 }
 
+textarea {
+    resize: vertical;
+    height: 100px;
+}
+
 .container {
     width: 100%;
     min-height: 100vh;
