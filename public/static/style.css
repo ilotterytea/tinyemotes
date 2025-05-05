@@ -73,6 +73,13 @@ form {
     gap: 4px;
 }
 
+label {
+    display: block;
+}
+
+label.inline {
+    display: inline;
+}
 
 .container {
     width: 100%;

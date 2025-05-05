@@ -16,7 +16,7 @@ if (!isset($_SESSION["user_id"], $_SESSION["user_name"])) {
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
-    $username = str_safe($_POST["username"] ?? "", ACCOUNT_USERNAME_MAX_LENGTH);
+    $username = str_safe($_POST["username"] ?? "", ACCOUNT_USERNAME_LENGTH[1]);
 
     if (!empty($username) && $username != $_SESSION["user_name"]) {
         if (!preg_match(ACCOUNT_USERNAME_REGEX, $username)) {
@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     username.addEventListener("input", (e) => {
         const regex = <?php echo ACCOUNT_USERNAME_REGEX ?>;
 
-        if (regex.test(e.target.value) && e.target.value.length <= <?php echo ACCOUNT_USERNAME_MAX_LENGTH ?>) {
+        if (regex.test(e.target.value) && e.target.value.length <= <?php echo ACCOUNT_USERNAME_LENGTH[1] ?>) {
             validUsername = e.target.value;
         } else {
             e.target.value = validUsername;

@@ -38,8 +38,11 @@ define("REPORTS_ENABLE", true); // Enable emote, user reports.
 
 // ACCOUNTS
 define("ACCOUNT_REGISTRATION_ENABLE", true); // Enable account registration.
+define("ACCOUNT_COOKIE_MAX_LIFETIME", 86400 * 30); // Remember user for a month.
 define("ACCOUNT_USERNAME_REGEX", "/^[A-Za-z0-9_]+$/"); // RegEx filter for account usernames.
-define("ACCOUNT_USERNAME_MAX_LENGTH", 20); // Max length for account usernames.
+define("ACCOUNT_USERNAME_LENGTH", [2, 20]); // [Min, Max] length for account usernames.
+define("ACCOUNT_PASSWORD_MIN_LENGTH", 10); // Minimal length for passwords.
+define("ACCOUNT_SECRET_KEY_LENGTH", 32); // The length for secret keys.
 define("ACCOUNT_PFP_MAX_SIZE", [128, 128]); // Max dimensions for account pictures.
 define("ACCOUNT_BANNER_MAX_SIZE", [1920, 1080]); // Max dimensions for account banners.
 

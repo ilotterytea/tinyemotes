@@ -129,7 +129,7 @@ if ($row = $stmt->fetch()) {
 
 $_SESSION["user_id"] = $user_id;
 $_SESSION["user_name"] = $user_name;
-setcookie("secret_key", $user_secret_key, time() + 86400 * 30, "/");
+setcookie("secret_key", $user_secret_key, time() + ACCOUNT_COOKIE_MAX_LIFETIME, "/");
 
 $db = null;
 
