@@ -28,3 +28,13 @@ function resize_image(string $src_path, string $dst_path, int $max_width, int $m
 
     return $result_code;
 }
+
+function does_file_meet_requirements(string $path, int $max_width, int $max_height): array
+{
+    $file = getimagesize($path);
+    if (!$file) {
+        return [false, null];
+    }
+
+    return [$file[0] <= $max_width && $file[1] <= $max_height, image_type_to_extension(intval($file[2]), false)];
+}

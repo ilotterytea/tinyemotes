@@ -67,6 +67,10 @@ input {
     border: 1px solid gray;
 }
 
+input[type=file] {
+    max-width: 230px;
+}
+
 form {
     display: flex;
     flex-direction: column;
