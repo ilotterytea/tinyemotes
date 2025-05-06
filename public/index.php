@@ -30,7 +30,7 @@ authorize_user();
                 <a href="/software.php">Chat clients & Tools</a>
             </div>
 
-            <form action="/emotes/search.php" method="get" class="row">
+            <form action="/emotes" method="get" class="row">
                 <input type="text" name="q">
                 <button type="submit">Search</button>
             </form>
