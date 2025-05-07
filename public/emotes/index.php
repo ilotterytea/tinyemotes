@@ -27,7 +27,8 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
         SELECT 1
         FROM emote_set_contents ec
         INNER JOIN emote_sets es ON es.id = ec.emote_set_id
-        WHERE ec.emote_id = e.id AND es.owner_id = ?
+        JOIN acquired_emote_sets aes ON aes.emote_set_id = es.id
+        WHERE ec.emote_id = e.id AND es.owner_id = ? AND aes.is_default = TRUE
     ) THEN 1 ELSE 0 END AS is_in_user_set, COALESCE(COUNT(r.rate), 0) AS rating
     FROM emotes e
     LEFT JOIN ratings AS r ON r.emote_id = e.id
