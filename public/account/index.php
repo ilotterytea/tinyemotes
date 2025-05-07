@@ -88,13 +88,23 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                     <form action="/account" method="POST" enctype="multipart/form-data">
                         <h2>Profile</h2>
                         <h3>Profile picture</h3>
-                        <img src="/static/userdata/avatars/<?php echo $_SESSION["user_id"] ?>" id="pfp" width="64"
-                            height="64">
+                        <?php
+                        if (is_file("../static/userdata/avatars/" . $_SESSION["user_id"])) {
+                            echo '<img src="/static/userdata/avatars/' . $_SESSION["user_id"] . '" id="pfp" width="64" height="64">';
+                        } else {
+                            echo "<p>You don't have profile picture</p>";
+                        }
+                        ?>
                         <input type="file" name="pfp">
 
                         <h3>Profile banner</h3>
-                        <img src="/static/userdata/banners/<?php echo $_SESSION["user_id"] ?>" id="banner" width="192"
-                            height="108">
+                        <?php
+                        if (is_file("../static/userdata/banners/" . $_SESSION["user_id"])) {
+                            echo '<img src="/static/userdata/banners/' . $_SESSION["user_id"] . '" id="banner" width="192" height="108">';
+                        } else {
+                            echo "<p>You don't have profile banner</p>";
+                        }
+                        ?>
                         <input type="file" name="banner">
 
                         <h3>Username</h3>

@@ -86,9 +86,15 @@ if ($id == "" && $alias_id == "") {
                                             $last_active = format_timestamp($diff);
                                         }
 
-                                        echo '<tr>';
-                                        echo '<td><img src="/static/userdata/avatars/' . $row["id"] . '" width="24" height="24"></td>';
-                                        echo '<td><a href="/users.php?id=' . $row["id"] . '">' . $row["username"] . '</a></td>';
+                                        echo '<tr><td>';
+                                        echo '<img src="/static/';
+                                        if (is_file("static/userdata/avatars/" . $row["id"])) {
+                                            echo 'userdata/avatars/' . $row["id"];
+                                        } else {
+                                            echo 'img/defaults/profile_picture.png';
+                                        }
+                                        echo '" width="24" height="24">';
+                                        echo '</td><td><a href="/users.php?id=' . $row["id"] . '">' . $row["username"] . '</a></td>';
                                         echo "<td>$last_active ago</td>";
                                         echo '</tr>';
                                     }
@@ -322,13 +328,28 @@ if ($is_json) {
                 <section class="user-bar column small-gap">
                     <section class="box">
                         <div class="box navtab">
-                            <p>User #<?php echo $user->id() ?></p>
+                            <p>User</p>
                         </div>
-                        <div class="box content background"
-                            style="background-image: url('/static/userdata/banners/<?php echo $user->id() ?>');">
-                            <img src="/static/userdata/avatars/<?php echo $user->id() ?>" width="96" height="96">
-                            <h1><?php echo $user->username() ?></h1>
-                        </div>
+                        <?php
+                        echo '<div class="box content background"';
+
+                        if (is_file("static/userdata/banners/" . $user->id())) {
+                            echo ' style="background-image: url(\'/static/userdata/banners/' . $user->id() . '\');">';
+                        } else {
+                            echo '>';
+                        }
+
+                        echo '<img src="/static/';
+                        if (is_file("static/userdata/avatars/" . $user->id())) {
+                            echo 'userdata/avatars/' . $user->id();
+                        } else {
+                            echo 'img/defaults/profile_picture.png';
+                        }
+                        echo '" width="96" height="96">';
+                        echo '<h1>' . $user->username() . '</h1>';
+
+                        echo '</div>';
+                        ?>
                     </section>
 
                     <!-- STATS -->

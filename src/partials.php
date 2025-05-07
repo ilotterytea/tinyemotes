@@ -72,12 +72,18 @@ function html_navigation_bar()
         </div>
         <?php
         if (isset($_SESSION["user_id"])) {
-            echo '' ?>
-            <a href="/users.php?id=<?php echo $_SESSION["user_id"] ?>" class="links" style="margin-left:auto;">
-                Signed in as <?php echo $_SESSION["user_name"] ?> <img
-                    src="/static/userdata/avatars/<?php echo $_SESSION["user_id"] ?>" width="24" height="24" />
-            </a>
-            <?php ;
+            echo '<a href="/users.php?id=' . $_SESSION["user_id"] . '" class="links" style="margin-left:auto;">';
+            echo 'Signed in as ' . $_SESSION["user_name"] . ' ';
+            echo '<img src="/static/';
+            if (
+                is_file($_SERVER['DOCUMENT_ROOT'] . "/static/userdata/avatars/" . $_SESSION["user_id"])
+            ) {
+                echo 'userdata/avatars/' . $_SESSION["user_id"];
+            } else {
+                echo 'img/defaults/profile_picture.png';
+            }
+            echo '" width="24" height="24" />';
+            echo '</a>';
         }
         ?>
     </section>
