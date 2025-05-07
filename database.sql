@@ -112,6 +112,14 @@ CREATE TABLE IF NOT EXISTS mod_actions(
     created_at TIMESTAMP NOT NULL DEFAULT UTC_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS actions (
+    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    user_id CHAR(32) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    action_type TEXT NOT NULL,
+    action_payload TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT UTC_TIMESTAMP
+);
+
 -- -------------------------
 --       INSERTIONS      
 -- -------------------------

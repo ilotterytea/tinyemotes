@@ -59,6 +59,18 @@ function authorize_user(bool $required = false): bool
         if ($role_row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $_SESSION["user_role"] = $role_row;
         }
+
+        $stmt = $db->prepare("SELECT es.* FROM emote_sets es
+            INNER JOIN acquired_emote_sets aes ON aes.emote_set_id = es.id
+            WHERE aes.user_id = ? AND aes.is_default = TRUE
+            ");
+        $stmt->execute([$row["id"]]);
+
+        $_SESSION["user_active_emote_set"] = null;
+
+        if ($emote_set_row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $_SESSION["user_active_emote_set"] = $emote_set_row;
+        }
     } else {
         session_regenerate_id();
         session_unset();

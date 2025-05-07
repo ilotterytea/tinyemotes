@@ -389,6 +389,21 @@ if ($is_manual) {
     }
 }
 
+$db->prepare("INSERT INTO actions(user_id, action_type, action_payload) VALUES (?, ?, ?)")
+    ->execute([
+        $uploaded_by,
+        "EMOTE_CREATE",
+        json_encode([
+            "emote" => [
+                "id" => $id,
+                "code" => $code,
+                "visibility" => $visibility,
+                "uploaded_by" => $uploaded_by,
+            ]
+        ])
+    ]);
+
+
 $db = null;
 
 if (CLIENT_REQUIRES_JSON) {
