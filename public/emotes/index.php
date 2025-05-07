@@ -176,8 +176,34 @@ if (CLIENT_REQUIRES_JSON) {
                 <section class="content">
                     <?php display_alert() ?>
                     <section class="box">
-                        <div class="box navtab">
-                            <?php echo $emote != null ? "Emote - " . $emote->get_code() : "$total_emotes Emotes - Page $page/$total_pages" ?>
+                        <div class="box navtab row">
+                            <?php
+                            if ($emote != null) {
+                                echo "Emote - " . $emote->get_code();
+                                echo '<div class="row small-gap" style="margin-left:auto">';
+
+                                $stmt = $db->prepare("
+                                    SELECT MAX(es.is_featured) AS is_featured, MAX(es.is_global) AS is_global
+                                    FROM emote_sets es
+                                    JOIN emote_set_contents esc ON esc.emote_set_id = es.id
+                                    JOIN emotes e ON esc.emote_id = e.id
+                                    WHERE e.id = ?
+                                ");
+                                $stmt->execute([$emote->get_id()]);
+
+                                if ($row = $stmt->fetch()) {
+                                    if ($row["is_featured"]) {
+                                        echo '<img src="/static/img/icons/star.png" title="Featured emote" alt="Featured" />';
+                                    }
+                                    if ($row["is_global"]) {
+                                        echo '<img src="/static/img/icons/world.png" title="Global emote" alt="Global" />';
+                                    }
+                                }
+                                echo '</div>';
+                            } else {
+                                echo "$total_emotes Emotes - Page $page/$total_pages";
+                            }
+                            ?>
                         </div>
                         <?php
                         if ($emote != null) { ?>
