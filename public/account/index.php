@@ -13,9 +13,9 @@ if (!isset($_SESSION["user_id"], $_SESSION["user_name"])) {
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] == "POST") {
-    $db = new PDO(DB_URL, DB_USER, DB_PASS);
+$db = new PDO(DB_URL, DB_USER, DB_PASS);
 
+if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $username = str_safe($_POST["username"] ?? "", ACCOUNT_USERNAME_LENGTH[1]);
 
     if (!empty($username) && $username != $_SESSION["user_name"]) {
@@ -135,9 +135,30 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
                     <hr>
 
-                    <form action="/account/signout.php">
-                        <h2>Security</h2>
-                        <button type="submit">Sign out everywhere</button>
+                    <form action="/account/security.php" method="post">
+                        <h2>Security & Privacy</h2>
+                        <div>
+                            <label for="password-current">Current password:</label>
+                            <input type="password" name="password-current" id="form-password-current">
+                            <label for="password-new">New password:</label>
+                            <input type="password" name="password-new" id="form-password-new">
+                        </div>
+                        <div>
+                            <input type="checkbox" name="hide-actions" value="1" id="form-hide-actions" <?php
+                            $stmt = $db->prepare("SELECT hide_actions FROM user_preferences WHERE id = ?");
+                            $stmt->execute([$_SESSION["user_id"]]);
+                            if (intval($stmt->fetch()[0]) == 1) {
+                                echo 'checked';
+                            }
+                            ?>>
+                            <label for="hide-actions" class="inline">Hide actions</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" name="signout-everywhere" value="1" id="form-signout-everywhere">
+                            <label for="signout-everywhere" class="inline">Sign out everywhere</label>
+                        </div>
+
+                        <button type="submit">Apply</button>
                     </form>
 
                     <form action="/account/delete.php">

@@ -7,6 +7,11 @@ CREATE TABLE IF NOT EXISTS users (
     last_active_at TIMESTAMP NOT NULL DEFAULT UTC_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS user_preferences (
+    id CHAR(32) NOT NULL PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    hide_actions BOOLEAN NOT NULL DEFAULT FALSE
+);
+
 CREATE TABLE IF NOT EXISTS connections (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
     user_id CHAR(32) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -127,9 +132,13 @@ CREATE TABLE IF NOT EXISTS actions (
 -- CREATING A ROLE FOR USERS
 INSERT IGNORE INTO roles(id, name) VALUES (1, 'User');
 
+INSERT IGNORE INTO user_preferences(id) SELECT id FROM users;
+
 -- -------------------------
 --       TRIGGERS        
 -- -------------------------
+
+DROP TRIGGER IF EXISTS create_user;
 
 -- CREATE EMOTESET AND ASSIGN ROLE FOR NEW USER
 DELIMITER $$
@@ -137,6 +146,7 @@ CREATE TRIGGER IF NOT EXISTS create_user
 AFTER INSERT ON users
 FOR EACH ROW
 BEGIN
+    INSERT INTO user_preferences(id) VALUES (NEW.id);
     INSERT INTO role_assigns(user_id, role_id) VALUES (NEW.id, 1);
     INSERT INTO emote_sets(owner_id, name) VALUES (NEW.id, CONCAT(NEW.username, '''s emoteset'));
 END$$

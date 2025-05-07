@@ -74,7 +74,10 @@ input[type=file] {
 form {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+}
+
+form:has(div) {
+    gap: 16px;
 }
 
 label {
