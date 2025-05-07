@@ -291,7 +291,6 @@ if (CLIENT_REQUIRES_JSON) {
                                     $link = "#";
 
                                     if ($emote->get_uploaded_by()) {
-                                        $db = new PDO(DB_URL, DB_USER, DB_PASS);
                                         $stmt = $db->prepare("SELECT username FROM users WHERE id = ?");
                                         $stmt->execute([$emote->get_uploaded_by()]);
 
@@ -310,7 +309,21 @@ if (CLIENT_REQUIRES_JSON) {
                                     echo ' UTC">about ' . format_timestamp(time() - $emote->get_created_at()) . " ago</span>";
                                     ?></td>
                                 </tr>
-                                <?php if (RATING_ENABLE): ?>
+                                <?php
+                                $stmt = $db->prepare("SELECT u.id, u.username, a.created_at FROM users u
+                                    INNER JOIN mod_actions a ON a.emote_id = ?
+                                    WHERE u.id = a.user_id");
+                                $stmt->execute([$emote->get_id()]);
+
+                                if ($row = $stmt->fetch()) {
+                                    echo '<tr><th>Approver</th><td>';
+                                    echo '<a href="/users.php?id=' . $row["id"] . '" target="_blank">' . $row["username"] . '</a>, <span title="';
+                                    echo date("M d, Y H:i:s", strtotime($row["created_at"])) . ' UTC">';
+                                    echo format_timestamp(strtotime($row["created_at"]) - $emote->get_created_at()) . ' after upload';
+                                    echo '</span></td></tr>';
+                                }
+
+                                if (RATING_ENABLE): ?>
                                     <tr>
                                         <th>Rating</th>
                                         <?php
@@ -382,7 +395,6 @@ if (CLIENT_REQUIRES_JSON) {
                         <section class="box">
                             <div class="content">
                                 <?php
-                                $db = new PDO(DB_URL, DB_USER, DB_PASS);
                                 $stmt = $db->prepare("SELECT users.id, users.username
                             FROM users
                             INNER JOIN emote_sets AS es ON es.owner_id = users.id
