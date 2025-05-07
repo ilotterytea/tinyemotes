@@ -490,3 +490,7 @@ a.box:hover {
     justify-content: center;
     align-items: center;
 }
+
+.font-small {
+    font-size: 12px;
+}

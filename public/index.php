@@ -47,10 +47,24 @@ authorize_user();
                 ?>
             </div>
 
-            <p style="font-size:12px;">
-                Serving <?php echo $count ?> gorillion emotes -
-                Running
+            <p class="font-small">
                 <?php
+                // cv pasted from https://gist.github.com/eusonlito/5099936
+                function size($dir)
+                {
+                    $size = 0;
+
+                    foreach (glob(rtrim($dir, '/') . '/*') as $each) {
+                        $size += is_file($each) ? filesize($each) : size($each);
+                    }
+
+                    return $size;
+                }
+
+                echo "Serving $count gorillion emotes and ";
+
+                echo sprintf("%.2f", size("./static/userdata") / 1024 / 1024) . 'MB of active content - Running ';
+
                 echo '<a href="' . TINYEMOTES_LINK . '">';
                 echo sprintf("%s v%s", TINYEMOTES_NAME, TINYEMOTES_VERSION);
                 echo '</a> ';
