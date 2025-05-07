@@ -36,28 +36,48 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         }
     }
 
-    if (isset($_FILES["pfp"])) {
+    if (isset($_FILES["pfp"]) && !empty($_FILES["pfp"]["tmp_name"])) {
         $pfp = $_FILES["pfp"];
-        resize_image(
-            $pfp["tmp_name"],
-            "../static/userdata/avatars/" . $_SESSION["user_id"],
-            ACCOUNT_PFP_MAX_SIZE[0],
-            ACCOUNT_PFP_MAX_SIZE[1],
-            false,
-            true
-        );
+
+        if (!is_dir("../static/userdata/avatars")) {
+            mkdir("../static/userdata/avatars", 0777, true);
+        }
+
+        if (
+            $err = resize_image(
+                $pfp["tmp_name"],
+                $_SERVER["DOCUMENT_ROOT"] . "/static/userdata/avatars/" . $_SESSION["user_id"],
+                ACCOUNT_PFP_MAX_SIZE[0],
+                ACCOUNT_PFP_MAX_SIZE[1],
+                false,
+                true
+            )
+        ) {
+            generate_alert("/account", sprintf("Error occurred while processing the profile picture (%d)", $err));
+            exit;
+        }
     }
 
-    if (isset($_FILES["banner"])) {
+    if (isset($_FILES["banner"]) && !empty($_FILES["banner"]["tmp_name"])) {
         $banner = $_FILES["banner"];
-        resize_image(
-            $banner["tmp_name"],
-            "../static/userdata/banners/" . $_SESSION["user_id"],
-            ACCOUNT_BANNER_MAX_SIZE[0],
-            ACCOUNT_BANNER_MAX_SIZE[1],
-            false,
-            true
-        );
+
+        if (!is_dir("../static/userdata/banners")) {
+            mkdir("../static/userdata/banners", 0777, true);
+        }
+
+        if (
+            $err = resize_image(
+                $banner["tmp_name"],
+                $_SERVER["DOCUMENT_ROOT"] . "/static/userdata/banners/" . $_SESSION["user_id"],
+                ACCOUNT_BANNER_MAX_SIZE[0],
+                ACCOUNT_BANNER_MAX_SIZE[1],
+                false,
+                true
+            )
+        ) {
+            generate_alert("/account", sprintf("Error occurred while processing the profile banner (%d)", $err));
+            exit;
+        }
     }
 
     $db = null;
