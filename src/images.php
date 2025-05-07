@@ -24,7 +24,7 @@ function resize_image(string $src_path, string $dst_path, int $max_width, int $m
 
     $result_code = null;
 
-    exec(command: "magick convert $input_path -coalesce -resize {$new_width}x$new_height -layers optimize -loop 0 $output_path", result_code: $result_code);
+    exec(command: "magick convert $input_path -coalesce -resize {$new_width}x{$new_height}! -loop 0 $output_path", result_code: $result_code);
 
     return $result_code;
 }
