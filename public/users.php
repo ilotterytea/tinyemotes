@@ -231,10 +231,13 @@ $stmt->execute([$user->id(), $user->id()]);
 $uploaded_emotes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // gathering actions
-$stmt = $db->prepare("SELECT a.* FROM actions a WHERE a.user_id = ? ORDER BY a.created_at DESC LIMIT 15");
-$stmt->execute([$user->id()]);
+$actions = [];
 
-$actions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+if (ACCOUNT_LOG_ACTIONS) {
+    $stmt = $db->prepare("SELECT a.* FROM actions a WHERE a.user_id = ? ORDER BY a.created_at DESC LIMIT 15");
+    $stmt->execute([$user->id()]);
+    $actions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // TODO: add functionality
 
@@ -514,56 +517,86 @@ if ($is_json) {
                     }
                     ?>
 
-                    <!-- Actions -->
-                    <section class="box">
-                        <div class="box navtab">
-                            <p>Actions</p>
-                        </div>
-                        <div class="box content">
-                            <?php
-                            if (empty($actions)) {
-                                echo "<p>This user has done nothing bad or good...</p>";
-                            }
+                    <?php if (ACCOUNT_LOG_ACTIONS): ?>
+                        <!-- Actions -->
+                        <section class="box">
+                            <div class="box navtab">
+                                <p>Actions</p>
+                            </div>
+                            <div class="box content">
+                                <?php
+                                if (empty($actions)) {
+                                    echo "<p>This user has done nothing bad or good...</p>";
+                                }
 
-                            foreach ($actions as $action) {
-                                echo '<div class="row">';
+                                foreach ($actions as $action) {
+                                    echo '<div class="row">';
 
-                                list($action_name, $preposition, $icon_name) = match ($action["action_type"]) {
-                                    "EMOTESET_ADD" => ["added", "to", "yes.png"],
-                                    "EMOTESET_REMOVE" => ["removed", "from", "no.png"],
-                                    "EMOTESET_ALIAS" => ["renamed", "in", "pencil.png"],
-                                    "EMOTE_CREATE" => ["created", null, "new_emote.png"],
-                                    "EMOTE_DELETE" => ["deleted", null, "deleted_emote.png"],
-                                    "EMOTE_RENAME" => ["renamed", null, "renamed_emote.png"]
-                                };
+                                    list($action_name, $preposition, $icon_name) = match ($action["action_type"]) {
+                                        "EMOTESET_ADD" => ["added", "to", "yes.png"],
+                                        "EMOTESET_REMOVE" => ["removed", "from", "no.png"],
+                                        "EMOTESET_ALIAS" => ["renamed", "in", "pencil.png"],
+                                        "EMOTE_CREATE" => ["created", null, "new_emote.png"],
+                                        "EMOTE_DELETE" => ["deleted", null, "deleted_emote.png"],
+                                        "EMOTE_RENAME" => ["renamed", null, "renamed_emote.png"]
+                                    };
 
-                                echo "<div><img src='/static/img/icons/$icon_name' width='16' /></div>";
+                                    echo "<div><img src='/static/img/icons/$icon_name' width='16' /></div>";
 
-                                echo '<div class="column">';
-                                echo '<p>';
-                                echo '<i>' . $user->username() . '</i> ';
+                                    echo '<div class="column">';
+                                    echo '<p>';
+                                    echo '<i>' . $user->username() . '</i> ';
 
-                                $payload = json_decode($action["action_payload"], true);
+                                    $payload = json_decode($action["action_payload"], true);
 
-                                list($action_root, $action_sub) = explode("_", $action["action_type"]);
+                                    list($action_root, $action_sub) = explode("_", $action["action_type"]);
 
-                                switch ($action_root) {
-                                    case "EMOTESET": {
-                                        $e_stmt = $db->prepare("SELECT COUNT(*) FROM emotes WHERE id = ?");
-                                        $e_stmt->execute([$payload["emote"]["id"]]);
+                                    switch ($action_root) {
+                                        case "EMOTESET": {
+                                            $e_stmt = $db->prepare("SELECT COUNT(*) FROM emotes WHERE id = ?");
+                                            $e_stmt->execute([$payload["emote"]["id"]]);
 
-                                        echo "$action_name emote <a href=\"";
+                                            echo "$action_name emote <a href=\"";
 
-                                        if ($e_stmt->rowCount() == 1) {
-                                            echo '/emotes?id=' . $payload["emote"]["id"] . '">';
-                                            echo '<img src="/static/userdata/emotes/' . $payload["emote"]["id"] . '/1x.webp" height="16" /> ';
-                                        } else {
-                                            echo '">';
+                                            if ($e_stmt->rowCount() == 1) {
+                                                echo '/emotes?id=' . $payload["emote"]["id"] . '">';
+                                                echo '<img src="/static/userdata/emotes/' . $payload["emote"]["id"] . '/1x.webp" height="16" /> ';
+                                            } else {
+                                                echo '">';
+                                            }
+
+                                            if (isset($payload["emote"]["original_code"])) {
+                                                echo $payload["emote"]["original_code"] . '</a> to ';
+                                                echo "<a href=\"";
+
+                                                if ($e_stmt->rowCount() == 1) {
+                                                    echo '/emotes?id=' . $payload["emote"]["id"] . '">';
+                                                    echo '<img src="/static/userdata/emotes/' . $payload["emote"]["id"] . '/1x.webp" height="16" /> ';
+                                                } else {
+                                                    echo '">';
+                                                }
+
+                                                echo $payload["emote"]["code"] . '</a>';
+                                            } else {
+                                                echo $payload["emote"]["code"] . '</a>';
+                                            }
+
+                                            $es_stmt = $db->prepare("SELECT COUNT(*) FROM emote_sets WHERE id = ?");
+                                            $es_stmt->execute([$payload["emoteset"]["id"]]);
+
+                                            echo " $preposition <a href=\"";
+                                            if ($es_stmt->rowCount() == 1) {
+                                                echo '/emotesets.php?id=' . $payload["emoteset"]["id"];
+                                            }
+
+                                            echo '">' . $payload["emoteset"]["name"] . '</a>';
+                                            break;
                                         }
+                                        case "EMOTE": {
+                                            $e_stmt = $db->prepare("SELECT COUNT(*) FROM emotes WHERE id = ?");
+                                            $e_stmt->execute([$payload["emote"]["id"]]);
 
-                                        if (isset($payload["emote"]["original_code"])) {
-                                            echo $payload["emote"]["original_code"] . '</a> to ';
-                                            echo "<a href=\"";
+                                            echo "$action_name emote <a href=\"";
 
                                             if ($e_stmt->rowCount() == 1) {
                                                 echo '/emotes?id=' . $payload["emote"]["id"] . '">';
@@ -573,50 +606,22 @@ if ($is_json) {
                                             }
 
                                             echo $payload["emote"]["code"] . '</a>';
-                                        } else {
-                                            echo $payload["emote"]["code"] . '</a>';
+                                            break;
                                         }
-
-                                        $es_stmt = $db->prepare("SELECT COUNT(*) FROM emote_sets WHERE id = ?");
-                                        $es_stmt->execute([$payload["emoteset"]["id"]]);
-
-                                        echo " $preposition <a href=\"";
-                                        if ($es_stmt->rowCount() == 1) {
-                                            echo '/emotesets.php?id=' . $payload["emoteset"]["id"];
+                                        default: {
+                                            echo "something that we don't know";
+                                            break;
                                         }
-
-                                        echo '">' . $payload["emoteset"]["name"] . '</a>';
-                                        break;
                                     }
-                                    case "EMOTE": {
-                                        $e_stmt = $db->prepare("SELECT COUNT(*) FROM emotes WHERE id = ?");
-                                        $e_stmt->execute([$payload["emote"]["id"]]);
 
-                                        echo "$action_name emote <a href=\"";
-
-                                        if ($e_stmt->rowCount() == 1) {
-                                            echo '/emotes?id=' . $payload["emote"]["id"] . '">';
-                                            echo '<img src="/static/userdata/emotes/' . $payload["emote"]["id"] . '/1x.webp" height="16" /> ';
-                                        } else {
-                                            echo '">';
-                                        }
-
-                                        echo $payload["emote"]["code"] . '</a>';
-                                        break;
-                                    }
-                                    default: {
-                                        echo "something that we don't know";
-                                        break;
-                                    }
+                                    echo '</p>';
+                                    echo '<span class="font-small" style="color: gray;">[' . format_timestamp(time() - strtotime($action["created_at"])) . ' ago]</span> ';
+                                    echo '</div></div>';
                                 }
-
-                                echo '</p>';
-                                echo '<span class="font-small" style="color: gray;">[' . format_timestamp(time() - strtotime($action["created_at"])) . ' ago]</span> ';
-                                echo '</div></div>';
-                            }
-                            ?>
-                        </div>
-                    </section>
+                                ?>
+                            </div>
+                        </section>
+                    <?php endif; ?>
                 </section>
             </section>
         </div>

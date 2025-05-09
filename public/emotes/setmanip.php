@@ -82,8 +82,10 @@ switch ($action) {
         $stmt = $db->prepare("INSERT INTO emote_set_contents(emote_set_id, emote_id, added_by) VALUES (?, ?, ?)");
         $stmt->execute([$emote_set_id, $emote_id, $user_id]);
 
-        $db->prepare("INSERT INTO actions(user_id, action_type, action_payload) VALUES (?, ?, ?)")
-            ->execute([$user_id, "EMOTESET_ADD", json_encode($payload)]);
+        if (ACCOUNT_LOG_ACTIONS) {
+            $db->prepare("INSERT INTO actions(user_id, action_type, action_payload) VALUES (?, ?, ?)")
+                ->execute([$user_id, "EMOTESET_ADD", json_encode($payload)]);
+        }
 
         $db = null;
 
@@ -100,8 +102,10 @@ switch ($action) {
             exit;
         }
 
-        $db->prepare("INSERT INTO actions(user_id, action_type, action_payload) VALUES (?, ?, ?)")
-            ->execute([$user_id, "EMOTESET_REMOVE", json_encode($payload)]);
+        if (ACCOUNT_LOG_ACTIONS) {
+            $db->prepare("INSERT INTO actions(user_id, action_type, action_payload) VALUES (?, ?, ?)")
+                ->execute([$user_id, "EMOTESET_REMOVE", json_encode($payload)]);
+        }
 
         $db = null;
 
@@ -137,8 +141,10 @@ switch ($action) {
         $stmt = $db->prepare("UPDATE emote_set_contents SET code = ? WHERE emote_set_id = ? AND emote_id = ?");
         $stmt->execute([$value, $emote_set_id, $emote_id]);
 
-        $db->prepare("INSERT INTO actions(user_id, action_type, action_payload) VALUES (?, ?, ?)")
-            ->execute([$user_id, "EMOTESET_ALIAS", json_encode($payload)]);
+        if (ACCOUNT_LOG_ACTIONS) {
+            $db->prepare("INSERT INTO actions(user_id, action_type, action_payload) VALUES (?, ?, ?)")
+                ->execute([$user_id, "EMOTESET_ALIAS", json_encode($payload)]);
+        }
 
         $db = null;
 
