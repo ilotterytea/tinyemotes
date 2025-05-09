@@ -9,6 +9,10 @@
 
     --foreground-color: #425514;
     --foreground-color-hover: #1c220c;
+
+    --body-background: #f2f8ee;
+
+    --profile-background: radial-gradient(#f2f8eebb, #f2f8ee);
 }
 
 * {
@@ -16,6 +20,10 @@
     margin: 0;
 
     font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    background: var(--body-background);
 }
 
 h1 {
@@ -120,6 +128,14 @@ textarea {
 
 .screenshots img {
     height: 128px;
+}
+
+.content.row>.content {
+    margin: 0;
+}
+
+.sidebar {
+    max-width: 300px;
 }
 
 /** 
@@ -284,7 +300,7 @@ button.purple:hover,
     background: var(--background-color);
     border: 2px solid var(--border-color);
     border-radius: 4px;
-    padding: 4px;
+    padding: 8px;
 }
 
 .box.navtab {
@@ -467,6 +483,12 @@ a.box:hover {
     vertical-align: middle;
 }
 
+/** 
+---------------------------------
+   SOMETHING FROM TAILWINDCSS
+---------------------------------
+*/
+
 .row {
     display: flex;
     flex-direction: row;
@@ -477,7 +499,7 @@ a.box:hover {
     flex-direction: column;
 }
 
-.flex {
+.grow {
     flex-grow: 1;
 }
 
@@ -494,6 +516,63 @@ a.box:hover {
     align-items: center;
 }
 
+.items-center {
+    align-items: center;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
 .font-small {
     font-size: 12px;
+}
+
+.p-16 {
+    padding: 16px;
+}
+
+.m-8 {
+    margin: 8px;
+}
+
+.inline {
+    display: inline;
+}
+
+.flex {
+    display: flex;
+}
+
+.w-full {
+    width: 100%;
+}
+
+/** 
+-------------
+   USER
+-------------
+*/
+
+.background {
+    position: absolute;
+    background-position: center center;
+    top: 61px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: -1;
+}
+
+.background-layer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--profile-background);
 }

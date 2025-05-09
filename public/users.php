@@ -252,39 +252,10 @@ $stmt->execute([$user->id()]);
 $contributions += intval($stmt->fetch()[0]);
 
 // getting status
-$status = "... i don't know who am i";
-
 $stmt = $db->prepare("SELECT * FROM roles r INNER JOIN role_assigns ra ON ra.user_id = ? WHERE ra.role_id = r.id");
 $stmt->execute([$user->id()]);
 
-if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $status = '<span class="badge" style="color: rgba('
-        . $row["foreground_color"] . ');';
-
-    $bg_color_parts = explode(":", $row["background_color"]);
-
-    switch ($bg_color_parts[0]) {
-        case "solid": {
-            $status .= "background: rgba($bg_color_parts[1]);";
-            break;
-        }
-        case "gradient": {
-            $status .= "background: linear-gradient(0deg, rgba($bg_color_parts[1]), rgba($bg_color_parts[2]));";
-            break;
-        }
-        case "img": {
-            $status .= "background-image: url('$bg_color_parts[1]');";
-            break;
-        }
-        default:
-            break;
-    }
-
-    $status .= '">';
-    $status .= '<img src="/static/img/icons/badges/' . $row["badge_id"] . '.webp" alt="">';
-    $status .= $row["name"];
-    $status .= '</span>';
-}
+$role = $stmt->fetch(PDO::FETCH_ASSOC) ?? null;
 
 // getting reactions
 $stmt = $db->prepare("SELECT rate, COUNT(*) AS c FROM ratings WHERE user_id = ? GROUP BY rate ORDER BY c DESC");
@@ -294,6 +265,12 @@ $fav_reactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // getting favorite emote
 $fav_emote = 1;
+
+// User preferences
+$stmt = $db->prepare("SELECT * FROM user_preferences WHERE id = ?");
+$stmt->execute([$user->id()]);
+
+$user_preferences = $stmt->fetch(PDO::FETCH_ASSOC) ?? null;
 
 if ($is_json) {
     header("Content-type: application/json");
@@ -306,7 +283,7 @@ if ($is_json) {
             "joined_at" => $user->joined_at(),
             "last_active_at" => $user->last_active_at(),
             "stats" => [
-                "status_id" => $status,
+                "role" => $role,
                 "contributions" => $contributions,
                 "favorite_reaction_id" => $fav_reaction,
                 "favorite_emote_id" => $fav_emote
@@ -330,45 +307,60 @@ if ($is_json) {
 </head>
 
 <body>
+    <div class="background" style="background-image: url('/static/userdata/banners/<?php echo $user->id() ?>');">
+        <div class="background-layer"></div>
+    </div>
+
     <div class="container">
         <div class="wrapper">
             <?php echo html_navigation_bar() ?>
             <section class="content row">
-                <!-- User information -->
-                <section class="user-bar column small-gap">
+                <section class="sidebar flex column small-gap">
+                    <!-- User -->
                     <section class="box">
                         <div class="box navtab">
-                            <p>User</p>
+                            <?php echo $user->username() ?>
                         </div>
-                        <?php
-                        echo '<div class="box content background"';
-
-                        if (is_file("static/userdata/banners/" . $user->id())) {
-                            echo ' style="background-image: url(\'/static/userdata/banners/' . $user->id() . '\');">';
-                        } else {
-                            echo '>';
-                        }
-
-                        echo '<img src="/static/';
-                        if (is_file("static/userdata/avatars/" . $user->id())) {
-                            echo 'userdata/avatars/' . $user->id();
-                        } else {
-                            echo 'img/defaults/profile_picture.png';
-                        }
-                        echo '" width="96" height="96">';
-                        echo '<h1>' . $user->username() . '</h1>';
-
-                        echo '</div>';
-                        ?>
+                        <div class="box content justify-center items-center">
+                            <?php
+                            echo '<img src="/static/';
+                            if (is_file("static/userdata/avatars/" . $user->id())) {
+                                echo 'userdata/avatars/' . $user->id();
+                            } else {
+                                echo 'img/defaults/profile_picture.png';
+                            }
+                            echo '" width="192" height="192">';
+                            ?>
+                        </div>
                     </section>
+                    <!-- Role -->
+                    <?php
+                    if ($role) {
+                        $badge_path = sprintf("/%s/userdata/badges/%s/3x.webp", INSTANCE_STATIC_FOLDER, $role["badge_id"] ?? "");
+                        $bg_color_split = explode(":", $role["background_color"]);
+                        $bg_color = match ($bg_color_split[0]) {
+                            "solid" => sprintf("background: rgba(%s);", $bg_color_split[1]),
+                            "gradient" => sprintf("background: linear-gradient(0deg, rgba(%s), rgba(%s));", $bg_color_split[1], $bg_color_split[2]),
+                            "img" => sprintf("background-image: url('%s')", $bg_color_split[1]),
+                            default => ""
+                        };
 
-                    <!-- STATS -->
+                        if (is_file($_SERVER["DOCUMENT_ROOT"] . $badge_path)): ?>
+                            <div class="box row small-gap items-center" style="<?php echo $bg_color; ?>">
+                                <div>
+                                    <img src="<?php echo $badge_path ?>" alt="<?php echo $role["name"] ?>" width="54"
+                                        height="54">
+                                </div>
+                                <div class="column">
+                                    <p><?php echo $role["name"] ?></p>
+                                    <i style="color: gray">Role</i>
+                                </div>
+                            </div>
+                        <?php endif;
+                    } ?>
+                    <!-- Stats -->
                     <section class="box">
                         <table class="vertical left">
-                            <tr>
-                                <th><img src="/static/img/icons/user.png"> I am </th>
-                                <td><?php echo $status ?></td>
-                            </tr>
                             <tr>
                                 <th><img src="/static/img/icons/door_in.png"> Joined</th>
                                 <?php
@@ -423,24 +415,52 @@ if ($is_json) {
                             ?>
                         </table>
                     </section>
-
-                    <!-- ACTIONS -->
-                    <section class="box column">
-                        <a href="/message/send.php?user=<?php echo $user->id() ?>">Send a message</a>
-                        <?php
-                        if (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_report"]) {
-                            echo '<a href="/report?user_id=' . $user->id() . '">Report user</a>';
-                        }
-                        ?>
+                    <!-- Buttons -->
+                    <section class="box flex column small-gap" style="display: inline-block;">
+                        <button onclick="open_tab('user-emotes')" id="user-emotes-button"><img
+                                src="/static/img/icons/emotes/emote.png" alt=""> Emotes</button>
+                        <button onclick="open_tab('user-emotesets')" id="user-emotesets-button"><img
+                                src="/static/img/icons/emotes/emote_folder.png" alt=""> Emote
+                            sets</button>
+                        <?php if (ACCOUNT_LOG_ACTIONS && !$user_preferences["hide_actions"]): ?>
+                            <button onclick="open_tab('user-actions')" id="user-actions-button"><img
+                                    src="/static/img/icons/tag_blue.png" alt=""> Actions</button>
+                        <?php endif; ?>
+                        <button onclick="open_tab('user-uploadedemotes')" id="user-uploadedemotes-button"><img
+                                src="/static/img/icons/emotes/emote_go.png" alt=""> Uploaded
+                            emotes</button>
                     </section>
                 </section>
-
-                <!-- Emotes -->
-                <section class="column small-gap flex">
-                    <!-- Emoteset -->
-                    <section class="box">
+                <section class="content" style="display: inline-block;">
+                    <!-- Current emoteset -->
+                    <section class="box grow user-tab" id="user-emotes">
                         <div class="box navtab">
-                            <p>Emotes</p>
+                            <?php echo !empty($active_emote_set) ? $active_emote_set["name"] : "Emotes" ?>
+                        </div>
+                        <div class="box content items flex">
+                            <?php if (!empty($active_emote_set)) {
+                                if (!empty($active_emote_set["emotes"])) {
+                                    foreach ($active_emote_set["emotes"] as $emote_row) {
+                                        echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
+                                        echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.webp" alt="' . $emote_row["code"] . '"/>';
+                                        echo '<h1>' . $emote_row["code"] . '</h1>';
+                                        echo '<p>' . ($emote_row["uploaded_by"] == null ? (ANONYMOUS_DEFAULT_NAME . "*") : $emote_row["uploaded_by"]["username"]) . '</p>';
+                                        echo '</a>';
+                                        echo '</a>';
+                                    }
+                                } else {
+                                    echo '<p>No emotes found... ' . ((($_SESSION["user_id"] ?? "") == $id) ? 'Start adding emotes and they will appear here! :)</p>' : '</p>');
+                                }
+                            } else {
+                                echo "<p>This user doesn't have active emote set.</p>";
+                            }
+                            ?>
+                        </div>
+                    </section>
+                    <!-- Emote sets -->
+                    <section class="box grow user-tab" id="user-emotesets">
+                        <div class="box navtab">
+                            Emote sets
                         </div>
                         <div class="box content items">
                             <?php
@@ -469,59 +489,11 @@ if ($is_json) {
                             ?>
                         </div>
                     </section>
-
-                    <!-- Active emoteset -->
-                    <?php
-                    if ($active_emote_set != null) {
-                        echo '' ?>
-                        <section class="box">
-                            <div class="content items">
-                                <?php
-                                if (!empty($active_emote_set["emotes"])) {
-                                    foreach ($active_emote_set["emotes"] as $emote_row) {
-                                        echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
-                                        echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.webp" alt="' . $emote_row["code"] . '"/>';
-                                        echo '<h1>' . $emote_row["code"] . '</h1>';
-                                        echo '<p>' . ($emote_row["uploaded_by"] == null ? (ANONYMOUS_DEFAULT_NAME . "*") : $emote_row["uploaded_by"]["username"]) . '</p>';
-                                        echo '</a>';
-                                        echo '</a>';
-                                    }
-                                } else {
-                                    echo '<p>No emotes found... ' . ((($_SESSION["user_id"] ?? "") == $id) ? 'Start adding emotes and they will appear here! :)</p>' : '</p>');
-                                }
-                                ?>
-                            </div>
-                        </section><?php
-                    }
-                    ?>
-
-                    <!-- Uploaded emotes -->
-                    <?php
-                    if (!empty($uploaded_emotes)) {
-                        echo '' ?>
-                        <section class="box">
-                            <div class="box navtab">
-                                <p>Uploaded emotes</p>
-                            </div>
-                            <div class="box content items">
-                                <?php
-                                foreach ($uploaded_emotes as $emote_row) {
-                                    echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
-                                    echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.webp" alt="' . $emote_row["code"] . '"/>';
-                                    echo '<h1>' . $emote_row["code"] . '</h1>';
-                                    echo '</a>';
-                                }
-                                ?>
-                            </div>
-                        </section><?php
-                    }
-                    ?>
-
-                    <?php if (ACCOUNT_LOG_ACTIONS): ?>
+                    <?php if (ACCOUNT_LOG_ACTIONS && !$user_preferences["hide_actions"]): ?>
                         <!-- Actions -->
-                        <section class="box">
+                        <section class="box grow user-tab" id="user-actions">
                             <div class="box navtab">
-                                <p>Actions</p>
+                                Actions
                             </div>
                             <div class="box content">
                                 <?php
@@ -622,10 +594,41 @@ if ($is_json) {
                             </div>
                         </section>
                     <?php endif; ?>
+                    <!-- Uploaded emotes -->
+                    <section class="box grow user-tab" id="user-uploadedemotes">
+                        <div class="box navtab">
+                            Uploaded emotes
+                        </div>
+                        <div class="box content items">
+                            <?php
+                            foreach ($uploaded_emotes as $emote_row) {
+                                echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
+                                echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.webp" alt="' . $emote_row["code"] . '"/>';
+                                echo '<h1>' . $emote_row["code"] . '</h1>';
+                                echo '</a>';
+                            }
+                            ?>
+                        </div>
+                    </section>
                 </section>
             </section>
         </div>
     </div>
 </body>
+
+<script>
+    function open_tab(name) {
+        const body = document.getElementById(name);
+        const tabs = document.querySelectorAll(".user-tab");
+
+        for (let tab of tabs) {
+            tab.style.display = (tab.getAttribute("id") == name) ? "flex" : "none";
+        }
+    }
+
+    open_tab("user-emotes");
+
+    document.getElementById("sidebar").style.display = "block";
+</script>
 
 </html>
