@@ -3,6 +3,7 @@ include_once "../src/utils.php";
 include_once "../src/config.php";
 include_once "../src/accounts.php";
 include_once "../src/partials.php";
+include_once "../src/alert.php";
 authorize_user();
 
 $id = $_GET["id"] ?? "";
@@ -50,6 +51,11 @@ if ($id == "global") {
         }
     }
 } else if (intval($id) <= 0 && intval($alias_id) <= 0) {
+    if (!EMOTESET_PUBLIC_LIST) {
+        generate_alert("/404.php", "The public list of emotesets is disabled", 403);
+        exit;
+    }
+
     $limit = 20;
     $offset = ($page - 1) * $limit;
 

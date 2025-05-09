@@ -16,6 +16,11 @@ $alias_id = $_GET["alias_id"] ?? "";
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
 if ($id == "" && $alias_id == "") {
+    if (!ACCOUNT_PUBLIC_LIST) {
+        generate_alert("/404.php", "The public list of accounts is disabled", 403);
+        exit;
+    }
+
     $page = max(1, intval($_GET["p"] ?? "1"));
     $limit = 25;
     $offset = ($page - 1) * $limit;

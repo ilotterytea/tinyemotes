@@ -29,6 +29,9 @@ define("EMOTE_VISIBILITY_DEFAULT", 2); // Default visibility for emotes. 0 - unl
 define("EMOTE_MAX_SIZE", [128, 128]); // Max size of emote.
 define("EMOTE_NAME_REGEX", "/^[A-Za-z0-9_]+$/"); // RegEx filter for emote names.
 
+// EMOTESETS
+define("EMOTESET_PUBLIC_LIST", true); // Show emotesets public.
+
 // MODERATION
 define("MOD_SYSTEM_DASHBOARD", true); // Enable system dashboard for moderators (/system).
 define("MOD_EMOTES_APPROVE", true); // Enable manual emote approval (/system/emotes).
@@ -45,6 +48,7 @@ define("ACCOUNT_PASSWORD_MIN_LENGTH", 10); // Minimal length for passwords.
 define("ACCOUNT_SECRET_KEY_LENGTH", 32); // The length for secret keys.
 define("ACCOUNT_PFP_MAX_SIZE", [128, 128]); // Max dimensions for account pictures.
 define("ACCOUNT_BANNER_MAX_SIZE", [1920, 1080]); // Max dimensions for account banners.
+define("ACCOUNT_PUBLIC_LIST", true); // The public list of accounts.
 
 // TWITCH
 define("TWITCH_REGISTRATION_ENABLE", false); // Enable account registration via Twitch.
