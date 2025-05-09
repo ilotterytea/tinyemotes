@@ -13,11 +13,11 @@ function html_navigation_bar()
             <a href="/emotes" class="button">Emotes</a>
 
             <?php if (EMOTESET_PUBLIC_LIST): ?>
-                <a href="/emotesets.php">Emotesets</a>
+                <a href="/emotesets.php" class="button">Emotesets</a>
             <?php endif; ?>
 
             <?php if (ACCOUNT_PUBLIC_LIST): ?>
-                <a href="/users.php">Users</a>
+                <a href="/users.php" class="button">Users</a>
             <?php endif; ?>
 
             <?php if (EMOTE_UPLOAD && (ANONYMOUS_UPLOAD || (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_upload"]))) {
