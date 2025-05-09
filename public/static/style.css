@@ -13,6 +13,10 @@
     --body-background: #f2f8ee;
 
     --profile-background: radial-gradient(#f2f8eebb, #f2f8ee);
+
+    /** NAVBAR */
+    --navbar-background: linear-gradient(0deg, #b9caaf, #eaffdd);
+    --navbar-border-color: #94a58a;
 }
 
 * {
@@ -155,10 +159,11 @@ textarea {
 */
 
 .navbar {
+    background: var(--navbar-background);
+    border-bottom: 1px solid var(--navbar-border-color);
     display: flex;
     flex-direction: row;
     padding: 4px;
-
     gap: 16px;
 }
 
