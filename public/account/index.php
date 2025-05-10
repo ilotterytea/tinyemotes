@@ -135,6 +135,58 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
                     <hr>
 
+                    <div>
+                        <h2>Connections</h2>
+                        <div>
+                            <?php
+                            $stmt = $db->prepare("SELECT * FROM connections WHERE user_id = ?");
+                            $stmt->execute([$_SESSION["user_id"]]);
+                            $connections = $stmt->fetchAll();
+                            $platforms = ["twitch"];
+
+                            foreach ($platforms as $platform) {
+                                $connection = null;
+                                $key = array_search($platform, array_column($connections, "platform"));
+
+                                if (!is_bool($key)) {
+                                    $connection = $connections[$key];
+                                }
+
+                                echo "<div class='box $platform row small-gap items-center'>";
+                                echo "<div><img src='/static/img/icons/connections/$platform.webp' alt='' width='52' height='52' /></div>";
+
+                                echo "<div class='column grow'>";
+                                echo "<b>" . ucfirst($platform) . "</b>";
+
+                                // TODO: check if connection is still alive
+                                if ($connection == null) {
+                                    echo "<i>Not connected</i>";
+                                } else {
+                                    echo "<i>" . $connection["alias_id"] . "</i>";
+                                }
+
+                                echo "</div>";
+
+                                echo "<div class='column'>";
+
+                                if ($connection == null) {
+                                    echo "<a href='/account/login/$platform.php'>";
+                                    echo '<img src="/static/img/icons/disconnect.png" alt="Connect" title="Connect" />';
+                                    echo "</a>";
+                                } else {
+                                    echo "<a href='/account/login/$platform.php?disconnect'>";
+                                    echo '<img src="/static/img/icons/connect.png" alt="Disconnect" title="Disconnect" />';
+                                    echo "</a>";
+                                }
+
+                                echo "</div></div>";
+                            }
+                            ?>
+                        </div>
+                    </div>
+
+                    <hr>
+
                     <form action="/account/security.php" method="post">
                         <h2>Security & Privacy</h2>
                         <div>

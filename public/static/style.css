@@ -251,9 +251,10 @@ button.green:hover,
 }
 
 button.purple,
-.button.purple {
-    background: #9a7ad2;
-    border-color: #6d5595;
+.button.purple,
+.twitch {
+    background: #9a7ad2 !important;
+    border-color: #6d5595 !important;
 }
 
 button.purple:hover,
