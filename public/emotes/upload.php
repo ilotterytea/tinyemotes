@@ -104,8 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
                                 <textarea name="notes" id="form-notes"></textarea>
 
                                 <div>
-                                    <label for="tos" class="inline">Do you accept <a href="/rules">the rules</a>?<span
-                                            style="color:red;">*</span></label>
+                                    <label for="tos" class="inline">Do you accept <a href="/rules.php" target="_BLANK">the
+                                            rules</a>?<span style="color:red;">*</span></label>
                                     <input type="checkbox" name="tos" value="1" required>
                                 </div>
 
