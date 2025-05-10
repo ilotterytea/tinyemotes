@@ -20,10 +20,14 @@ $current_user_id = $_SESSION["user_id"] ?? "";
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
 $emote_results = $db->prepare("SELECT e.*,
 CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by,
-CASE WHEN up.private_profile = FALSE OR up.id = ? THEN u.username ELSE NULL END AS uploader_name
+CASE WHEN up.private_profile = FALSE OR up.id = ? THEN u.username ELSE NULL END AS uploader_name,
+r.name AS role_name,
+r.badge_id AS role_badge_id
 FROM emotes e
 LEFT JOIN users u ON u.id = e.uploaded_by
 LEFT JOIN user_preferences up ON up.id = u.id
+LEFT JOIN role_assigns ra ON ra.user_id = u.id
+LEFT JOIN roles r ON r.id = ra.role_id
 WHERE e.visibility = 2
 ORDER BY e.created_at DESC
 LIMIT 25
@@ -37,10 +41,14 @@ $emote = $emote_results[0] ?? null;
 if (isset($_GET["id"])) {
     $stmt = $db->prepare("SELECT e.*,
         CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by,
-        CASE WHEN up.private_profile = FALSE OR up.id = ? THEN u.username ELSE NULL END AS uploader_name
+        CASE WHEN up.private_profile = FALSE OR up.id = ? THEN u.username ELSE NULL END AS uploader_name,
+        r.name AS role_name,
+        r.badge_id AS role_badge_id
         FROM emotes e
-        LEFT JOIN user_preferences up ON up.id = u.id
         LEFT JOIN users u ON u.id = e.uploaded_by
+        LEFT JOIN user_preferences up ON up.id = u.id
+        LEFT JOIN role_assigns ra ON ra.user_id = u.id
+        LEFT JOIN roles r ON r.id = ra.role_id
         WHERE e.visibility = 2 AND e.id = ?
         LIMIT 1");
 
@@ -135,6 +143,10 @@ if (isset($_GET["id"])) {
                                     echo "<a href=\"$link\">";
                                     echo $username;
                                     echo "</a>";
+
+                                    if ($emote["role_badge_id"]) {
+                                        echo ' <img src="/static/userdata/badges/' . $emote["role_badge_id"] . '/1x.webp" alt="## ' . $emote["role_name"] . '" title="' . $emote["role_name"] . '" />';
+                                    }
 
                                     echo ', <span title="';
                                     echo date("M d, Y H:i:s", strtotime($emote["created_at"]));

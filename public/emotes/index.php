@@ -329,11 +329,14 @@ if (CLIENT_REQUIRES_JSON) {
                                     $username = ANONYMOUS_DEFAULT_NAME;
                                     $link = "#";
                                     $show_private_badge = false;
+                                    $badge = null;
 
                                     if ($emote->get_uploaded_by()) {
-                                        $stmt = $db->prepare("SELECT u.username, up.private_profile
+                                        $stmt = $db->prepare("SELECT u.username, up.private_profile, r.name AS role_name, r.badge_id AS role_badge_id
                                             FROM users u
                                             INNER JOIN user_preferences up ON up.id = u.id
+                                            LEFT JOIN role_assigns ra ON ra.user_id = u.id
+                                            LEFT JOIN roles r ON r.id = ra.role_id
                                             WHERE u.id = ?
                                         ");
                                         $stmt->execute([$emote->get_uploaded_by()]);
@@ -343,6 +346,7 @@ if (CLIENT_REQUIRES_JSON) {
 
                                             $username = $row["username"];
                                             $link = "/users.php?id=" . $emote->get_uploaded_by();
+                                            $badge = ["role_name" => $row["role_name"], "role_badge_id" => $row["role_badge_id"]];
                                         }
                                     }
 
@@ -354,20 +358,32 @@ if (CLIENT_REQUIRES_JSON) {
                                         echo " <img src='/static/img/icons/eye.png' alt='(Private)' title='You are the only one who sees this' />";
                                     }
 
+                                    if ($badge && $badge["role_badge_id"]) {
+                                        echo ' <img src="/static/userdata/badges/' . $badge["role_badge_id"] . '/1x.webp" alt="## ' . $badge["role_name"] . '" title="' . $badge["role_name"] . '" />';
+                                    }
+
                                     echo ', <span title="';
                                     echo date("M d, Y H:i:s", $emote->get_created_at());
                                     echo ' UTC">about ' . format_timestamp(time() - $emote->get_created_at()) . " ago</span>";
                                     ?></td>
                                 </tr>
                                 <?php
-                                $stmt = $db->prepare("SELECT u.id, u.username, a.created_at FROM users u
+                                $stmt = $db->prepare("SELECT u.id, u.username, a.created_at, r.name AS role_name, r.badge_id AS role_badge_id FROM users u
                                     INNER JOIN mod_actions a ON a.emote_id = ?
+                                    LEFT JOIN role_assigns ra ON ra.user_id = u.id
+                                    LEFT JOIN roles r ON r.id = ra.role_id
                                     WHERE u.id = a.user_id");
                                 $stmt->execute([$emote->get_id()]);
 
                                 if ($row = $stmt->fetch()) {
                                     echo '<tr><th>Approver</th><td>';
-                                    echo '<a href="/users.php?id=' . $row["id"] . '" target="_blank">' . $row["username"] . '</a>, <span title="';
+                                    echo '<a href="/users.php?id=' . $row["id"] . '" target="_blank">' . $row["username"] . '</a>';
+
+                                    if ($row["role_badge_id"]) {
+                                        echo ' <img src="/static/userdata/badges/' . $row["role_badge_id"] . '/1x.webp" alt="## ' . $row["role_name"] . '" title="' . $row["role_name"] . '" />';
+                                    }
+
+                                    echo ', <span title="';
                                     echo date("M d, Y H:i:s", strtotime($row["created_at"])) . ' UTC">';
                                     echo format_timestamp(strtotime($row["created_at"]) - $emote->get_created_at()) . ' after upload';
                                     echo '</span></td></tr>';
