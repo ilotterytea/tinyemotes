@@ -526,6 +526,10 @@ a.box:hover {
     align-items: center;
 }
 
+.items-bottom {
+    align-items: end;
+}
+
 .justify-center {
     justify-content: center;
 }
