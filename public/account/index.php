@@ -202,16 +202,17 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                             <input type="password" name="password-new" id="form-password-new">
                         </div>
                         <div>
-                            <?php if (ACCOUNT_LOG_ACTIONS): ?>
-                                <input type="checkbox" name="hide-actions" value="1" id="form-hide-actions" <?php
-                                $stmt = $db->prepare("SELECT hide_actions FROM user_preferences WHERE id = ?");
-                                $stmt->execute([$_SESSION["user_id"]]);
-                                if (intval($stmt->fetch()[0]) == 1) {
-                                    echo 'checked';
-                                }
-                                ?>>
-                                <label for="hide-actions" class="inline">Hide actions</label>
-                            <?php endif; ?>
+                            <input type="checkbox" name="make-private" value="1" id="form-make-private" <?php
+                            $stmt = $db->prepare("SELECT private_profile FROM user_preferences WHERE id = ?");
+                            $stmt->execute([$_SESSION["user_id"]]);
+                            if (intval($stmt->fetch()[0]) == 1) {
+                                echo 'checked';
+                            }
+                            ?>>
+                            <label for="make-private" class="inline">Make profile private</label>
+                            <p class="font-small">Enabling this feature will hide your authorship of uploaded emotes and
+                                actions.</p>
+
                         </div>
                         <div>
                             <input type="checkbox" name="signout-everywhere" value="1" id="form-signout-everywhere">

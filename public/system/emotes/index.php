@@ -15,24 +15,36 @@ if (!authorize_user(true) || !$_SESSION["user_role"]["permission_approve_emotes"
     exit;
 }
 
+$current_user_id = $_SESSION["user_id"] ?? "";
+
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
-$emote_results = $db->query("SELECT e.*, u.username as uploader_name
+$emote_results = $db->prepare("SELECT e.*,
+CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by,
+CASE WHEN up.private_profile = FALSE OR up.id = ? THEN u.username ELSE NULL END AS uploader_name
 FROM emotes e
 LEFT JOIN users u ON u.id = e.uploaded_by
+LEFT JOIN user_preferences up ON up.id = u.id
 WHERE e.visibility = 2
 ORDER BY e.created_at DESC
 LIMIT 25
-")->fetchAll(PDO::FETCH_ASSOC);
+");
+$emote_results->execute([$current_user_id, $current_user_id]);
+
+$emote_results = $emote_results->fetchAll(PDO::FETCH_ASSOC);
 
 $emote = $emote_results[0] ?? null;
 
 if (isset($_GET["id"])) {
-    $stmt = $db->prepare("SELECT e.*, u.username as uploader_name
+    $stmt = $db->prepare("SELECT e.*,
+        CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by,
+        CASE WHEN up.private_profile = FALSE OR up.id = ? THEN u.username ELSE NULL END AS uploader_name
         FROM emotes e
+        LEFT JOIN user_preferences up ON up.id = u.id
         LEFT JOIN users u ON u.id = e.uploaded_by
         WHERE e.visibility = 2 AND e.id = ?
         LIMIT 1");
-    $stmt->execute([$_GET["id"]]);
+
+    $stmt->execute([$current_user_id, $current_user_id, $_GET["id"]]);
     $emote = $stmt->fetch(PDO::FETCH_ASSOC) ?? null;
 }
 

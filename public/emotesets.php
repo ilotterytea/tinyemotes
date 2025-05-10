@@ -34,11 +34,13 @@ if ($id == "global") {
         CASE 
             WHEN esc.code IS NOT NULL THEN e.code 
             ELSE NULL 
-        END AS original_code
+        END AS original_code,
+        CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by
         FROM emotes e
+        JOIN user_preferences up ON up.id = e.uploaded_by
         JOIN emote_set_contents esc ON esc.emote_id = e.id
         WHERE esc.emote_set_id = ?");
-        $stmt->execute([$emote_set["id"]]);
+        $stmt->execute([$_SESSION["user_id"] ?? "", $emote_set["id"]]);
 
         $emote_set["emotes"] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -75,11 +77,13 @@ if ($id == "global") {
         CASE 
             WHEN esc.code IS NOT NULL THEN e.code 
             ELSE NULL 
-        END AS original_code
+        END AS original_code,
+        CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by
         FROM emotes e
+        JOIN user_preferences up ON up.id = e.uploaded_by
         JOIN emote_set_contents esc ON esc.emote_set_id = ?
         WHERE e.id = esc.emote_id");
-        $stmt->execute([$e["id"]]);
+        $stmt->execute([$_SESSION["user_id"] ?? "", $e["id"]]);
 
         $e["emotes"] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($e["emotes"] as &$em) {
@@ -113,11 +117,13 @@ if ($id == "global") {
         CASE 
             WHEN esc.code IS NOT NULL THEN e.code 
             ELSE NULL 
-        END AS original_code
+        END AS original_code,
+        CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by
         FROM emotes e
+        JOIN user_preferences up ON up.id = e.uploaded_by
         JOIN emote_set_contents esc ON esc.emote_set_id = ?
         WHERE esc.emote_id = e.id");
-        $stmt->execute([$emote_set["id"]]);
+        $stmt->execute([$_SESSION["user_id"] ?? "", $emote_set["id"]]);
 
         $emote_set["emotes"] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -144,11 +150,13 @@ if ($id == "global") {
         CASE 
             WHEN esc.code IS NOT NULL THEN e.code 
             ELSE NULL 
-        END AS original_code
+        END AS original_code,
+        CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by
         FROM emotes e
+        JOIN user_preferences up ON up.id = e.uploaded_by
         JOIN emote_set_contents esc ON esc.emote_set_id = ?
         WHERE esc.emote_id = e.id");
-        $stmt->execute([$emote_set["id"]]);
+        $stmt->execute([$_SESSION["user_id"] ?? "", $emote_set["id"]]);
 
         $emote_set["emotes"] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($emote_set["emotes"] as &$e) {

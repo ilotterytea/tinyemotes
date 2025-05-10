@@ -12,6 +12,8 @@ $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
 function display_list_emotes(PDO &$db, string $search, string $sort_by, int $page, int $limit): array
 {
+    $current_user_id = $_SESSION["user_id"] ?? "";
+
     $user_id = $_SESSION["user_id"] ?? "-1";
     $offset = ($page - 1) * $limit;
 
@@ -23,6 +25,7 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
     };
 
     $stmt = $db->prepare("SELECT e.*,
+    CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by,
     CASE WHEN EXISTS (
         SELECT 1
         FROM emote_set_contents ec
@@ -31,6 +34,7 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
         WHERE ec.emote_id = e.id AND es.owner_id = ? AND aes.is_default = TRUE
     ) THEN 1 ELSE 0 END AS is_in_user_set, COALESCE(COUNT(r.rate), 0) AS rating
     FROM emotes e
+    LEFT JOIN user_preferences up ON up.id = e.uploaded_by
     LEFT JOIN ratings AS r ON r.emote_id = e.id
     WHERE e.code LIKE ? AND e.visibility = 1
     GROUP BY 
@@ -39,10 +43,11 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
     LIMIT ? OFFSET ?
     ");
 
-    $stmt->bindParam(1, $user_id, PDO::PARAM_INT);
-    $stmt->bindParam(2, $search, PDO::PARAM_STR);
-    $stmt->bindParam(3, $limit, PDO::PARAM_INT);
-    $stmt->bindParam(4, $offset, PDO::PARAM_INT);
+    $stmt->bindParam(1, $current_user_id, PDO::PARAM_STR);
+    $stmt->bindParam(2, $user_id, PDO::PARAM_INT);
+    $stmt->bindParam(3, $search, PDO::PARAM_STR);
+    $stmt->bindParam(4, $limit, PDO::PARAM_INT);
+    $stmt->bindParam(5, $offset, PDO::PARAM_INT);
 
     $stmt->execute();
 
@@ -54,9 +59,14 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
         $uploader = null;
 
         if ($row["uploaded_by"]) {
-            $stmt = $db->prepare("SELECT id, username FROM users WHERE id = ?");
+            $private_profile = $row["uploaded_by"] == ($_SESSION["user_id"] ?? "") ? "" : "AND up.private_profile = FALSE";
+            $stmt = $db->prepare("SELECT u.id, u.username FROM users u
+                INNER JOIN user_preferences up ON up.id = u.id
+                WHERE u.id = ? $private_profile
+            ");
             $stmt->execute([$row["uploaded_by"]]);
-            $uploader = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $uploader = $stmt->fetch(PDO::FETCH_ASSOC) ?? null;
         }
 
         array_push($emotes, new Emote(
@@ -77,11 +87,13 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
 function display_emote(PDO &$db, string $id)
 {
     $stmt = $db->prepare("SELECT e.*, COALESCE(COUNT(r.rate), 0) as total_rating,
-    COALESCE(ROUND(AVG(r.rate), 2), 0) AS average_rating
+    COALESCE(ROUND(AVG(r.rate), 2), 0) AS average_rating,
+    CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by
     FROM emotes e
-    LEFT JOIN ratings AS r ON r.emote_id = ?
+    LEFT JOIN user_preferences up ON up.id = e.uploaded_by
+    LEFT JOIN ratings AS r ON r.emote_id = e.id
     WHERE e.id = ?");
-    $stmt->execute([$id, $id]);
+    $stmt->execute([$_SESSION["user_id"] ?? "", $id]);
 
     $emote = null;
 
@@ -316,12 +328,19 @@ if (CLIENT_REQUIRES_JSON) {
                                     <td><?php
                                     $username = ANONYMOUS_DEFAULT_NAME;
                                     $link = "#";
+                                    $show_private_badge = false;
 
                                     if ($emote->get_uploaded_by()) {
-                                        $stmt = $db->prepare("SELECT username FROM users WHERE id = ?");
+                                        $stmt = $db->prepare("SELECT u.username, up.private_profile
+                                            FROM users u
+                                            INNER JOIN user_preferences up ON up.id = u.id
+                                            WHERE u.id = ?
+                                        ");
                                         $stmt->execute([$emote->get_uploaded_by()]);
 
                                         if ($row = $stmt->fetch()) {
+                                            $show_private_badge = $row["private_profile"];
+
                                             $username = $row["username"];
                                             $link = "/users.php?id=" . $emote->get_uploaded_by();
                                         }
@@ -330,6 +349,10 @@ if (CLIENT_REQUIRES_JSON) {
                                     echo "<a href=\"$link\">";
                                     echo $username;
                                     echo "</a>";
+
+                                    if ($show_private_badge) {
+                                        echo " <img src='/static/img/icons/eye.png' alt='(Private)' title='You are the only one who sees this' />";
+                                    }
 
                                     echo ', <span title="';
                                     echo date("M d, Y H:i:s", $emote->get_created_at());

@@ -155,6 +155,14 @@ if ($user == null) {
     exit;
 }
 
+// User preferences
+$stmt = $db->prepare("SELECT * FROM user_preferences WHERE id = ?");
+$stmt->execute([$user->id()]);
+
+$user_preferences = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$public_profile = !$user_preferences["private_profile"] || $user->id() == ($_SESSION["user_id"] ?? "");
+
 // --- EMOTE SETS ---
 // TODO: OPTIMIZE IT ASAP!!!
 $emote_sets = [];
@@ -172,7 +180,8 @@ while ($row = $stmt->fetch()) {
 
     // getting info about emote set content
     $em_stmt = $db->prepare(
-        "SELECT e.id, e.created_at, e.uploaded_by, 
+        "SELECT e.id, e.created_at,
+        CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by, 
         CASE 
             WHEN esc.code IS NOT NULL THEN esc.code 
             ELSE e.code
@@ -182,12 +191,13 @@ while ($row = $stmt->fetch()) {
             ELSE NULL 
         END AS original_code
         FROM emotes e
+        LEFT JOIN user_preferences up ON up.id = e.uploaded_by
         INNER JOIN emote_set_contents AS esc
         ON esc.emote_set_id = ?
         WHERE esc.emote_id = e.id
         " . ($row["is_default"] ? '' : ' LIMIT 5')
     );
-    $em_stmt->execute([$row["emote_set_id"]]);
+    $em_stmt->execute([$_SESSION["user_id"] ?? "", $row["emote_set_id"]]);
 
     $emote_set_emotes = $em_stmt->fetchAll(PDO::FETCH_ASSOC);
     foreach ($emote_set_emotes as &$e) {
@@ -215,7 +225,10 @@ while ($row = $stmt->fetch()) {
 $active_emote_set = &$emote_sets[$active_emote_set];
 
 // gathering uploaded emotes
-$stmt = $db->prepare("SELECT e.*,
+$uploaded_emotes = [];
+
+if ($public_profile) {
+    $stmt = $db->prepare("SELECT e.*,
     CASE WHEN EXISTS (
         SELECT 1
         FROM emote_set_contents ec
@@ -226,14 +239,15 @@ $stmt = $db->prepare("SELECT e.*,
     WHERE e.uploaded_by = ?
     ORDER BY e.created_at ASC
     ");
-$stmt->execute([$user->id(), $user->id()]);
+    $stmt->execute([$user->id(), $user->id()]);
 
-$uploaded_emotes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $uploaded_emotes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // gathering actions
 $actions = [];
 
-if (ACCOUNT_LOG_ACTIONS) {
+if ($public_profile) {
     $stmt = $db->prepare("SELECT a.* FROM actions a WHERE a.user_id = ? ORDER BY a.created_at DESC LIMIT 15");
     $stmt->execute([$user->id()]);
     $actions = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -265,12 +279,6 @@ $fav_reactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // getting favorite emote
 $fav_emote = 1;
-
-// User preferences
-$stmt = $db->prepare("SELECT * FROM user_preferences WHERE id = ?");
-$stmt->execute([$user->id()]);
-
-$user_preferences = $stmt->fetch(PDO::FETCH_ASSOC) ?? null;
 
 if ($is_json) {
     header("Content-type: application/json");
@@ -422,13 +430,13 @@ if ($is_json) {
                         <button onclick="open_tab('user-emotesets')" id="user-emotesets-button"><img
                                 src="/static/img/icons/emotes/emote_folder.png" alt=""> Emote
                             sets</button>
-                        <?php if (ACCOUNT_LOG_ACTIONS && !$user_preferences["hide_actions"]): ?>
+                        <?php if ($public_profile): ?>
                             <button onclick="open_tab('user-actions')" id="user-actions-button"><img
                                     src="/static/img/icons/tag_blue.png" alt=""> Actions</button>
+                            <button onclick="open_tab('user-uploadedemotes')" id="user-uploadedemotes-button"><img
+                                    src="/static/img/icons/emotes/emote_go.png" alt=""> Uploaded
+                                emotes</button>
                         <?php endif; ?>
-                        <button onclick="open_tab('user-uploadedemotes')" id="user-uploadedemotes-button"><img
-                                src="/static/img/icons/emotes/emote_go.png" alt=""> Uploaded
-                            emotes</button>
                     </section>
                 </section>
                 <section class="content" style="display: inline-block;">
@@ -489,11 +497,12 @@ if ($is_json) {
                             ?>
                         </div>
                     </section>
-                    <?php if (ACCOUNT_LOG_ACTIONS && !$user_preferences["hide_actions"]): ?>
+                    <?php if ($public_profile): ?>
                         <!-- Actions -->
                         <section class="box grow user-tab" id="user-actions">
                             <div class="box navtab">
                                 Actions
+                                <?php echo $user_preferences["private_profile"] ? " <img src='/static/img/icons/eye.png' alt='(Private)' title='You are the only one who sees this' />" : "" ?>
                             </div>
                             <div class="box content">
                                 <?php
@@ -593,23 +602,25 @@ if ($is_json) {
                                 ?>
                             </div>
                         </section>
+
+                        <!-- Uploaded emotes -->
+                        <section class="box grow user-tab" id="user-uploadedemotes">
+                            <div class="box navtab">
+                                Uploaded emotes
+                                <?php echo $user_preferences["private_profile"] ? " <img src='/static/img/icons/eye.png' alt='(Private)' title='You are the only one who sees this' />" : "" ?>
+                            </div>
+                            <div class="box content items">
+                                <?php
+                                foreach ($uploaded_emotes as $emote_row) {
+                                    echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
+                                    echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.webp" alt="' . $emote_row["code"] . '"/>';
+                                    echo '<h1>' . $emote_row["code"] . '</h1>';
+                                    echo '</a>';
+                                }
+                                ?>
+                            </div>
+                        </section>
                     <?php endif; ?>
-                    <!-- Uploaded emotes -->
-                    <section class="box grow user-tab" id="user-uploadedemotes">
-                        <div class="box navtab">
-                            Uploaded emotes
-                        </div>
-                        <div class="box content items">
-                            <?php
-                            foreach ($uploaded_emotes as $emote_row) {
-                                echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
-                                echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.webp" alt="' . $emote_row["code"] . '"/>';
-                                echo '<h1>' . $emote_row["code"] . '</h1>';
-                                echo '</a>';
-                            }
-                            ?>
-                        </div>
-                    </section>
                 </section>
             </section>
         </div>

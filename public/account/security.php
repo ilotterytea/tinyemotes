@@ -3,6 +3,7 @@
 include_once "../../src/accounts.php";
 include_once "../../src/alert.php";
 include_once "../../src/config.php";
+include_once "../../src/utils.php";
 
 if ($_SERVER["REQUEST_METHOD"] != "POST" || !authorize_user(true)) {
     header("Location: /account");
@@ -33,10 +34,10 @@ if (!empty($_POST["password-new"])) {
         ->execute([password_hash($password, PASSWORD_DEFAULT), $user["id"]]);
 }
 
-$hide_actions = (int) (intval($_POST["hide-actions"] ?? "0") == 1);
+$private_profile = (int) (intval($_POST["make-private"] ?? "0") == 1);
 
-$db->prepare("UPDATE user_preferences SET hide_actions = ? WHERE id = ?")
-    ->execute([$hide_actions, $user["id"]]);
+$db->prepare("UPDATE user_preferences SET private_profile = ? WHERE id = ?")
+    ->execute([$private_profile, $user["id"]]);
 
 if (intval($_POST["signout-everywhere"] ?? "0") == 1) {
     $db->prepare("UPDATE users SET secret_key = ? WHERE id = ?")
