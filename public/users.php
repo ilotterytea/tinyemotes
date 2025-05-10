@@ -344,7 +344,6 @@ if ($is_json) {
                     <!-- Role -->
                     <?php
                     if ($role) {
-                        $badge_path = sprintf("/%s/userdata/badges/%s/3x.webp", INSTANCE_STATIC_FOLDER, $role["badge_id"] ?? "");
                         $bg_color_split = explode(":", $role["background_color"]);
                         $bg_color = match ($bg_color_split[0]) {
                             "solid" => sprintf("background: rgba(%s);", $bg_color_split[1]),
@@ -353,11 +352,11 @@ if ($is_json) {
                             default => ""
                         };
 
-                        if (is_file($_SERVER["DOCUMENT_ROOT"] . $badge_path)): ?>
+                        if ($role["badge_id"]): ?>
                             <div class="box row small-gap items-center" style="<?php echo $bg_color; ?>">
                                 <div>
-                                    <img src="<?php echo $badge_path ?>" alt="<?php echo $role["name"] ?>" width="54"
-                                        height="54">
+                                    <img src="/static/userdata/badges/<?php echo $role["badge_id"] ?>/3x.webp"
+                                        alt="<?php echo $role["name"] ?>" width="54" height="54">
                                 </div>
                                 <div class="column">
                                     <p><?php echo $role["name"] ?></p>

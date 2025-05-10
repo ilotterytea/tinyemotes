@@ -81,13 +81,19 @@ CREATE TABLE IF NOT EXISTS reports (
     response_message TEXT
 );
 
+CREATE TABLE IF NOT EXISTS badges (
+    id CHAR(32) NOT NULL PRIMARY KEY DEFAULT REPLACE(UUID(),'-',''),
+    uploaded_by CHAR(32) REFERENCES users(id),
+    created_at TIMESTAMP NOT NULL DEFAULT UTC_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS roles (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
     priority INTEGER NOT NULL DEFAULT 0,
     name TEXT NOT NULL,
     foreground_color TEXT NOT NULL DEFAULT '000,000,000',
     background_color TEXT NOT NULL DEFAULT 'solid:255,255,255',
-    badge_id INTEGER NOT NULL DEFAULT 0,
+    badge_id CHAR(32) REFERENCES badges(id),
 
     -- permissions
     permission_upload BOOLEAN NOT NULL DEFAULT true,
@@ -153,6 +159,8 @@ END$$
 DELIMITER ;
 
 -- NULLIFY EMOTE AUTHORS ON USER DELETION
+DROP TRIGGER IF EXISTS user_deletion;
+
 DELIMITER $$
 CREATE TRIGGER IF NOT EXISTS user_deletion
 BEFORE DELETE ON users
@@ -161,6 +169,7 @@ BEGIN
     UPDATE emotes SET uploaded_by = NULL WHERE uploaded_by = OLD.id;
     UPDATE emote_set_contents SET added_by = NULL WHERE added_by = OLD.id;
     UPDATE reports SET resolved_by = NULL WHERE resolved_by = OLD.id;
+    UPDATE badges SET uploaded_by = NULL WHERE uploaded_by = OLD.id;
 END$$
 DELIMITER ;
 
