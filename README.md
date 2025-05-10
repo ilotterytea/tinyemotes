@@ -26,10 +26,13 @@ The main goal of the project is to replicate full functionality of other emote p
 
 ## Installation guide
 
+> It is not recommended to install right now before version 1.0 is released, as there may be breaking updates.
+
 ### Prerequisites
 
 + PHP >= 8.3
-+ ImageMagick
++ ImageMagick >= 7.0
++ cURL
 + MySQL/MariaDB
 
 ### Step-by-step
