@@ -465,7 +465,8 @@ if (CLIENT_REQUIRES_JSON) {
                             FROM users
                             INNER JOIN emote_sets AS es ON es.owner_id = users.id
                             INNER JOIN emote_set_contents AS ec ON ec.emote_set_id = es.id
-                            WHERE ec.emote_id = ?");
+                            INNER JOIN acquired_emote_sets AS aes ON aes.emote_set_id = es.id
+                            WHERE ec.emote_id = ? AND aes.is_default = TRUE");
 
                                 $stmt->execute([$emote->get_id()]);
                                 $count = $stmt->rowCount();
