@@ -190,8 +190,14 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                     <form action="/account/security.php" method="post">
                         <h2>Security & Privacy</h2>
                         <div>
-                            <label for="password-current">Current password:</label>
-                            <input type="password" name="password-current" id="form-password-current">
+                            <?php
+                            $stmt = $db->prepare("SELECT CASE WHEN password IS NOT NULL THEN 1 ELSE 0 END as set_password FROM users WHERE id = ?");
+                            $stmt->execute([$_SESSION["user_id"]]);
+                            $set_password = $stmt->fetch()[0];
+                            if ($set_password): ?>
+                                <label for="password-current">Current password:</label>
+                                <input type="password" name="password-current" id="form-password-current" required>
+                            <?php endif; ?>
                             <label for="password-new">New password:</label>
                             <input type="password" name="password-new" id="form-password-new">
                         </div>
