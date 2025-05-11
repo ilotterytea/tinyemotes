@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                 <section class="box accman">
                     <h1>Account management</h1>
 
-                    <form action="/account" method="POST" enctype="multipart/form-data">
+                    <form action="/account/" method="POST" enctype="multipart/form-data">
                         <h2>Profile</h2>
                         <h3>Profile picture</h3>
                         <?php
