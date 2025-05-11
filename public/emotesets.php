@@ -52,7 +52,7 @@ if ($id == "global") {
             }
         }
     }
-} else if (intval($id) <= 0 && intval($alias_id) <= 0) {
+} else if (empty($id) && intval($alias_id) <= 0) {
     if (!EMOTESET_PUBLIC_LIST) {
         generate_alert("/404.php", "The public list of emotesets is disabled", 403);
         exit;
