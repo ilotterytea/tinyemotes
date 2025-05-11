@@ -394,7 +394,7 @@ if ($is_manual) {
     }
 }
 
-if (ACCOUNT_LOG_ACTIONS) {
+if (ACCOUNT_LOG_ACTIONS && $uploaded_by != null) {
     $db->prepare("INSERT INTO actions(user_id, action_type, action_payload) VALUES (?, ?, ?)")
         ->execute([
             $uploaded_by,
