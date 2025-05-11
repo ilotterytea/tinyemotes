@@ -387,6 +387,11 @@ if ($is_manual) {
         abort_upload($path, $db, $id);
         exit;
     }
+
+    if (EMOTE_STORE_ORIGINAL) {
+        $ext = get_file_extension($image["tmp_name"]) ?? "";
+        move_uploaded_file($image["tmp_name"], "$path/original.$ext");
+    }
 }
 
 if (ACCOUNT_LOG_ACTIONS) {

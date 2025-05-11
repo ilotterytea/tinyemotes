@@ -28,6 +28,7 @@ define("EMOTE_COMMENT_MAX_LENGTH", 100); // Max length for emote comment.
 define("EMOTE_VISIBILITY_DEFAULT", 2); // Default visibility for emotes. 0 - unlisted, 1 - public, 2 - pending approval (same as unlisted).
 define("EMOTE_MAX_SIZE", [128, 128]); // Max size of emote.
 define("EMOTE_NAME_REGEX", "/^[A-Za-z0-9_]+$/"); // RegEx filter for emote names.
+define("EMOTE_STORE_ORIGINAL", true); // Store original uploads of emotes.
 
 // EMOTESETS
 define("EMOTESET_PUBLIC_LIST", true); // Show emotesets public.

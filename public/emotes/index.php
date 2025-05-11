@@ -195,6 +195,14 @@ if (CLIENT_REQUIRES_JSON) {
                                 echo "Emote - " . $emote->get_code();
                                 echo '<div class="row small-gap" style="margin-left:auto">';
 
+                                $original_path = "/static/userdata/emotes/" . $emote->get_id();
+                                $files = glob($_SERVER["DOCUMENT_ROOT"] . $original_path . "/original.*");
+
+                                if (!empty($files)) {
+                                    $filename = basename($files[0]);
+                                    echo "<a href='$original_path/$filename' target='_BLANK'><img src='/static/img/icons/emotes/emote.png' alt='[Show original]' title='Show original' /></a>";
+                                }
+
                                 $stmt = $db->prepare("
                                     SELECT MAX(es.is_featured) AS is_featured, MAX(es.is_global) AS is_global
                                     FROM emote_sets es

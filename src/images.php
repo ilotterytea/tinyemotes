@@ -29,6 +29,15 @@ function resize_image(string $src_path, string $dst_path, int $max_width, int $m
     return $result_code;
 }
 
+function get_file_extension(string $path): string|null
+{
+    if ($file = getimagesize($path)) {
+        return image_type_to_extension(intval($file[2]), false);
+    }
+
+    return null;
+}
+
 function does_file_meet_requirements(string $path, int $max_width, int $max_height): array
 {
     $file = getimagesize($path);

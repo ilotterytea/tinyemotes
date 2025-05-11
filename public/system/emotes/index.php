@@ -101,7 +101,21 @@ if (isset($_GET["id"])) {
                     <section class="content">
                         <!-- Emote showcase -->
                         <section class="box">
-                            <div class="box navtab">Emote - <?php echo $emote["code"] ?></div>
+                            <div class="box navtab row">
+                                <?php
+                                echo "Emote - " . $emote["code"];
+                                echo '<div class="row small-gap" style="margin-left:auto">';
+
+                                $original_path = "/static/userdata/emotes/" . $emote["id"];
+                                $files = glob($_SERVER["DOCUMENT_ROOT"] . $original_path . "/original.*");
+
+                                if (!empty($files)) {
+                                    $filename = basename($files[0]);
+                                    echo "<a href='$original_path/$filename' target='_BLANK'><img src='/static/img/icons/emotes/emote.png' alt='[Show original]' title='Show original' /></a>";
+                                }
+                                echo '</div>';
+                                ?>
+                            </div>
                             <div class="box content">
                                 <div class="emote-showcase">
                                     <img src="/static/userdata/emotes/<?php echo $emote["id"] ?>/1x.webp"
