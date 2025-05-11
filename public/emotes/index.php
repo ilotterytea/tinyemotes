@@ -401,7 +401,7 @@ if (CLIENT_REQUIRES_JSON) {
                                     <tr>
                                         <th>Rating</th>
                                         <?php
-                                        if ($emote->get_rating()["total"] < 10) {
+                                        if ($emote->get_rating()["total"] < RATING_EMOTE_MIN_VOTES) {
                                             echo '<td>Not rated (' . $emote->get_rating()["total"] . ')</td>';
                                         } else {
 

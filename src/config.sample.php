@@ -16,6 +16,7 @@ define("RATING_NAMES", [
     "-1" => "COAL",
     "1" => "GEM",
 ]); // Rating names. The schema is [ "id/rating_point" => "name" ].
+define("RATING_EMOTE_MIN_VOTES", 10); // Minimal amount of votes to display emote rating.
 
 // UPLOADS
 define("ANONYMOUS_UPLOAD", false); // Allow anonymous upload for emotes.
@@ -59,9 +60,8 @@ define("TWITCH_SECRET_KEY", "BBBBBBBBB"); // Secret key of your Twitch applicati
 define("TWITCH_REDIRECT_URI", ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http") . "://$_SERVER[HTTP_HOST]/account/login/twitch.php"); // Redirect URI of your Twitch application.
 
 // HCAPTCHA
-define("HCAPTCHA_ENABLE", true); // Enable hCaptcha.
-define("HCAPTCHA_SECRETKEY", "ES_XXXXXX"); // hCaptcha's secret key.
-define("HCAPTCHA_SITEKEY", "YYYYYYY"); // hCaptcha's site key.
+define("CAPTCHA_ENABLE", true); // Enable built-in captcha.
+define("CAPTCHA_WORDS", ["hello", "apple", "cat"]); // Captcha words.
 
 // FOR DEVELOPERS
 define("CLIENT_REQUIRES_JSON", isset($_SERVER["HTTP_ACCEPT"]) && $_SERVER["HTTP_ACCEPT"] == "application/json");
