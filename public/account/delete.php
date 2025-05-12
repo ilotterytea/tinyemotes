@@ -22,8 +22,15 @@ setcookie("secret_key", "", time() - 1000);
 $db = null;
 
 $path = "../static/userdata/avatars/$id";
-if (is_file($path)) {
-    unlink($path);
+if (is_dir($path)) {
+    array_map("unlink", glob("$path/*.*"));
+    rmdir($path);
+}
+
+$path = "../static/userdata/banners/$id";
+if (is_dir($path)) {
+    array_map("unlink", glob("$path/*.*"));
+    rmdir($path);
 }
 
 header("Location: /account");
