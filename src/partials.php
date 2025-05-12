@@ -83,8 +83,8 @@ function html_navigation_bar()
                     Signed in as <?php echo $_SESSION["user_name"] ?>
                     <?php
                     echo '<img src="/static/';
-                    if (is_file($_SERVER['DOCUMENT_ROOT'] . "/static/userdata/avatars/" . $_SESSION["user_id"])) {
-                        echo 'userdata/avatars/' . $_SESSION["user_id"];
+                    if (is_dir($_SERVER['DOCUMENT_ROOT'] . "/static/userdata/avatars/" . $_SESSION["user_id"])) {
+                        echo 'userdata/avatars/' . $_SESSION["user_id"] . "/1x.webp";
                     } else {
                         echo 'img/defaults/profile_picture.png';
                     }

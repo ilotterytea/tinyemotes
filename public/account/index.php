@@ -39,17 +39,13 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     if (isset($_FILES["pfp"]) && !empty($_FILES["pfp"]["tmp_name"])) {
         $pfp = $_FILES["pfp"];
 
-        if (!is_dir("../static/userdata/avatars")) {
-            mkdir("../static/userdata/avatars", 0777, true);
-        }
-
         if (
-            $err = resize_image(
+            $err = create_image_bundle(
                 $pfp["tmp_name"],
                 $_SERVER["DOCUMENT_ROOT"] . "/static/userdata/avatars/" . $_SESSION["user_id"],
                 ACCOUNT_PFP_MAX_SIZE[0],
                 ACCOUNT_PFP_MAX_SIZE[1],
-                false,
+                true,
                 true
             )
         ) {
@@ -61,17 +57,13 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     if (isset($_FILES["banner"]) && !empty($_FILES["banner"]["tmp_name"])) {
         $banner = $_FILES["banner"];
 
-        if (!is_dir("../static/userdata/banners")) {
-            mkdir("../static/userdata/banners", 0777, true);
-        }
-
         if (
-            $err = resize_image(
+            $err = create_image_bundle(
                 $banner["tmp_name"],
                 $_SERVER["DOCUMENT_ROOT"] . "/static/userdata/banners/" . $_SESSION["user_id"],
                 ACCOUNT_BANNER_MAX_SIZE[0],
                 ACCOUNT_BANNER_MAX_SIZE[1],
-                false,
+                true,
                 true
             )
         ) {
@@ -109,8 +101,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                         <h2>Profile</h2>
                         <h3>Profile picture</h3>
                         <?php
-                        if (is_file("../static/userdata/avatars/" . $_SESSION["user_id"])) {
-                            echo '<img src="/static/userdata/avatars/' . $_SESSION["user_id"] . '" id="pfp" width="64" height="64">';
+                        if (is_dir("../static/userdata/avatars/" . $_SESSION["user_id"])) {
+                            echo '<img src="/static/userdata/avatars/' . $_SESSION["user_id"] . '/2x.webp" id="pfp" width="64" height="64">';
                         } else {
                             echo "<p>You don't have profile picture</p>";
                         }
@@ -119,8 +111,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
                         <h3>Profile banner</h3>
                         <?php
-                        if (is_file("../static/userdata/banners/" . $_SESSION["user_id"])) {
-                            echo '<img src="/static/userdata/banners/' . $_SESSION["user_id"] . '" id="banner" width="192" height="108">';
+                        if (is_dir("../static/userdata/banners/" . $_SESSION["user_id"])) {
+                            echo '<img src="/static/userdata/banners/' . $_SESSION["user_id"] . '/2x.webp" id="banner" width="256">';
                         } else {
                             echo "<p>You don't have profile banner</p>";
                         }

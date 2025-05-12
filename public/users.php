@@ -93,8 +93,8 @@ if ($id == "" && $alias_id == "") {
 
                                         echo '<tr><td>';
                                         echo '<img src="/static/';
-                                        if (is_file("static/userdata/avatars/" . $row["id"])) {
-                                            echo 'userdata/avatars/' . $row["id"];
+                                        if (is_dir("static/userdata/avatars/" . $row["id"])) {
+                                            echo 'userdata/avatars/' . $row["id"] . '/1x.webp';
                                         } else {
                                             echo 'img/defaults/profile_picture.png';
                                         }
@@ -315,7 +315,8 @@ if ($is_json) {
 </head>
 
 <body>
-    <div class="background" style="background-image: url('/static/userdata/banners/<?php echo $user->id() ?>');">
+    <div class="background"
+        style="background-image: url('/static/userdata/banners/<?php echo $user->id() ?>/3x.webp');">
         <div class="background-layer"></div>
     </div>
 
@@ -332,8 +333,8 @@ if ($is_json) {
                         <div class="box content justify-center items-center">
                             <?php
                             echo '<img src="/static/';
-                            if (is_file("static/userdata/avatars/" . $user->id())) {
-                                echo 'userdata/avatars/' . $user->id();
+                            if (is_dir("static/userdata/avatars/" . $user->id())) {
+                                echo 'userdata/avatars/' . $user->id() . '/3x.webp';
                             } else {
                                 echo 'img/defaults/profile_picture.png';
                             }
