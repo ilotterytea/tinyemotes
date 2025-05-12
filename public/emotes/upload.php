@@ -369,21 +369,8 @@ if ($is_manual) {
 } else {
     $image = $_FILES["file"];
     // resizing the image
-    if ($err = resize_image($image["tmp_name"], "$path/3x", $max_width, $max_height)) {
-        error_log("Error processing image: $err");
-        generate_alert("/emotes/upload.php", "Error occurred while processing the image ($err)", 500);
-        abort_upload($path, $db, $id);
-        exit;
-    }
-    if ($err = resize_image($image["tmp_name"], "$path/2x", $max_width / 2, $max_height / 2)) {
-        error_log("Error processing image: $err");
-        generate_alert("/emotes/upload.php", "Error occurred while processing the image ($err)", 500);
-        abort_upload($path, $db, $id);
-        exit;
-    }
-    if ($err = resize_image($image["tmp_name"], "$path/1x", $max_width / 4, $max_height / 4)) {
-        error_log("Error processing image: $err");
-        generate_alert("/emotes/upload.php", "Error occurred while processing the image ($err)", 500);
+    if ($err = create_image_bundle($image["tmp_name"], $path, $max_width, $max_height)) {
+        generate_alert("/emotes/upload.php", "Error occurred while processing images ($err)", 500);
         abort_upload($path, $db, $id);
         exit;
     }

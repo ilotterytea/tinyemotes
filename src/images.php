@@ -29,6 +29,33 @@ function resize_image(string $src_path, string $dst_path, int $max_width, int $m
     return $result_code;
 }
 
+function create_image_bundle(string $src_path, string $dst_path, int $max_width, int $max_height, bool $set_format = true, bool $stretch = false): int|null
+{
+    if (!is_dir($dst_path)) {
+        mkdir($dst_path, 0777, true);
+    }
+
+    if ($err = resize_image($src_path, "$dst_path/3x", $max_width, $max_height, $set_format, $stretch)) {
+        array_map("unlink", glob("$dst_path/*.*"));
+        rmdir($dst_path);
+        return $err;
+    }
+
+    if ($err = resize_image($src_path, "$dst_path/2x", round($max_width / 2), round($max_height / 2), $set_format, $stretch)) {
+        array_map("unlink", glob("$dst_path/*.*"));
+        rmdir($dst_path);
+        return $err;
+    }
+
+    if ($err = resize_image($src_path, "$dst_path/1x", round($max_width / 4), round($max_height / 4), $set_format, $stretch)) {
+        array_map("unlink", glob("$dst_path/*.*"));
+        rmdir($dst_path);
+        return $err;
+    }
+
+    return null;
+}
+
 function get_file_extension(string $path): string|null
 {
     if ($file = getimagesize($path)) {
