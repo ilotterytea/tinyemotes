@@ -60,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <p>Log in to <?php echo INSTANCE_NAME ?></p>
                     </div>
                     <div class="box content">
-                        <form action="/account/login" method="post">
+                        <form action="/account/login/" method="post">
                             <div>
                                 <label for="username">Username</label>
                                 <input type="text" name="username" id="form-username" required>
