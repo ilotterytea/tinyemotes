@@ -123,28 +123,47 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                         <h2>Profile</h2>
                         <h3>Profile picture</h3>
                         <?php
-                        if (is_dir("../static/userdata/avatars/" . $_SESSION["user_id"])) {
+                        $has_pfp = is_dir("../static/userdata/avatars/" . $_SESSION["user_id"]);
+                        if ($has_pfp) {
                             echo '<img src="/static/userdata/avatars/' . $_SESSION["user_id"] . '/2x.webp" id="pfp" width="64" height="64">';
                         } else {
                             echo "<p>You don't have profile picture</p>";
                         }
                         ?>
-                        <input type="file" name="pfp">
+                        <div>
+                            <input type="file" name="pfp">
+                            <?php if ($has_pfp): ?>
+                                <a href="/account/delete.php?pfp=true">
+                                    <img src="/static/img/icons/bin.png" alt="Remove profile picture"
+                                        title="Remove profile picture">
+                                </a>
+                            <?php endif; ?>
+                        </div>
 
                         <h3>Profile banner</h3>
                         <?php
-                        if (is_dir("../static/userdata/banners/" . $_SESSION["user_id"])) {
+                        $has_banner = is_dir("../static/userdata/banners/" . $_SESSION["user_id"]);
+                        if ($has_banner) {
                             echo '<img src="/static/userdata/banners/' . $_SESSION["user_id"] . '/2x.webp" id="banner" width="256">';
                         } else {
                             echo "<p>You don't have profile banner</p>";
                         }
                         ?>
-                        <input type="file" name="banner">
+                        <div>
+                            <input type="file" name="banner">
+                            <?php if ($has_banner): ?>
+                                <a href="/account/delete.php?banner=true">
+                                    <img src="/static/img/icons/bin.png" alt="Remove banner" title="Remove banner">
+                                </a>
+                            <?php endif; ?>
+                        </div>
 
                         <h3>Personal badge</h3>
                         <?php
                         $stmt = $db->prepare("SELECT badge_id FROM user_badges WHERE user_id = ?");
                         $stmt->execute([$_SESSION["user_id"]]);
+
+                        $has_badge = false;
 
                         if ($row = $stmt->fetch()) {
                             echo '<div class="box row items-center justify-between">';
@@ -152,11 +171,19 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                             echo '<img src="/static/userdata/badges/' . $row["badge_id"] . '/2x.webp" id="badge">';
                             echo '<img src="/static/userdata/badges/' . $row["badge_id"] . '/3x.webp" id="badge">';
                             echo '</div>';
+                            $has_badge = true;
                         } else {
                             echo "<p>You don't have personal badge</p>";
                         }
                         ?>
-                        <input type="file" name="badge">
+                        <div>
+                            <input type="file" name="badge">
+                            <?php if ($has_badge): ?>
+                                <a href="/account/delete.php?badge=true">
+                                    <img src="/static/img/icons/bin.png" alt="Remove badge" title="Remove badge">
+                                </a>
+                            <?php endif; ?>
+                        </div>
 
                         <h3>Username</h3>
                         <input type="text" name="username" id="username" value="<?php echo $_SESSION["user_name"] ?>">
@@ -253,9 +280,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                         <button type="submit">Apply</button>
                     </form>
 
-                    <form action="/account/delete.php">
-                        <button class="red" type="submit">Delete me</button>
-                    </form>
+                    <a href="/account/delete.php?profile=true" class="red button" style="text-align: center;">Delete
+                        me</a>
                 </section>
             </section>
         </div>
