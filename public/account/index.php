@@ -72,6 +72,28 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         }
     }
 
+    if (isset($_FILES["badge"]) && !empty($_FILES["badge"]["tmp_name"])) {
+        $badge = $_FILES["badge"];
+        $badge_id = bin2hex(random_bytes(16));
+        if (
+            $err = create_image_bundle(
+                $badge["tmp_name"],
+                $_SERVER["DOCUMENT_ROOT"] . "/static/userdata/badges/" . $badge_id,
+                ACCOUNT_BADGE_MAX_SIZE[0],
+                ACCOUNT_BADGE_MAX_SIZE[1],
+                true,
+                true
+            )
+        ) {
+            generate_alert("/account", sprintf("Error occurred while processing the personal badge (%d)", $err));
+            exit;
+        }
+
+        $db->prepare("DELETE FROM user_badges WHERE badge_id != ? AND user_id = ?")->execute([$badge_id, $_SESSION["user_id"]]);
+        $db->prepare("INSERT INTO badges(id, uploaded_by) VALUES (?, ?)")->execute([$badge_id, $_SESSION["user_id"]]);
+        $db->prepare("INSERT INTO user_badges(badge_id, user_id) VALUES (?, ?)")->execute([$badge_id, $_SESSION["user_id"]]);
+    }
+
     $db = null;
     generate_alert("/account", "Your changes have been applied!", 200);
     exit;
@@ -118,6 +140,23 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                         }
                         ?>
                         <input type="file" name="banner">
+
+                        <h3>Personal badge</h3>
+                        <?php
+                        $stmt = $db->prepare("SELECT badge_id FROM user_badges WHERE user_id = ?");
+                        $stmt->execute([$_SESSION["user_id"]]);
+
+                        if ($row = $stmt->fetch()) {
+                            echo '<div class="box row items-center justify-between">';
+                            echo '<img src="/static/userdata/badges/' . $row["badge_id"] . '/1x.webp" id="badge">';
+                            echo '<img src="/static/userdata/badges/' . $row["badge_id"] . '/2x.webp" id="badge">';
+                            echo '<img src="/static/userdata/badges/' . $row["badge_id"] . '/3x.webp" id="badge">';
+                            echo '</div>';
+                        } else {
+                            echo "<p>You don't have personal badge</p>";
+                        }
+                        ?>
+                        <input type="file" name="badge">
 
                         <h3>Username</h3>
                         <input type="text" name="username" id="username" value="<?php echo $_SESSION["user_name"] ?>">

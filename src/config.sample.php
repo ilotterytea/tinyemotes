@@ -50,6 +50,7 @@ define("ACCOUNT_PASSWORD_MIN_LENGTH", 10); // Minimal length for passwords.
 define("ACCOUNT_SECRET_KEY_LENGTH", 32); // The length for secret keys.
 define("ACCOUNT_PFP_MAX_SIZE", [128, 128]); // Max dimensions for account pictures.
 define("ACCOUNT_BANNER_MAX_SIZE", [1920, 1080]); // Max dimensions for account banners.
+define("ACCOUNT_BADGE_MAX_SIZE", [72, 72]); // Max dimensions for account badges.
 define("ACCOUNT_PUBLIC_LIST", true); // The public list of accounts.
 define("ACCOUNT_LOG_ACTIONS", true); // Log user's actions (emote addition, etc.).
 

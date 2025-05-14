@@ -338,13 +338,15 @@ if (CLIENT_REQUIRES_JSON) {
                                     $link = "#";
                                     $show_private_badge = false;
                                     $badge = null;
+                                    $custom_badge = null;
 
                                     if ($emote->get_uploaded_by()) {
-                                        $stmt = $db->prepare("SELECT u.username, up.private_profile, r.name AS role_name, r.badge_id AS role_badge_id
+                                        $stmt = $db->prepare("SELECT u.username, up.private_profile, r.name AS role_name, r.badge_id AS role_badge_id, ub.badge_id AS custom_badge_id
                                             FROM users u
                                             INNER JOIN user_preferences up ON up.id = u.id
                                             LEFT JOIN role_assigns ra ON ra.user_id = u.id
                                             LEFT JOIN roles r ON r.id = ra.role_id
+                                            LEFT JOIN user_badges ub ON ub.user_id = u.id
                                             WHERE u.id = ?
                                         ");
                                         $stmt->execute([$emote->get_uploaded_by()]);
@@ -355,6 +357,7 @@ if (CLIENT_REQUIRES_JSON) {
                                             $username = $row["username"];
                                             $link = "/users.php?id=" . $emote->get_uploaded_by();
                                             $badge = ["role_name" => $row["role_name"], "role_badge_id" => $row["role_badge_id"]];
+                                            $custom_badge = $row["custom_badge_id"];
                                         }
                                     }
 
@@ -368,6 +371,10 @@ if (CLIENT_REQUIRES_JSON) {
 
                                     if ($badge && $badge["role_badge_id"]) {
                                         echo ' <img src="/static/userdata/badges/' . $badge["role_badge_id"] . '/1x.webp" alt="## ' . $badge["role_name"] . '" title="' . $badge["role_name"] . '" />';
+                                    }
+
+                                    if ($custom_badge) {
+                                        echo " <img src='/static/userdata/badges/$custom_badge/1x.webp' alt='' title='Personal badge' />";
                                     }
 
                                     echo ', <span title="';

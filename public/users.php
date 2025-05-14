@@ -280,6 +280,18 @@ $fav_reactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 // getting favorite emote
 $fav_emote = 1;
 
+// getting custom badge
+$stmt = $db->prepare("SELECT b.* FROM badges b
+    INNER JOIN user_badges ub ON ub.user_id = ?
+    WHERE b.id = ub.badge_id
+");
+$stmt->execute([$user->id()]);
+
+$custom_badge = null;
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $custom_badge = $row;
+}
+
 if ($is_json) {
     header("Content-type: application/json");
     echo json_encode([
@@ -299,7 +311,8 @@ if ($is_json) {
             "active_emote_set_id" => $active_emote_set["id"],
             "emote_sets" => $emote_sets,
             "uploaded_emotes" => $uploaded_emotes,
-            "actions" => $actions
+            "actions" => $actions,
+            "custom_badge" => $custom_badge
         ]
     ]);
     exit;
@@ -327,8 +340,14 @@ if ($is_json) {
                 <section class="sidebar flex column small-gap">
                     <!-- User -->
                     <section class="box">
-                        <div class="box navtab">
-                            <?php echo $user->username() ?>
+                        <div class="box navtab flex items-center small-gap">
+                            <?php
+                            echo $user->username();
+
+                            if ($custom_badge) {
+                                echo ' <img src="/static/userdata/badges/' . $custom_badge["id"] . '/1x.webp" alt="" title="Personal badge" />';
+                            }
+                            ?>
                         </div>
                         <div class="box content justify-center items-center">
                             <?php
