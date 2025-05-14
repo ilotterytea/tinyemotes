@@ -383,10 +383,12 @@ if (CLIENT_REQUIRES_JSON) {
                                     ?></td>
                                 </tr>
                                 <?php
-                                $stmt = $db->prepare("SELECT u.id, u.username, a.created_at, r.name AS role_name, r.badge_id AS role_badge_id FROM users u
+                                $stmt = $db->prepare("SELECT u.id, u.username, a.created_at, r.name AS role_name, r.badge_id AS role_badge_id, ub.badge_id AS custom_badge_id
+                                    FROM users u
                                     INNER JOIN mod_actions a ON a.emote_id = ?
                                     LEFT JOIN role_assigns ra ON ra.user_id = u.id
                                     LEFT JOIN roles r ON r.id = ra.role_id
+                                    LEFT JOIN user_badges ub ON ub.user_id = u.id
                                     WHERE u.id = a.user_id");
                                 $stmt->execute([$emote->get_id()]);
 
@@ -396,6 +398,10 @@ if (CLIENT_REQUIRES_JSON) {
 
                                     if ($row["role_badge_id"]) {
                                         echo ' <img src="/static/userdata/badges/' . $row["role_badge_id"] . '/1x.webp" alt="## ' . $row["role_name"] . '" title="' . $row["role_name"] . '" />';
+                                    }
+
+                                    if ($row["custom_badge_id"]) {
+                                        echo " <img src='/static/userdata/badges/" . $row["custom_badge_id"] . "/1x.webp' alt='' title='Personal badge' />";
                                     }
 
                                     echo ', <span title="';
