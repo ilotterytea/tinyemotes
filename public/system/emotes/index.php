@@ -121,13 +121,32 @@ if (isset($_GET["id"])) {
                                 ?>
                             </div>
                             <div class="box content">
-                                <div class="emote-showcase">
-                                    <img src="/static/userdata/emotes/<?php echo $emote["id"] ?>/1x.webp"
-                                        alt="<?php echo $emote["id"] ?>">
-                                    <img src="/static/userdata/emotes/<?php echo $emote["id"] ?>/2x.webp"
-                                        alt="<?php echo $emote["id"] ?>">
-                                    <img src="/static/userdata/emotes/<?php echo $emote["id"] ?>/3x.webp"
-                                        alt="<?php echo $emote["id"] ?>">
+                                <div class="emote-showcase items-bottom">
+                                    <?php
+                                    for ($size = 1; $size < 4; $size++) {
+                                        echo '<div class="column items-center small-gap">';
+
+                                        echo '<img src="/static/userdata/emotes/';
+                                        echo $emote["id"];
+                                        echo "/{$size}x.webp\"";
+                                        echo 'title="' . $emote["code"] . '" />';
+
+                                        $path = $_SERVER["DOCUMENT_ROOT"] . '/static/userdata/emotes/' . $emote["id"] . "/{$size}x.webp";
+
+                                        echo '<div class="column items-center">';
+
+                                        if ($file_size = filesize($path)) {
+                                            $kb = sprintf("%.2f", $file_size / 1024);
+                                            echo "<p class='font-small'>{$kb}KB</p>";
+                                        }
+
+                                        if ($image_size = getimagesize($path)) {
+                                            echo "<p class='font-small'>$image_size[0]x$image_size[1]</p>";
+                                        }
+
+                                        echo '</div></div>';
+                                    }
+                                    ?>
                                 </div>
                             </div>
                         </section>
