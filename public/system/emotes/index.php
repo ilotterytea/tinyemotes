@@ -22,12 +22,14 @@ $emote_results = $db->prepare("SELECT e.*,
 CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by,
 CASE WHEN up.private_profile = FALSE OR up.id = ? THEN u.username ELSE NULL END AS uploader_name,
 r.name AS role_name,
-r.badge_id AS role_badge_id
+r.badge_id AS role_badge_id,
+ub.badge_id AS custom_badge_id
 FROM emotes e
 LEFT JOIN users u ON u.id = e.uploaded_by
 LEFT JOIN user_preferences up ON up.id = u.id
 LEFT JOIN role_assigns ra ON ra.user_id = u.id
 LEFT JOIN roles r ON r.id = ra.role_id
+LEFT JOIN user_badges ub ON ub.user_id = u.id
 WHERE e.visibility = 2
 ORDER BY e.created_at DESC
 LIMIT 25
@@ -43,12 +45,14 @@ if (isset($_GET["id"])) {
         CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by,
         CASE WHEN up.private_profile = FALSE OR up.id = ? THEN u.username ELSE NULL END AS uploader_name,
         r.name AS role_name,
-        r.badge_id AS role_badge_id
+        r.badge_id AS role_badge_id,
+        ub.badge_id AS custom_badge_id
         FROM emotes e
         LEFT JOIN users u ON u.id = e.uploaded_by
         LEFT JOIN user_preferences up ON up.id = u.id
         LEFT JOIN role_assigns ra ON ra.user_id = u.id
         LEFT JOIN roles r ON r.id = ra.role_id
+        LEFT JOIN user_badges ub ON ub.user_id = u.id
         WHERE e.visibility = 2 AND e.id = ?
         LIMIT 1");
 
@@ -160,6 +164,10 @@ if (isset($_GET["id"])) {
 
                                     if ($emote["role_badge_id"]) {
                                         echo ' <img src="/static/userdata/badges/' . $emote["role_badge_id"] . '/1x.webp" alt="## ' . $emote["role_name"] . '" title="' . $emote["role_name"] . '" />';
+                                    }
+
+                                    if ($emote["custom_badge_id"]) {
+                                        echo ' <img src="/static/userdata/badges/' . $emote["custom_badge_id"] . '/1x.webp" alt="" title="Personal badge" />';
                                     }
 
                                     echo ', <span title="';
