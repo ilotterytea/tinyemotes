@@ -32,7 +32,9 @@ function resize_image(string $src_path, string $dst_path, int $max_width, int $m
 function create_image_bundle(string $src_path, string $dst_path, int $max_width, int $max_height, bool $set_format = true, bool $stretch = false): int|null
 {
     if (!is_dir($dst_path)) {
-        mkdir($dst_path, 0777, true);
+        if (!mkdir($dst_path, 0777, true)) {
+            return -3;
+        }
     }
 
     if ($err = resize_image($src_path, "$dst_path/3x", $max_width, $max_height, $set_format, $stretch)) {
