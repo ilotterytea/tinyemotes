@@ -147,6 +147,24 @@ if (isset($_GET["id"])) {
                         <!-- Emote information -->
                         <section class="box">
                             <table class="vertical">
+                                <?php
+                                $stmt = $db->prepare("SELECT t.code FROM tags t
+                                    INNER JOIN tag_assigns ta ON ta.emote_id = ?
+                                    WHERE t.id = ta.tag_id
+                                ");
+                                $stmt->execute([$emote["id"]]);
+
+                                $tags = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                                $tags = array_column($tags, "code");
+
+                                if (!empty($tags)) {
+                                    echo '<tr><th>Tags</th><td>';
+                                    foreach ($tags as $tag) {
+                                        echo "<a href='/emotes/?q=$tag'>$tag</a> ";
+                                    }
+                                    echo '</td></tr>';
+                                }
+                                ?>
                                 <tr>
                                     <th>Uploader</th>
                                     <td><?php

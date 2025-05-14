@@ -103,10 +103,25 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
                                 <label for="notes">Approval notes</label>
                                 <textarea name="notes" id="form-notes"></textarea>
 
-                                <div>
-                                    <label class="inline" for="source">Emote source: </label>
-                                    <input name="source" id="form-source"></input>
-                                </div>
+                                <table class="vertical left font-weight-normal">
+                                    <tr>
+                                        <th>Emote source:</th>
+                                        <td class="flex"><input class="grow" name="source" id="form-source"></input></td>
+                                    </tr>
+                                    <?php if (TAGS_ENABLE && TAGS_MAX_COUNT != 0): ?>
+                                        <tr>
+                                            <th>Tags <span class="font-small" style="cursor: help;" title="<?php
+                                            echo 'Tags are used for fast search. ';
+                                            if (TAGS_MAX_COUNT > 0) {
+                                                echo 'You can use ' . TAGS_MAX_COUNT . ' tags. ';
+                                            }
+                                            echo 'They are space-separated o algo.';
+                                            ?>">[?]</span>:
+                                            </th>
+                                            <td class="flex"><input class="grow" name="tags" id="form-tags"></input></td>
+                                        </tr>
+                                    <?php endif; ?>
+                                </table>
 
                                 <div>
                                     <label for="tos" class="inline">Do you accept <a href="/rules.php" target="_BLANK">the
@@ -388,6 +403,40 @@ if ($is_manual) {
     if (EMOTE_STORE_ORIGINAL) {
         $ext = get_file_extension($image["tmp_name"]) ?? "";
         move_uploaded_file($image["tmp_name"], "$path/original.$ext");
+    }
+}
+
+$tags = str_safe($_POST["tags"] ?? "", null);
+
+if (!empty($tags) && TAGS_ENABLE) {
+    $tags = explode(" ", $tags);
+
+    $count = 0;
+
+    foreach ($tags as $tag) {
+        if (TAGS_MAX_COUNT > 0 && $count >= TAGS_MAX_COUNT) {
+            break;
+        }
+
+        if (!preg_match(TAGS_CODE_REGEX, $tag)) {
+            continue;
+        }
+
+        $tag_id = null;
+
+        $stmt = $db->prepare("SELECT id FROM tags WHERE code = ?");
+        $stmt->execute([$tag]);
+
+        if ($row = $stmt->fetch()) {
+            $tag_id = $row["id"];
+        } else {
+            $tag_id = bin2hex(random_bytes(16));
+            $db->prepare("INSERT INTO tags(id, code) VALUES (?, ?)")->execute([$tag_id, $tag]);
+        }
+
+        $db->prepare("INSERT INTO tag_assigns(tag_id, emote_id) VALUES (?, ?)")->execute([$tag_id, $id]);
+
+        $count++;
     }
 }
 

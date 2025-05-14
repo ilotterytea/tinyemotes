@@ -31,6 +31,11 @@ define("EMOTE_MAX_SIZE", [128, 128]); // Max size of emote.
 define("EMOTE_NAME_REGEX", "/^[A-Za-z0-9_]+$/"); // RegEx filter for emote names.
 define("EMOTE_STORE_ORIGINAL", true); // Store original uploads of emotes.
 
+// TAGS
+define("TAGS_ENABLE", true); // Allow emote tagging.
+define("TAGS_CODE_REGEX", "/^[A-Za-z0-9_]+$/");
+define("TAGS_MAX_COUNT", 10); // Maximum tags per emote. Set -1 for unlimited amount.
+
 // EMOTESETS
 define("EMOTESET_PUBLIC_LIST", true); // Show emotesets public.
 

@@ -36,18 +36,23 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
     FROM emotes e
     LEFT JOIN user_preferences up ON up.id = e.uploaded_by
     LEFT JOIN ratings AS r ON r.emote_id = e.id
-    WHERE e.code LIKE ? AND e.visibility = 1
+    LEFT JOIN tag_assigns ta ON ta.emote_id = e.id
+    LEFT JOIN tags t ON t.id = ta.tag_id
+    WHERE (t.code = ? OR e.code LIKE ?) AND e.visibility = 1
     GROUP BY 
     e.id, e.code, e.created_at
     ORDER BY $sort
     LIMIT ? OFFSET ?
     ");
 
+    $sql_search = "%$search%";
+
     $stmt->bindParam(1, $current_user_id, PDO::PARAM_STR);
     $stmt->bindParam(2, $user_id, PDO::PARAM_INT);
     $stmt->bindParam(3, $search, PDO::PARAM_STR);
-    $stmt->bindParam(4, $limit, PDO::PARAM_INT);
-    $stmt->bindParam(5, $offset, PDO::PARAM_INT);
+    $stmt->bindParam(4, $sql_search, PDO::PARAM_STR);
+    $stmt->bindParam(5, $limit, PDO::PARAM_INT);
+    $stmt->bindParam(6, $offset, PDO::PARAM_INT);
 
     $stmt->execute();
 
@@ -78,7 +83,8 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
             $row["is_in_user_set"],
             $row["rating"],
             $row["visibility"],
-            $row["source"]
+            $row["source"],
+            []
         ));
     }
 
@@ -100,6 +106,15 @@ function display_emote(PDO &$db, string $id)
 
     if ($row = $stmt->fetch()) {
         if ($row["id"] != null) {
+            $stmt = $db->prepare("SELECT t.code FROM tags t
+                INNER JOIN tag_assigns ta ON ta.emote_id = ?
+                WHERE t.id = ta.tag_id
+            ");
+            $stmt->execute([$row["id"]]);
+
+            $tags = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $tags = array_column($tags, "code");
+
             $emote = new Emote(
                 $row["id"],
                 $row["code"],
@@ -109,7 +124,8 @@ function display_emote(PDO &$db, string $id)
                 false,
                 ["total" => $row["total_rating"], "average" => $row["average_rating"]],
                 $row["visibility"],
-                $row["source"]
+                $row["source"],
+                $tags
             );
         }
     }
@@ -142,14 +158,12 @@ $page = max(1, intval($_GET["p"] ?? "1"));
 $limit = 50;
 $total_emotes = 0;
 $total_pages = 0;
-$search = "%" . ($_GET["q"] ?? "") . "%";
+$search = $_GET["q"] ?? "";
 $sort_by = $_GET["sort_by"] ?? "";
 
 if (empty($id)) {
     $emotes = display_list_emotes($db, $search, $sort_by, $page, $limit);
-    $stmt = $db->prepare("SELECT COUNT(*) FROM emotes WHERE code LIKE ? AND visibility = 1");
-    $stmt->execute([$search]);
-    $total_emotes = $stmt->fetch()[0];
+    $total_emotes = count($emotes);
     $total_pages = ceil($total_emotes / $limit);
 } else {
     $emote = display_emote($db, $id);
@@ -224,7 +238,7 @@ if (CLIENT_REQUIRES_JSON) {
                                 }
                                 echo '</div>';
                             } else {
-                                echo "$total_emotes Emotes - Page $page/$total_pages";
+                                echo "Emotes - Page $page/$total_pages";
                             }
                             ?>
                         </div>
@@ -352,6 +366,18 @@ if (CLIENT_REQUIRES_JSON) {
 
                         <section class="box">
                             <table class="vertical">
+                                <?php if (!empty($emote->get_tags())): ?>
+                                    <tr>
+                                        <th>Tags</th>
+                                        <td>
+                                            <?php
+                                            foreach ($emote->get_tags() as $tag) {
+                                                echo "<a href='/emotes/?q=$tag'>$tag</a> ";
+                                            }
+                                            ?>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
                                 <tr>
                                     <th>Uploader</th>
                                     <td><?php

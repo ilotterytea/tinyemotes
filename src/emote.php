@@ -12,7 +12,9 @@ class Emote
 
     public string|null $source;
 
-    function __construct($id, $code, $ext, $created_at, $uploaded_by, $is_in_user_set, $rating, $visibility, $source)
+    public array $tags;
+
+    function __construct($id, $code, $ext, $created_at, $uploaded_by, $is_in_user_set, $rating, $visibility, $source, $tags)
     {
         $this->id = $id;
         $this->code = $code;
@@ -23,6 +25,7 @@ class Emote
         $this->rating = $rating;
         $this->visibility = $visibility;
         $this->source = $source;
+        $this->tags = $tags;
     }
 
     function get_id()
@@ -68,6 +71,11 @@ class Emote
     function get_source()
     {
         return $this->source;
+    }
+
+    function get_tags(): array
+    {
+        return $this->tags;
     }
 }
 
