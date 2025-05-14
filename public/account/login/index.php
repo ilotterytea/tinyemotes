@@ -85,8 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 <?php if (TWITCH_REGISTRATION_ENABLE): ?>
                     <section class="box column">
-                        <a href="/account/login/twitch.php" class="button purple"
-                            style="padding:8px 24px; font-size: 18px;">Login with Twitch</a>
+                        <a href="/account/login/twitch.php" class="button purple big">Login with Twitch</a>
                         <p style="font-size: 12px;">Logging in via Twitch gives you the ability to use
                             <?php echo INSTANCE_NAME ?> emotes in your Twitch chat.
                         </p>

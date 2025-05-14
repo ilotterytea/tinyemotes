@@ -49,7 +49,7 @@ if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         }
     }
 
-    $comment = str_safe($_POST["comment"] ?? "", EMOTE_COMMENT_MAX_LENGTH, false);
+    $comment = str_safe($_POST["comment"] ?? "", null, false);
 
     if ($comment == "") {
         $comment = null;
@@ -65,11 +65,15 @@ if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             default => 'We did something with your emote "' . $row["code"] . '"'
         };
 
+        if ($comment != null) {
+            $contents .= " Mod's comment: $comment";
+        }
+
         $db->prepare("INSERT INTO inbox_messages(recipient_id, message_type, contents, link) VALUES (?, ?, ?, ?)")
             ->execute([$row["uploaded_by"], "1", $contents, "/emotes?id=" . $row["id"]]);
     }
 
-    generate_alert("/system/emotes", 'Emote "' . $row["code"] . '" has been ' . ($verdict == 0 ? 'rejected (unlisted)' : 'approved (public)') . '!', 200);
+    generate_alert("/system/emotes", 'Emote "' . $row["code"] . '" has been ' . ($verdict == 0 ? 'unlisted' : 'set to public') . '!', 200);
     exit;
 }
 

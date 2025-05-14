@@ -131,19 +131,6 @@ if (isset($_GET["id"])) {
                                 </div>
                             </div>
                         </section>
-                        <!-- Emote actions -->
-                        <section class="box items center row">
-                            <form action="/system/emotes/manip.php" method="post">
-                                <input type="text" name="id" value="<?php echo $emote["id"] ?>" style="display: none;">
-                                <input type="text" name="action" value="approve" style="display: none;">
-                                <button type="submit" class="green">Approve</button>
-                            </form>
-                            <form action="/system/emotes/manip.php" method="post">
-                                <input type="text" name="id" value="<?php echo $emote["id"] ?>" style="display: none;">
-                                <input type="text" name="action" value="reject" style="display: none;">
-                                <button type="submit" class="red">Reject</button>
-                            </form>
-                        </section>
                         <!-- Emote information -->
                         <section class="box">
                             <table class="vertical">
@@ -208,20 +195,37 @@ if (isset($_GET["id"])) {
                                 <?php endif; ?>
                             </table>
                         </section>
-                        <!-- Mod actions on emote -->
-                        <section class="box">
-                            <div class="box navtab">
-                                Mod actions
+                        <!-- Emote actions -->
+                        <form action="/system/emotes/verdict.php" method="post">
+                            <input type="text" name="id" value="<?php echo $emote["id"] ?>" style="display: none;">
+                            <input type="text" name="action" value="none" id="form-action" style="display: none;">
+                            <div class="column small-gap">
+                                <noscript>JavaScript is required!!!</noscript>
+                                <div class="box row small-gap">
+                                    <button type="submit" class="grow green big" onclick="set_verdict('approve')">Make it
+                                        public</button>
+                                    <button type="submit" class="grow red big" onclick="set_verdict('reject')">Make it
+                                        unlisted</button>
+                                </div>
+                                <div class="box">
+                                    <div class="box navtab">Comment</div>
+                                    <div class="box content">
+                                        <textarea name="comment" id="form-comment"></textarea>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="box content">
-                                <p>No one has done anything on this emote...</p>
-                            </div>
-                        </section>
+                        </form>
                     </section>
                 <?php endif; ?>
             </section>
         </div>
     </div>
 </body>
+
+<script>
+    function set_verdict(verdict) {
+        document.getElementById("form-action").setAttribute("value", verdict);
+    }
+</script>
 
 </html>

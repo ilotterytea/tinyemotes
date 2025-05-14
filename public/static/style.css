@@ -262,6 +262,12 @@ button.purple:hover,
     background: #ac88ea;
 }
 
+button.big,
+.button.big {
+    padding: 8px 24px;
+    font-size: 18px;
+}
+
 /** 
 ----------
    LIST
