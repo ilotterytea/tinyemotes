@@ -179,6 +179,15 @@ if (isset($_GET["id"])) {
                                     <th>Notes</th>
                                     <td><?php echo isset($emote["notes"]) == true ? $emote["notes"] : '<i>Empty</i>' ?></td>
                                 </tr>
+                                <?php if ($emote["source"]): ?>
+                                    <tr>
+                                        <th>Source</th>
+                                        <td>
+                                            <a href="<?php echo $emote["source"] ?>"
+                                                target="_blank"><?php echo $emote["source"] ?></a>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
                             </table>
                         </section>
                         <!-- Mod actions on emote -->

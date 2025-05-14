@@ -138,6 +138,12 @@ CREATE TABLE IF NOT EXISTS actions (
 );
 
 -- -------------------------
+--       ALTERS      
+-- -------------------------
+
+ALTER TABLE emotes ADD COLUMN IF NOT EXISTS source TEXT;
+
+-- -------------------------
 --       INSERTIONS      
 -- -------------------------
 

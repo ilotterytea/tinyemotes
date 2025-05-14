@@ -77,7 +77,8 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
             $uploader,
             $row["is_in_user_set"],
             $row["rating"],
-            $row["visibility"]
+            $row["visibility"],
+            $row["source"]
         ));
     }
 
@@ -107,7 +108,8 @@ function display_emote(PDO &$db, string $id)
                 $row["uploaded_by"],
                 false,
                 ["total" => $row["total_rating"], "average" => $row["average_rating"]],
-                $row["visibility"]
+                $row["visibility"],
+                $row["source"]
             );
         }
     }
@@ -476,6 +478,15 @@ if (CLIENT_REQUIRES_JSON) {
                                     }
                                     ?></td>
                                 </tr>
+                                <?php if ($emote->get_source()): ?>
+                                    <tr>
+                                        <th>Source</th>
+                                        <td>
+                                            <a href="<?php echo $emote->get_source() ?>"
+                                                target="_blank"><?php echo $emote->get_source() ?></a>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
                             </table>
                         </section>
 

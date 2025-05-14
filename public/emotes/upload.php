@@ -100,8 +100,13 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
                                     <p id="form-visibility-description" style="font-size: 10px;">test</p>
                                 </div>
 
-                                <label for="notes">Approval notes (optional)</label>
+                                <label for="notes">Approval notes</label>
                                 <textarea name="notes" id="form-notes"></textarea>
+
+                                <div>
+                                    <label class="inline" for="source">Emote source: </label>
+                                    <input name="source" id="form-source"></input>
+                                </div>
 
                                 <div>
                                     <label for="tos" class="inline">Do you accept <a href="/rules.php" target="_BLANK">the
@@ -323,6 +328,11 @@ if (empty($notes)) {
     $notes = null;
 }
 
+$source = str_safe($_POST["source"] ?? "", null);
+if (empty($source)) {
+    $source = null;
+}
+
 $visibility = clamp(intval($_POST["visibility"], EMOTE_VISIBILITY_DEFAULT), 0, 2);
 
 if (MOD_EMOTES_APPROVE && $visibility == 1 && EMOTE_VISIBILITY_DEFAULT != 1) {
@@ -333,8 +343,8 @@ if (MOD_EMOTES_APPROVE && $visibility == 1 && EMOTE_VISIBILITY_DEFAULT != 1) {
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
 $id = bin2hex(random_bytes(16));
-$stmt = $db->prepare("INSERT INTO emotes(id, code, notes, uploaded_by, visibility) VALUES (?, ?, ?, ?, ?)");
-$stmt->execute([$id, $code, $notes, $uploaded_by, $visibility]);
+$stmt = $db->prepare("INSERT INTO emotes(id, code, notes, source, uploaded_by, visibility) VALUES (?, ?, ?, ?, ?, ?)");
+$stmt->execute([$id, $code, $notes, $source, $uploaded_by, $visibility]);
 
 $path = "../static/userdata/emotes/$id";
 
