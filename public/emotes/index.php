@@ -292,6 +292,25 @@ if (CLIENT_REQUIRES_JSON) {
                                         ;
                                     }
                                     ?>
+
+                                    <?php if ($emote->get_uploaded_by() === $_SESSION["user_id"]): ?>
+                                        <form action="/emotes/delete.php" method="post">
+                                            <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
+                                                style="display: none;">
+                                            <button type="submit" class="transparent">
+                                                <img src="/static/img/icons/bin.png" alt="Delete emote" title="Delete emote">
+                                            </button>
+                                        </form>
+                                        <form action="/emotes/delete.php" method="post">
+                                            <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
+                                                style="display: none;">
+                                            <input type="text" name="unlink" value="1" style="display:none">
+                                            <button type="submit" class="transparent">
+                                                <img src="/static/img/icons/link_break.png" alt="Remove your authorship"
+                                                    title="Remove your authorship">
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="items row right full">
                                     <?php
