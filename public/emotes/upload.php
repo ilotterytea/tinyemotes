@@ -475,6 +475,7 @@ if ($is_manual) {
 }
 
 $tags = str_safe($_POST["tags"] ?? "", null);
+$tags_processed = [];
 
 if (!empty($tags) && TAGS_ENABLE) {
     $tags = explode(" ", $tags);
@@ -505,8 +506,25 @@ if (!empty($tags) && TAGS_ENABLE) {
         $db->prepare("INSERT INTO tag_assigns(tag_id, emote_id) VALUES (?, ?)")->execute([$tag_id, $id]);
 
         $count++;
+        array_push($tags_processed, $tag);
     }
 }
+
+$emote_data = [
+    "id" => $id,
+    "code" => $code,
+    "visibility" => $visibility,
+    "uploaded_by" => match ($uploaded_by == null) {
+        true => null,
+        false => [
+            "id" => $uploaded_by,
+            "username" => $uploader_name
+        ]
+    },
+    "notes" => $notes,
+    "source" => $source,
+    "tags" => $tags_processed
+];
 
 if (ACCOUNT_LOG_ACTIONS && $uploaded_by != null) {
     $db->prepare("INSERT INTO actions(user_id, action_type, action_payload) VALUES (?, ?, ?)")
@@ -514,12 +532,7 @@ if (ACCOUNT_LOG_ACTIONS && $uploaded_by != null) {
             $uploaded_by,
             "EMOTE_CREATE",
             json_encode([
-                "emote" => [
-                    "id" => $id,
-                    "code" => $code,
-                    "visibility" => $visibility,
-                    "uploaded_by" => $uploaded_by,
-                ]
+                "emote" => $emote_data
             ])
         ]);
 }
@@ -531,11 +544,7 @@ if (CLIENT_REQUIRES_JSON) {
     json_response([
         "status_code" => 201,
         "message" => null,
-        "data" => [
-            "id" => $id,
-            "code" => $code,
-            "uploaded_by" => $uploaded_by
-        ]
+        "data" => $emote_data
     ], 201);
     exit;
 }

@@ -83,7 +83,7 @@ function fetch_all_emotes_from_emoteset(PDO &$db, string $emote_set_id, string $
 {
     // fetching emotes
     $sql = "SELECT 
-        e.id, e.created_at, 
+        e.id, e.created_at, e.visibility,
         CASE 
             WHEN esc.code IS NOT NULL THEN esc.code 
             ELSE e.code
