@@ -44,10 +44,10 @@ $software = [
 
                     foreach ($sw as $s) {
                         $name_lower = strtolower($s["name"]);
-                        echo '<div class="box row">';
+                        echo '<div class="box row small-gap">';
                         echo "<div><img src='/static/img/software/$name_lower/icon.png' alt=''></div>";
 
-                        echo '<div class="column flex">';
+                        echo '<div class="column grow small-gap">';
                         echo '<div class="row"><h1>' . $s["name"] . '</h1><p style="font-size:10px;">by ' . $s["author"] . '</p></div>';
                         echo '<p>' . $s["desc"] . '</p>';
 
@@ -66,8 +66,8 @@ $software = [
 
                         echo '</div>';
 
-                        echo '<div class="column">';
-                        echo '<a href="' . $s["download_url"] . '" target="_blank">[ Download ]</a>';
+                        echo '<div class="column small-gap items-center">';
+                        echo '<a href="' . $s["download_url"] . '" target="_blank" class="button green big">Download</a>';
                         echo '<a href="' . $s["source_url"] . '" target="_blank">[ Source code ]</a>';
                         echo '</div></div>';
                     }
