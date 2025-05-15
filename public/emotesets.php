@@ -4,169 +4,92 @@ include_once "../src/config.php";
 include_once "../src/accounts.php";
 include_once "../src/partials.php";
 include_once "../src/alert.php";
+include_once "../src/emote.php";
+
 authorize_user();
 
 $id = $_GET["id"] ?? "";
-$alias_id = $_GET["alias_id"] ?? "";
 
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
-$emote_sets = null;
+// searching requested emoteset
 $emote_set = null;
 
-$page = max(1, intval($_GET["p"] ?? "0"));
-$total_emotesets = 1;
-$total_pages = 1;
-
+// global emoteset
 if ($id == "global") {
-    $stmt = $db->prepare("SELECT * FROM emote_sets WHERE is_global = true");
-    $stmt->execute();
+    $rows = $db->query("SELECT * FROM emote_sets WHERE is_global = TRUE LIMIT 1", PDO::FETCH_ASSOC);
 
-    if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $emote_set = $row;
-
-        $stmt = $db->prepare("SELECT 
-        e.*, 
-        CASE 
-            WHEN esc.code IS NOT NULL THEN esc.code 
-            ELSE e.code
-        END AS code,
-        CASE 
-            WHEN esc.code IS NOT NULL THEN e.code 
-            ELSE NULL 
-        END AS original_code,
-        CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by
-        FROM emotes e
-        JOIN user_preferences up ON up.id = e.uploaded_by
-        JOIN emote_set_contents esc ON esc.emote_id = e.id
-        WHERE esc.emote_set_id = ?");
-        $stmt->execute([$_SESSION["user_id"] ?? "", $emote_set["id"]]);
-
-        $emote_set["emotes"] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        foreach ($emote_set["emotes"] as &$e) {
-            if ($uploader_id = $e["uploaded_by"]) {
-                $stmt = $db->prepare("SELECT id, username FROM users WHERE id = ?");
-                $stmt->execute([$uploader_id]);
-                $e["uploaded_by"] = $stmt->fetch(PDO::FETCH_ASSOC);
-            }
-        }
-    }
-} else if (empty($id) && intval($alias_id) <= 0) {
-    if (!EMOTESET_PUBLIC_LIST) {
-        generate_alert("/404.php", "The public list of emotesets is disabled", 403);
+    if ($rows->rowCount()) {
+        $emote_set = $rows->fetch();
+    } else {
+        generate_alert("/404.php", "Global emoteset is not found", 404);
         exit;
     }
+}
+// featured emoteset
+else if ($id == "featured") {
+    $rows = $db->query("SELECT * FROM emote_sets WHERE is_featured = TRUE LIMIT 1", PDO::FETCH_ASSOC);
 
-    $limit = 20;
-    $offset = ($page - 1) * $limit;
-
-    $stmt = $db->prepare("SELECT * FROM emote_sets LIMIT ? OFFSET ?");
-    $stmt->bindParam(1, $limit, PDO::PARAM_INT);
-    $stmt->bindParam(2, $offset, PDO::PARAM_INT);
-    $stmt->execute();
-
-    $emote_sets = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($emote_sets as &$e) {
-        $stmt = $db->prepare("SELECT e.*, 
-        CASE 
-            WHEN esc.code IS NOT NULL THEN esc.code 
-            ELSE e.code
-        END AS code,
-        CASE 
-            WHEN esc.code IS NOT NULL THEN e.code 
-            ELSE NULL 
-        END AS original_code,
-        CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by
-        FROM emotes e
-        JOIN user_preferences up ON up.id = e.uploaded_by
-        JOIN emote_set_contents esc ON esc.emote_set_id = ?
-        WHERE e.id = esc.emote_id");
-        $stmt->execute([$_SESSION["user_id"] ?? "", $e["id"]]);
-
-        $e["emotes"] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($e["emotes"] as &$em) {
-            if ($em["uploaded_by"]) {
-                $stmt = $db->prepare("SELECT id, username FROM users WHERE id = ?");
-                $stmt->execute([$em["uploaded_by"]]);
-                $em["uploaded_by"] = $stmt->fetch(PDO::FETCH_ASSOC);
-            }
-        }
+    if ($rows->rowCount()) {
+        $emote_set = $rows->fetch();
+    } else {
+        generate_alert("/404.php", "Featured emoteset is not found", 404);
+        exit;
     }
-    $count_stmt = $db->prepare("SELECT COUNT(*) FROM emote_sets");
-    $count_stmt->execute();
-    $total_emotesets = intval($count_stmt->fetch()[0]);
-    $total_pages = ceil($total_emotesets / $limit);
-} else if (intval($alias_id) > 0) {
-    $alias_id = intval($alias_id);
+}
+// connected emoteset
+else if (isset($_GET["alias_id"])) {
+    $alias_id = $_GET["alias_id"];
+    $platform = $_GET["platform"] ?? "twitch";
+
     $stmt = $db->prepare("SELECT es.* FROM emote_sets es
-    INNER JOIN connections co ON co.alias_id = ?
-    WHERE co.user_id = es.owner_id
+        INNER JOIN connections co ON co.alias_id = ? AND co.platform = ?
+        INNER JOIN acquired_emote_sets aes ON aes.user_id = co.user_id
+        WHERE aes.is_default = TRUE
     ");
-    $stmt->execute([$alias_id]);
+    $stmt->execute([$alias_id, $platform]);
 
     if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $emote_set = $row;
-
-        $stmt = $db->prepare("SELECT e.*, 
-        CASE 
-            WHEN esc.code IS NOT NULL THEN esc.code 
-            ELSE e.code
-        END AS code,
-        CASE 
-            WHEN esc.code IS NOT NULL THEN e.code 
-            ELSE NULL 
-        END AS original_code,
-        CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by
-        FROM emotes e
-        JOIN user_preferences up ON up.id = e.uploaded_by
-        JOIN emote_set_contents esc ON esc.emote_set_id = ?
-        WHERE esc.emote_id = e.id");
-        $stmt->execute([$_SESSION["user_id"] ?? "", $emote_set["id"]]);
-
-        $emote_set["emotes"] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        foreach ($emote_set["emotes"] as &$e) {
-            if ($e["uploaded_by"]) {
-                $stmt = $db->prepare("SELECT id, username FROM users WHERE id = ?");
-                $stmt->execute([$e["uploaded_by"]]);
-                $e["uploaded_by"] = $stmt->fetch(PDO::FETCH_ASSOC);
-            }
-        }
+    } else {
+        generate_alert("/404.php", "Emoteset is not found for alias ID $alias_id ($platform)", 404);
+        exit;
     }
-} else {
-    $stmt = $db->prepare("SELECT * FROM emote_sets WHERE id = ?");
+}
+// specified emoteset
+else if (!empty($id)) {
+    $stmt = $db->prepare("SELECT es.* FROM emote_sets es WHERE es.id = ?");
     $stmt->execute([$id]);
 
-    if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    if ($row = $stmt->fetch()) {
         $emote_set = $row;
+    } else {
+        generate_alert("/404.php", "Emoteset ID $id is not found", 404);
+        exit;
+    }
+}
 
-        $stmt = $db->prepare("SELECT e.*, 
-        CASE 
-            WHEN esc.code IS NOT NULL THEN esc.code 
-            ELSE e.code
-        END AS code,
-        CASE 
-            WHEN esc.code IS NOT NULL THEN e.code 
-            ELSE NULL 
-        END AS original_code,
-        CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by
-        FROM emotes e
-        JOIN user_preferences up ON up.id = e.uploaded_by
-        JOIN emote_set_contents esc ON esc.emote_set_id = ?
-        WHERE esc.emote_id = e.id");
-        $stmt->execute([$_SESSION["user_id"] ?? "", $emote_set["id"]]);
+$user_id = $_SESSION["user_id"] ?? "";
+$emote_sets = null;
 
-        $emote_set["emotes"] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($emote_set["emotes"] as &$e) {
-            $e["ext"] = "webp";
-            if ($e["uploaded_by"]) {
-                $stmt = $db->prepare("SELECT id, username FROM users WHERE id = ?");
-                $stmt->execute([$e["uploaded_by"]]);
-                $e["uploaded_by"] = $stmt->fetch(PDO::FETCH_ASSOC);
-            }
-        }
+// fetching emotes
+if ($emote_set) {
+    $emotes = fetch_all_emotes_from_emoteset($db, $emote_set["id"], $user_id, null);
+    $emote_set["emotes"] = $emotes;
+} elseif (!EMOTESET_PUBLIC_LIST) {
+    generate_alert("/404.php", "The public list of emotesets is disabled", 403);
+    exit;
+} else {
+    $emote_sets = [];
+    foreach ($db->query("SELECT es.* FROM emote_sets es", PDO::FETCH_ASSOC) as $row) {
+        $emote_set_row = $row;
+        $emote_set_row["emotes"] = fetch_all_emotes_from_emoteset(
+            $db,
+            $emote_set_row["id"],
+            $user_id,
+            5
+        );
+        array_push($emote_sets, $emote_set_row);
     }
 }
 
@@ -200,8 +123,12 @@ if (CLIENT_REQUIRES_JSON) {
 <head>
     <title>
         <?php
-        echo $emote_sets != null ? (count($emote_sets) . " emotesets") : ('"' . $emote_set["name"] . '" emoteset');
-        echo ' - ' . INSTANCE_NAME;
+        $title = match ($emote_set == null) {
+            true => count($emote_sets) . ' emotesets',
+            false => 'Emoteset - ' . $emote_set["name"],
+        };
+
+        echo "$title - " . INSTANCE_NAME;
         ?>
     </title>
     <link rel="stylesheet" href="/static/style.css">
@@ -216,24 +143,22 @@ if (CLIENT_REQUIRES_JSON) {
                 <section class="content">
                     <section class="box">
                         <div class="box navtab">
-                            <?php echo $emote_set != null ? ('"' . $emote_set["name"] . '" emoteset') : "$total_emotesets emotesets - Page $page/$total_pages" ?>
+                            <?php echo $title ?>
                         </div>
-                        <div class="box content items">
+                        <div class="box content small-gap items">
                             <?php
                             if (!empty($emote_sets)) {
                                 foreach ($emote_sets as $set_row) {
                                     ?>
                                     <a href="/emotesets.php?id=<?php echo $set_row["id"] ?>" class="box">
                                         <div>
-                                            <?php
-                                            echo '<p>' . $set_row["name"] . '</p>';
-                                            ?>
+                                            <p><?php echo $set_row["name"] ?></p>
                                         </div>
 
                                         <div>
                                             <?php
                                             foreach ($set_row["emotes"] as $emm) {
-                                                echo '<img src="/static/userdata/emotes/' . $emm["id"] . '/1x.webp">';
+                                                echo '<img src="/static/userdata/emotes/' . $emm["id"] . '/1x.webp" height="' . EMOTE_MAX_SIZE[1] / 4 . '">';
                                             }
                                             ?>
                                         </div>
@@ -241,30 +166,21 @@ if (CLIENT_REQUIRES_JSON) {
                                 <?php }
 
                                 echo '</div></section>';
-
-                                if ($total_pages > 1) {
-                                    echo '' ?>
-                                    <section class="box center row">
-                                        <?php
-                                        html_pagination($total_pages, $page, "/emotesets.php");
-                                        ?>
-                                        <?php
-                                }
                             } else if (!empty($emote_set)) {
                                 foreach ($emote_set["emotes"] as $emote_row) {
                                     echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
-                                    echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.webp" alt="' . $emote_row["code"] . '"/>';
+                                    echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.webp" alt="' . $emote_row["code"] . '" />';
                                     echo '<h1>' . $emote_row["code"] . '</h1>';
                                     echo '<p>' . ($emote_row["uploaded_by"] == null ? (ANONYMOUS_DEFAULT_NAME . "*") : $emote_row["uploaded_by"]["username"]) . '</p>';
                                     echo '</a>';
                                 }
                             } else {
-                                echo 'No emotesets found...';
+                                echo 'Nothing found...';
                             }
                             ?>
-                            </section>
                     </section>
                 </section>
+            </section>
         </div>
     </div>
 </body>

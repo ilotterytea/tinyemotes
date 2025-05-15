@@ -79,6 +79,48 @@ class Emote
     }
 }
 
+function fetch_all_emotes_from_emoteset(PDO &$db, string $emote_set_id, string $user_id, int|null $limit = null): array
+{
+    // fetching emotes
+    $sql = "SELECT 
+        e.id, e.created_at, 
+        CASE 
+            WHEN esc.code IS NOT NULL THEN esc.code 
+            ELSE e.code
+        END AS code,
+        CASE 
+            WHEN esc.code IS NOT NULL THEN e.code 
+            ELSE NULL 
+        END AS original_code,
+        CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by
+        FROM emotes e
+        LEFT JOIN user_preferences up ON up.id = e.uploaded_by
+        INNER JOIN emote_set_contents AS esc
+        ON esc.emote_set_id = ?
+        WHERE esc.emote_id = e.id";
+
+    if ($limit) {
+        $sql .= " LIMIT $limit";
+    }
+
+    $stmt = $db->prepare($sql);
+    $stmt->execute([$user_id, $emote_set_id]);
+
+    $emotes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // fetching uploaders
+    foreach ($emotes as $e) {
+        if ($e["uploaded_by"]) {
+            $stmt = $db->prepare("SELECT id, username FROM users WHERE id = ?");
+            $stmt->execute([$e["uploaded_by"]]);
+
+            $e["uploaded_by"] = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+    }
+
+    return $emotes;
+}
+
 function html_random_emote(PDO &$db)
 {
     $stmt = $db->prepare("SELECT id, code FROM emotes WHERE visibility = 1 ORDER BY RAND() LIMIT 1");
