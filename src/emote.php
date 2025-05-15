@@ -250,16 +250,26 @@ function html_featured_emote(PDO &$db)
 function html_display_emotes(array $emotes)
 {
     foreach ($emotes as $e) {
-        echo '<a class="box emote" href="/emotes?id=' . $e->get_id() . '">';
+        echo "<a class='box emote column justify-center items-center' href='/emotes?id={$e->id}'>";
 
         if ($e->is_added_by_user()) {
             echo '<img src="/static/img/icons/yes.png" class="emote-check" />';
         }
 
-        echo '<img src="/static/userdata/emotes/' . $e->get_id() . '/2x.webp" alt="' . $e->get_code() . '"/>';
-        echo '<h1>' . $e->get_code() . '</h1>';
-        echo '<p>' . ($e->get_uploaded_by() == null ? (ANONYMOUS_DEFAULT_NAME . "*") : $e->get_uploaded_by()->username) . '</p>';
-        echo '</a>';
+        // icon
+        echo '<div class="flex justify-center items-center grow emote-icon">';
+        echo "<img src='/static/userdata/emotes/{$e->id}/2x.webp' alt='{$e->code}' />";
+        echo '</div>';
+
+        // info
+        echo '<div class="flex column justify-bottom items-center emote-desc">';
+
+        echo "<h1 title='{$e->code}'>{$e->code}</h1>";
+        if ($e->get_uploaded_by()) {
+            echo "<p>{$e->uploaded_by->username}</p>";
+        }
+
+        echo '</div></a>';
     }
 }
 

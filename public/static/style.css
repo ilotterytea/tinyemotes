@@ -356,15 +356,6 @@ button.big,
 .box.emote {
     width: 96px;
     height: 96px;
-
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    gap: 6px;
-
-    overflow: hidden;
 }
 
 .box.background {
@@ -379,17 +370,19 @@ button.big,
     text-shadow: -1px 1px 4px black;
 }
 
-.box.emote:has(p) h1 {
-    margin-top: 4px;
-    line-height: 0;
-}
-
 .box.emote h1 {
     font-size: 16px;
     font-weight: 600;
+
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .box.emote p {
+    max-width: 100px;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 10px;
@@ -398,8 +391,6 @@ button.big,
 .box.emote img {
     max-width: 64px;
     max-height: 64px;
-    margin-top: auto;
-    margin-bottom: auto;
 }
 
 a.box {
@@ -546,6 +537,10 @@ a.box:hover {
 
 .justify-between {
     justify-content: space-between;
+}
+
+.justify-bottom {
+    justify-content: end;
 }
 
 .font-small {
