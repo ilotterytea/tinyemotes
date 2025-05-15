@@ -65,9 +65,10 @@ define("TWITCH_CLIENT_ID", "AAAAAAAAA"); // Client ID of your Twitch application
 define("TWITCH_SECRET_KEY", "BBBBBBBBB"); // Secret key of your Twitch application.
 define("TWITCH_REDIRECT_URI", ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http") . "://$_SERVER[HTTP_HOST]/account/login/twitch.php"); // Redirect URI of your Twitch application.
 
-// HCAPTCHA
+// CAPTCHA
 define("CAPTCHA_ENABLE", true); // Enable built-in captcha.
-define("CAPTCHA_WORDS", ["hello", "apple", "cat"]); // Captcha words.
+define("CAPTCHA_SIZE", [580, 220]); // Captcha size.
+define("CAPTCHA_FORCE_USERS", false); // Force authorized users to solve captcha.
 
 // FOR DEVELOPERS
 define("CLIENT_REQUIRES_JSON", isset($_SERVER["HTTP_ACCEPT"]) && $_SERVER["HTTP_ACCEPT"] == "application/json");

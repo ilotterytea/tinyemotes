@@ -2,6 +2,7 @@
 include "../../src/accounts.php";
 include_once "../../src/config.php";
 include_once "../../src/alert.php";
+include_once "../../src/captcha.php";
 
 if (!EMOTE_UPLOAD) {
     generate_alert("/404.php", "Emote upload is disabled", 403);
@@ -134,6 +135,12 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
                             </form>
                         </div>
                     </section>
+
+                    <?php
+                    if (CAPTCHA_ENABLE && (CAPTCHA_FORCE_USERS || !isset($_SESSION["user_id"]))) {
+                        html_captcha_form();
+                    }
+                    ?>
 
                     <section class="box column" id="emote-showcase" style="display: none;">
                         <div class="emote-showcase">
@@ -316,6 +323,11 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
     </html>
 
     <?php
+    exit;
+}
+
+if (!CLIENT_REQUIRES_JSON && CAPTCHA_ENABLE && !isset($_SESSION["captcha_solved"])) {
+    generate_alert("/404.php", "You haven't solved captcha yet.", 403);
     exit;
 }
 

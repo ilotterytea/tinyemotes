@@ -5,11 +5,6 @@ function authorize_user(bool $required = false): bool
 {
     session_start();
 
-    if (!isset($_SESSION["captcha_solved"]) && !CLIENT_REQUIRES_JSON) {
-        header("Location: /captcha.php");
-        exit;
-    }
-
     if (!isset($_COOKIE["secret_key"]) && !isset($_SERVER["HTTP_AUTHORIZATION"])) {
         if (isset($_SESSION["user_id"])) {
             session_unset();
