@@ -47,7 +47,7 @@ $db = new PDO(DB_URL, DB_USER, DB_PASS);
                             echo '</a>';
                         }
 
-                        if ($_SESSION["user_role"]["permission_report_review"]) {
+                        if (REPORTS_ENABLE && $_SESSION["user_role"]["permission_report_review"]) {
                             echo '<a href="/system/reports">Reports';
 
                             $results = $db->query("SELECT COUNT(*) FROM reports WHERE resolved_by IS NULL")->fetch()[0];

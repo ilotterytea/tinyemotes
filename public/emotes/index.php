@@ -315,8 +315,8 @@ if (CLIENT_REQUIRES_JSON) {
                                                 }
                                             }
                                         }
-                                        if ($_SESSION["user_role"]["permission_report"]) {
-                                            echo '<a class="button red" href="/report?emote_id=<?php echo $emote->get_id() ?>">Report emote</a>';
+                                        if (REPORTS_ENABLE && $_SESSION["user_role"]["permission_report"]) {
+                                            echo "<a class='button red' href='/report?emote_id={$emote->id}'>Report emote</a>";
                                         }
                                     }
                                     ?>
