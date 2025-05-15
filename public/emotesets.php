@@ -74,22 +74,14 @@ $emote_sets = null;
 
 // fetching emotes
 if ($emote_set) {
-    $emotes = fetch_all_emotes_from_emoteset($db, $emote_set["id"], $user_id, null);
-    $emote_set["emotes"] = $emotes;
+    $emote_set = Emoteset::from_array_extended($emote_set, $user_id, $db);
 } elseif (!EMOTESET_PUBLIC_LIST) {
     generate_alert("/404.php", "The public list of emotesets is disabled", 403);
     exit;
 } else {
     $emote_sets = [];
-    foreach ($db->query("SELECT es.* FROM emote_sets es", PDO::FETCH_ASSOC) as $row) {
-        $emote_set_row = $row;
-        $emote_set_row["emotes"] = fetch_all_emotes_from_emoteset(
-            $db,
-            $emote_set_row["id"],
-            $user_id,
-            5
-        );
-        array_push($emote_sets, $emote_set_row);
+    foreach ($db->query("SELECT * FROM emote_sets", PDO::FETCH_ASSOC) as $row) {
+        array_push($emote_sets, Emoteset::from_array_extended($row, $user_id, $db));
     }
 }
 
@@ -125,7 +117,7 @@ if (CLIENT_REQUIRES_JSON) {
         <?php
         $title = match ($emote_set == null) {
             true => count($emote_sets) . ' emotesets',
-            false => 'Emoteset - ' . $emote_set["name"],
+            false => "Emoteset - {$emote_set->name}",
         };
 
         echo "$title - " . INSTANCE_NAME;
@@ -148,32 +140,9 @@ if (CLIENT_REQUIRES_JSON) {
                         <div class="box content small-gap items">
                             <?php
                             if (!empty($emote_sets)) {
-                                foreach ($emote_sets as $set_row) {
-                                    ?>
-                                    <a href="/emotesets.php?id=<?php echo $set_row["id"] ?>" class="box">
-                                        <div>
-                                            <p><?php echo $set_row["name"] ?></p>
-                                        </div>
-
-                                        <div>
-                                            <?php
-                                            foreach ($set_row["emotes"] as $emm) {
-                                                echo '<img src="/static/userdata/emotes/' . $emm["id"] . '/1x.webp" height="' . EMOTE_MAX_SIZE[1] / 4 . '">';
-                                            }
-                                            ?>
-                                        </div>
-                                    </a>
-                                <?php }
-
-                                echo '</div></section>';
+                                html_display_emoteset($emote_sets);
                             } else if (!empty($emote_set)) {
-                                foreach ($emote_set["emotes"] as $emote_row) {
-                                    echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
-                                    echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.webp" alt="' . $emote_row["code"] . '" />';
-                                    echo '<h1>' . $emote_row["code"] . '</h1>';
-                                    echo '<p>' . ($emote_row["uploaded_by"] == null ? (ANONYMOUS_DEFAULT_NAME . "*") : $emote_row["uploaded_by"]["username"]) . '</p>';
-                                    echo '</a>';
-                                }
+                                html_display_emotes($emote_set->emotes);
                             } else {
                                 echo 'Nothing found...';
                             }

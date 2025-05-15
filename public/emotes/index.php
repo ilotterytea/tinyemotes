@@ -10,20 +10,64 @@ authorize_user();
 
 $db = new PDO(DB_URL, DB_USER, DB_PASS);
 
-function display_list_emotes(PDO &$db, string $search, string $sort_by, int $page, int $limit): array
-{
-    $current_user_id = $_SESSION["user_id"] ?? "";
+$user_id = $_SESSION["user_id"] ?? "";
 
-    $user_id = $_SESSION["user_id"] ?? "-1";
-    $offset = ($page - 1) * $limit;
+$emotes = null;
+$emote = null;
+$total_emotes = 0;
+$total_pages = 0;
 
-    $sort = match ($sort_by) {
+// fetching emote by id
+if (isset($_GET["id"])) {
+    $id = $_GET["id"];
+
+    $stmt = $db->prepare("SELECT e.id, e.code, e.created_at, e.source, e.visibility,
+            COALESCE(COUNT(r.rate), 0) as total_rating,
+            COALESCE(ROUND(AVG(r.rate), 2), 0) AS average_rating,
+            CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by
+        FROM emotes e
+        LEFT JOIN user_preferences up ON up.id = e.uploaded_by
+        LEFT JOIN ratings AS r ON r.emote_id = e.id
+        WHERE e.id = ?
+        LIMIT 1
+    ");
+    $stmt->execute([$user_id, $id]);
+
+    $row = $stmt->fetch();
+
+    if ($row["id"]) {
+        // fetching emote tags
+        $stmt = $db->prepare("SELECT t.code FROM tags t
+                INNER JOIN tag_assigns ta ON ta.emote_id = ?
+                WHERE t.id = ta.tag_id
+            ");
+        $stmt->execute([$row["id"]]);
+        $tags = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $tags = array_column($tags, "code");
+
+        $row["tags"] = $tags;
+        $row["ext"] = "webp";
+        $emote = Emote::from_array_with_user($row, $db);
+    } else {
+        generate_alert("/404.php", "Emote ID $id does not exists", 404);
+        exit;
+    }
+}
+// fetching all emotes
+else {
+    $sort = $_GET["sort"] ?? "high_ratings";
+    $sort = match ($sort) {
         "low_ratings" => "rating ASC",
         "recent" => "e.created_at DESC",
         "oldest" => "e.created_at ASC",
         default => "rating DESC"
     };
+    $page = max(1, intval($_GET["p"] ?? "1"));
+    $limit = 50;
+    $offset = ($page - 1) * $limit;
+    $search = $_GET["q"] ?? "";
 
+    // fetching emotes
     $stmt = $db->prepare("SELECT e.*,
     CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by,
     CASE WHEN EXISTS (
@@ -46,10 +90,10 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
     ");
 
     $sql_search = "%$search%";
-    $current_emote_set_id = $_SESSION["user_active_emote_set_id"] ?? "";
+    $user_emote_set_id = $_SESSION["user_active_emote_set_id"] ?? "";
 
-    $stmt->bindParam(1, $current_user_id, PDO::PARAM_STR);
-    $stmt->bindParam(2, $current_emote_set_id, PDO::PARAM_STR);
+    $stmt->bindParam(1, $user_id, PDO::PARAM_STR);
+    $stmt->bindParam(2, $user_emote_set_id, PDO::PARAM_STR);
     $stmt->bindParam(3, $search, PDO::PARAM_STR);
     $stmt->bindParam(4, $sql_search, PDO::PARAM_STR);
     $stmt->bindParam(5, $limit, PDO::PARAM_INT);
@@ -57,117 +101,15 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
 
     $stmt->execute();
 
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $emotes = [];
 
-    $rows = $stmt->fetchAll();
-
     foreach ($rows as $row) {
-        $uploader = null;
-
-        if ($row["uploaded_by"]) {
-            $private_profile = $row["uploaded_by"] == ($_SESSION["user_id"] ?? "") ? "" : "AND up.private_profile = FALSE";
-            $stmt = $db->prepare("SELECT u.id, u.username FROM users u
-                INNER JOIN user_preferences up ON up.id = u.id
-                WHERE u.id = ? $private_profile
-            ");
-            $stmt->execute([$row["uploaded_by"]]);
-
-            $uploader = $stmt->fetch(PDO::FETCH_ASSOC) ?? null;
-        }
-
-        array_push($emotes, new Emote(
-            $row["id"],
-            $row["code"],
-            "webp",
-            intval(strtotime($row["created_at"])),
-            $uploader,
-            $row["is_in_user_set"],
-            $row["rating"],
-            $row["visibility"],
-            $row["source"],
-            []
-        ));
+        array_push($emotes, Emote::from_array_with_user($row, $db));
     }
 
-    return $emotes;
-}
-
-function display_emote(PDO &$db, string $id)
-{
-    $stmt = $db->prepare("SELECT e.*, COALESCE(COUNT(r.rate), 0) as total_rating,
-    COALESCE(ROUND(AVG(r.rate), 2), 0) AS average_rating,
-    CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by
-    FROM emotes e
-    LEFT JOIN user_preferences up ON up.id = e.uploaded_by
-    LEFT JOIN ratings AS r ON r.emote_id = e.id
-    WHERE e.id = ?");
-    $stmt->execute([$_SESSION["user_id"] ?? "", $id]);
-
-    $emote = null;
-
-    if ($row = $stmt->fetch()) {
-        if ($row["id"] != null) {
-            $stmt = $db->prepare("SELECT t.code FROM tags t
-                INNER JOIN tag_assigns ta ON ta.emote_id = ?
-                WHERE t.id = ta.tag_id
-            ");
-            $stmt->execute([$row["id"]]);
-
-            $tags = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $tags = array_column($tags, "code");
-
-            $emote = new Emote(
-                $row["id"],
-                $row["code"],
-                "webp",
-                intval(strtotime($row["created_at"])),
-                $row["uploaded_by"],
-                false,
-                ["total" => $row["total_rating"], "average" => $row["average_rating"]],
-                $row["visibility"],
-                $row["source"],
-                $tags
-            );
-        }
-    }
-
-    if ($emote == null) {
-        if (CLIENT_REQUIRES_JSON) {
-            json_response([
-                "status_code" => 404,
-                "message" => "Emote ID $id does not exist",
-                "data" => null
-            ], 404);
-            exit;
-        }
-
-        header("Location: /404.php");
-        exit;
-    }
-
-    return $emote;
-}
-
-$emotes = null;
-$emote = null;
-
-$id = $_GET["id"] ?? "";
-
-$db = new PDO(DB_URL, DB_USER, DB_PASS);
-
-$page = max(1, intval($_GET["p"] ?? "1"));
-$limit = 50;
-$total_emotes = 0;
-$total_pages = 0;
-$search = $_GET["q"] ?? "";
-$sort_by = $_GET["sort_by"] ?? "";
-
-if (empty($id)) {
-    $emotes = display_list_emotes($db, $search, $sort_by, $page, $limit);
     $total_emotes = count($emotes);
     $total_pages = ceil($total_emotes / $limit);
-} else {
-    $emote = display_emote($db, $id);
 }
 
 if (CLIENT_REQUIRES_JSON) {
@@ -412,24 +354,13 @@ if (CLIENT_REQUIRES_JSON) {
                                     $custom_badge = null;
 
                                     if ($emote->get_uploaded_by()) {
-                                        $stmt = $db->prepare("SELECT u.username, up.private_profile, r.name AS role_name, r.badge_id AS role_badge_id, ub.badge_id AS custom_badge_id
-                                            FROM users u
-                                            INNER JOIN user_preferences up ON up.id = u.id
-                                            LEFT JOIN role_assigns ra ON ra.user_id = u.id
-                                            LEFT JOIN roles r ON r.id = ra.role_id
-                                            LEFT JOIN user_badges ub ON ub.user_id = u.id
-                                            WHERE u.id = ?
-                                        ");
-                                        $stmt->execute([$emote->get_uploaded_by()]);
+                                        $u = $emote->get_uploaded_by();
+                                        $show_private_badge = $u->private_profile;
 
-                                        if ($row = $stmt->fetch()) {
-                                            $show_private_badge = $row["private_profile"];
-
-                                            $username = $row["username"];
-                                            $link = "/users.php?id=" . $emote->get_uploaded_by();
-                                            $badge = ["role_name" => $row["role_name"], "role_badge_id" => $row["role_badge_id"]];
-                                            $custom_badge = $row["custom_badge_id"];
-                                        }
+                                        $username = $u->username;
+                                        $link = "/users.php?id={$u->id}";
+                                        $badge = $u->role;
+                                        $custom_badge = $u->custom_badge;
                                     }
 
                                     echo "<a href=\"$link\">";
@@ -440,12 +371,12 @@ if (CLIENT_REQUIRES_JSON) {
                                         echo " <img src='/static/img/icons/eye.png' alt='(Private)' title='You are the only one who sees this' />";
                                     }
 
-                                    if ($badge && $badge["role_badge_id"]) {
-                                        echo ' <img src="/static/userdata/badges/' . $badge["role_badge_id"] . '/1x.webp" alt="## ' . $badge["role_name"] . '" title="' . $badge["role_name"] . '" />';
+                                    if ($badge && $badge->badge) {
+                                        echo " <img src='/static/userdata/badges/{$badge->badge->id}/1x.webp' alt='## {$badge->name}' title='{$badge->name}' />";
                                     }
 
                                     if ($custom_badge) {
-                                        echo " <img src='/static/userdata/badges/$custom_badge/1x.webp' alt='' title='Personal badge' />";
+                                        echo " <img src='/static/userdata/badges/{$custom_badge->id}/1x.webp' alt='' title='Personal badge' />";
                                     }
 
                                     echo ', <span title="';
@@ -454,25 +385,23 @@ if (CLIENT_REQUIRES_JSON) {
                                     ?></td>
                                 </tr>
                                 <?php
-                                $stmt = $db->prepare("SELECT u.id, u.username, a.created_at, r.name AS role_name, r.badge_id AS role_badge_id, ub.badge_id AS custom_badge_id
-                                    FROM users u
+                                $stmt = $db->prepare("SELECT u.id, a.created_at FROM users u
                                     INNER JOIN mod_actions a ON a.emote_id = ?
-                                    LEFT JOIN role_assigns ra ON ra.user_id = u.id
-                                    LEFT JOIN roles r ON r.id = ra.role_id
-                                    LEFT JOIN user_badges ub ON ub.user_id = u.id
                                     WHERE u.id = a.user_id");
                                 $stmt->execute([$emote->get_id()]);
 
                                 if ($row = $stmt->fetch()) {
-                                    echo '<tr><th>Approver</th><td>';
-                                    echo '<a href="/users.php?id=' . $row["id"] . '" target="_blank">' . $row["username"] . '</a>';
+                                    $approver = User::get_user_by_id($db, $row["id"]);
 
-                                    if ($row["role_badge_id"]) {
-                                        echo ' <img src="/static/userdata/badges/' . $row["role_badge_id"] . '/1x.webp" alt="## ' . $row["role_name"] . '" title="' . $row["role_name"] . '" />';
+                                    echo '<tr><th>Approver</th><td>';
+                                    echo "<a href='/users.php?id={$approver->id}' target='_blank'>{$approver->username}</a>";
+
+                                    if ($approver->role && $approver->role->badge) {
+                                        echo " <img src='/static/userdata/badges/{$approver->role->badge->id}/1x.webp' alt='## {$approver->role->name}' title='{$approver->role->name}' />";
                                     }
 
-                                    if ($row["custom_badge_id"]) {
-                                        echo " <img src='/static/userdata/badges/" . $row["custom_badge_id"] . "/1x.webp' alt='' title='Personal badge' />";
+                                    if ($approver->custom_badge) {
+                                        echo " <img src='/static/userdata/badges/{$approver->custom_badge->id}/1x.webp' alt='' title='Personal badge' />";
                                     }
 
                                     echo ', <span title="';
@@ -591,20 +520,7 @@ if (CLIENT_REQUIRES_JSON) {
                             <?php
                         } else { ?>
                             <div class="box content items">
-                                <?php
-                                foreach ($emotes as $e) {
-                                    echo '<a class="box emote" href="/emotes?id=' . $e->get_id() . '">';
-
-                                    if ($e->is_added_by_user()) {
-                                        echo '<img src="/static/img/icons/yes.png" class="emote-check" />';
-                                    }
-
-                                    echo '<img src="/static/userdata/emotes/' . $e->get_id() . '/2x.webp" alt="' . $e->get_code() . '"/>';
-                                    echo '<h1>' . $e->get_code() . '</h1>';
-                                    echo '<p>' . ($e->get_uploaded_by() == null ? (ANONYMOUS_DEFAULT_NAME . "*") : $e->get_uploaded_by()["username"]) . '</p>';
-                                    echo '</a>';
-                                }
-                                ?>
+                                <?php html_display_emotes($emotes); ?>
                             </div>
                             <?php if ($total_pages > 1) {
                                 echo '' ?>

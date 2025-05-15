@@ -5,6 +5,7 @@ include_once "../src/partials.php";
 include_once "../src/utils.php";
 include_once "../src/accounts.php";
 include_once "../src/alert.php";
+include_once "../src/emote.php";
 
 authorize_user();
 
@@ -131,117 +132,68 @@ if ($id == "" && $alias_id == "") {
     exit;
 }
 
-$stmt = null;
-
-if ($id != "") {
-    $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
-    $stmt->execute([$id]);
-} else if ($alias_id != "") {
-    $stmt = $db->prepare("SELECT u.* FROM users u
-    INNER JOIN connections co ON (co.alias_id = ? AND co.platform = 'twitch')
-    WHERE co.user_id = u.id
-    ");
-    $stmt->execute([$alias_id]);
-}
-
+// --- fetching user
 $user = null;
 
-if ($row = $stmt->fetch()) {
-    $user = new User($row);
+// fetching user by connection
+if (isset($_GET["alias_id"])) {
+    $alias_id = $_GET["alias_id"];
+    $platform = $_GET["platform"] ?? "twitch";
+
+    $stmt = $db->prepare("SELECT u.id FROM users u
+        INNER JOIN connections co ON co.alias_id = ? AND co.platform = ?
+        WHERE co.user_id = u.id
+    ");
+    $stmt->execute([$alias_id, $platform]);
+
+    if ($row = $stmt->fetch()) {
+        $user = User::get_user_by_id($db, $row["id"]);
+    }
+}
+// fetching user by internal id
+else if (isset($_GET["id"])) {
+    $user = User::get_user_by_id($db, $_GET["id"]);
 }
 
-if ($user == null) {
+if (!$user) {
     generate_alert("/404.php", "The user you requested cannot be found", 404);
     exit;
 }
 
 // User preferences
 $stmt = $db->prepare("SELECT * FROM user_preferences WHERE id = ?");
-$stmt->execute([$user->id()]);
+$stmt->execute([$user->id]);
 
 $user_preferences = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$public_profile = !$user_preferences["private_profile"] || $user->id() == ($_SESSION["user_id"] ?? "");
+$public_profile = !$user_preferences["private_profile"] || $user->id == ($_SESSION["user_id"] ?? "");
 
-// --- EMOTE SETS ---
-// TODO: OPTIMIZE IT ASAP!!!
-$emote_sets = [];
+// fetching emote sets
+$emote_sets = Emoteset::get_all_user_emotesets($db, $user->id);
 $active_emote_set = null;
-
-// gathering acquired emote sets
-$stmt = $db->prepare("SELECT emote_set_id, is_default FROM acquired_emote_sets WHERE user_id = ?");
-$stmt->execute([$user->id()]);
-
-while ($row = $stmt->fetch()) {
-    // getting more info about set
-    $set_stmt = $db->prepare("SELECT id, name FROM emote_sets WHERE id = ?");
-    $set_stmt->execute([$row["emote_set_id"]]);
-    $set = $set_stmt->fetch();
-
-    // getting info about emote set content
-    $em_stmt = $db->prepare(
-        "SELECT e.id, e.created_at,
-        CASE WHEN up.private_profile = FALSE OR up.id = ? THEN e.uploaded_by ELSE NULL END AS uploaded_by, 
-        CASE 
-            WHEN esc.code IS NOT NULL THEN esc.code 
-            ELSE e.code
-        END AS code,
-        CASE 
-            WHEN esc.code IS NOT NULL THEN e.code 
-            ELSE NULL 
-        END AS original_code
-        FROM emotes e
-        LEFT JOIN user_preferences up ON up.id = e.uploaded_by
-        INNER JOIN emote_set_contents AS esc
-        ON esc.emote_set_id = ?
-        WHERE esc.emote_id = e.id
-        " . ($row["is_default"] ? '' : ' LIMIT 5')
-    );
-    $em_stmt->execute([$_SESSION["user_id"] ?? "", $row["emote_set_id"]]);
-
-    $emote_set_emotes = $em_stmt->fetchAll(PDO::FETCH_ASSOC);
-    foreach ($emote_set_emotes as &$e) {
-        $e["ext"] = "webp";
-        if ($e["uploaded_by"]) {
-            $uploaded_by_stmt = $db->prepare("SELECT id, username FROM users WHERE id = ?");
-            $uploaded_by_stmt->execute([$e["uploaded_by"]]);
-            $e["uploaded_by"] = $uploaded_by_stmt->fetch(PDO::FETCH_ASSOC);
-        }
+foreach ($emote_sets as $es) {
+    if ($es->is_default) {
+        $active_emote_set = $es;
+        break;
     }
-
-    $emote_set = [
-        "id" => $set["id"],
-        "name" => $set["name"],
-        "emotes" => $emote_set_emotes
-    ];
-
-    if ($row["is_default"]) {
-        $active_emote_set = count($emote_sets);
-    }
-
-    array_push($emote_sets, $emote_set);
 }
-
-$active_emote_set = &$emote_sets[$active_emote_set];
 
 // gathering uploaded emotes
 $uploaded_emotes = [];
 
 if ($public_profile) {
-    $stmt = $db->prepare("SELECT e.*,
-    CASE WHEN EXISTS (
-        SELECT 1
-        FROM emote_set_contents ec
-        INNER JOIN emote_sets es ON es.id = ec.emote_set_id
-        WHERE ec.emote_id = e.id AND es.owner_id = ?
-    ) THEN 1 ELSE 0 END AS is_in_user_set
+    $stmt = $db->prepare("SELECT e.id, e.code, e.uploaded_by, e.source, e.visibility
     FROM emotes e
     WHERE e.uploaded_by = ?
     ORDER BY e.created_at ASC
     ");
-    $stmt->execute([$user->id(), $user->id()]);
+    $stmt->execute([$user->id]);
 
-    $uploaded_emotes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($rows as $row) {
+        array_push($uploaded_emotes, Emote::from_array_with_user($row, $db));
+    }
 }
 
 // gathering actions
@@ -249,7 +201,7 @@ $actions = [];
 
 if ($public_profile) {
     $stmt = $db->prepare("SELECT a.* FROM actions a WHERE a.user_id = ? ORDER BY a.created_at DESC LIMIT 15");
-    $stmt->execute([$user->id()]);
+    $stmt->execute([$user->id]);
     $actions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
@@ -257,23 +209,23 @@ if ($public_profile) {
 
 // calculating contributions
 $stmt = $db->prepare("SELECT COUNT(*) FROM emotes WHERE uploaded_by = ?");
-$stmt->execute([$user->id()]);
+$stmt->execute([$user->id]);
 $contributions = intval($stmt->fetch()[0]);
 
 $stmt = $db->prepare("SELECT COUNT(*) FROM ratings WHERE user_id = ?");
-$stmt->execute([$user->id()]);
+$stmt->execute([$user->id]);
 
 $contributions += intval($stmt->fetch()[0]);
 
 // getting status
 $stmt = $db->prepare("SELECT * FROM roles r INNER JOIN role_assigns ra ON ra.user_id = ? WHERE ra.role_id = r.id");
-$stmt->execute([$user->id()]);
+$stmt->execute([$user->id]);
 
 $role = $stmt->fetch(PDO::FETCH_ASSOC) ?? null;
 
 // getting reactions
 $stmt = $db->prepare("SELECT rate, COUNT(*) AS c FROM ratings WHERE user_id = ? GROUP BY rate ORDER BY c DESC");
-$stmt->execute([$user->id()]);
+$stmt->execute([$user->id]);
 
 $fav_reactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -285,7 +237,7 @@ $stmt = $db->prepare("SELECT b.* FROM badges b
     INNER JOIN user_badges ub ON ub.user_id = ?
     WHERE b.id = ub.badge_id
 ");
-$stmt->execute([$user->id()]);
+$stmt->execute([$user->id]);
 
 $custom_badge = null;
 if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -293,27 +245,25 @@ if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 }
 
 if ($is_json) {
-    header("Content-type: application/json");
-    echo json_encode([
+    $user_data = (array) $user;
+
+    unset($user_data["private_profile"]);
+
+    $user_data["stats"] = [
+        "contributions" => $contributions,
+        "favorite_reaction_id" => $fav_reactions,
+        "favorite_emote_id" => $fav_emote
+    ];
+
+    $user_data["active_emote_set_id"] = $active_emote_set->id;
+    $user_data["emote_sets"] = $emote_sets;
+    $user_data["uploaded_emotes"] = $uploaded_emotes;
+    $user_data["actions"] = $actions;
+
+    json_response([
         "status_code" => 200,
         "message" => null,
-        "data" => [
-            "id" => $user->id(),
-            "username" => $user->username(),
-            "joined_at" => $user->joined_at(),
-            "last_active_at" => $user->last_active_at(),
-            "stats" => [
-                "role" => $role,
-                "contributions" => $contributions,
-                "favorite_reaction_id" => $fav_reaction,
-                "favorite_emote_id" => $fav_emote
-            ],
-            "active_emote_set_id" => $active_emote_set["id"],
-            "emote_sets" => $emote_sets,
-            "uploaded_emotes" => $uploaded_emotes,
-            "actions" => $actions,
-            "custom_badge" => $custom_badge
-        ]
+        "data" => $user_data
     ]);
     exit;
 }
@@ -322,14 +272,13 @@ if ($is_json) {
 <html>
 
 <head>
-    <title><?php echo sprintf("%s - %s", $user->username(), INSTANCE_NAME) ?></title>
+    <title><?php echo sprintf("%s - %s", $user->username, INSTANCE_NAME) ?></title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
 </head>
 
 <body>
-    <div class="background"
-        style="background-image: url('/static/userdata/banners/<?php echo $user->id() ?>/3x.webp');">
+    <div class="background" style="background-image: url('/static/userdata/banners/<?php echo $user->id ?>/3x.webp');">
         <div class="background-layer"></div>
     </div>
 
@@ -342,7 +291,7 @@ if ($is_json) {
                     <section class="box">
                         <div class="box navtab flex items-center small-gap">
                             <?php
-                            echo $user->username();
+                            echo $user->username;
 
                             if ($custom_badge) {
                                 echo ' <img src="/static/userdata/badges/' . $custom_badge["id"] . '/1x.webp" alt="" title="Personal badge" />';
@@ -352,8 +301,8 @@ if ($is_json) {
                         <div class="box content justify-center items-center">
                             <?php
                             echo '<img src="/static/';
-                            if (is_dir("static/userdata/avatars/" . $user->id())) {
-                                echo 'userdata/avatars/' . $user->id() . '/3x.webp';
+                            if (is_dir("static/userdata/avatars/" . $user->id)) {
+                                echo 'userdata/avatars/' . $user->id . '/3x.webp';
                             } else {
                                 echo 'img/defaults/profile_picture.png';
                             }
@@ -392,17 +341,17 @@ if ($is_json) {
                                 <th><img src="/static/img/icons/door_in.png"> Joined</th>
                                 <?php
                                 echo '<td title="';
-                                echo date("M d, Y H:i:s", $user->joined_at());
-                                echo ' UTC">about ' . format_timestamp(time() - $user->joined_at()) . " ago</td>";
+                                echo date("M d, Y H:i:s", $user->joined_at);
+                                echo ' UTC">about ' . format_timestamp(time() - $user->joined_at) . " ago</td>";
                                 ?>
                             </tr>
                             <tr>
                                 <th><img src="/static/img/icons/clock.png"> Last activity</th>
                                 <?php
-                                $diff = time() - $user->last_active_at();
+                                $diff = time() - $user->last_active_at;
                                 if ($diff > 60) {
                                     echo '<td title="';
-                                    echo date("M d, Y H:i:s", $user->last_active_at());
+                                    echo date("M d, Y H:i:s", $user->last_active_at);
                                     echo ' UTC">about ' . format_timestamp($diff) . " ago</td>";
                                 } else {
                                     echo '<td>Online</td>';
@@ -462,19 +411,12 @@ if ($is_json) {
                     <!-- Current emoteset -->
                     <section class="box grow user-tab" id="user-emotes">
                         <div class="box navtab">
-                            <?php echo !empty($active_emote_set) ? $active_emote_set["name"] : "Emotes" ?>
+                            <?php echo !empty($active_emote_set) ? $active_emote_set->name : "Emotes" ?>
                         </div>
                         <div class="box content items flex">
                             <?php if (!empty($active_emote_set)) {
-                                if (!empty($active_emote_set["emotes"])) {
-                                    foreach ($active_emote_set["emotes"] as $emote_row) {
-                                        echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
-                                        echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.webp" alt="' . $emote_row["code"] . '"/>';
-                                        echo '<h1>' . $emote_row["code"] . '</h1>';
-                                        echo '<p>' . ($emote_row["uploaded_by"] == null ? (ANONYMOUS_DEFAULT_NAME . "*") : $emote_row["uploaded_by"]["username"]) . '</p>';
-                                        echo '</a>';
-                                        echo '</a>';
-                                    }
+                                if (!empty($active_emote_set->emotes)) {
+                                    html_display_emotes($active_emote_set->emotes);
                                 } else {
                                     echo '<p>No emotes found... ' . ((($_SESSION["user_id"] ?? "") == $id) ? 'Start adding emotes and they will appear here! :)</p>' : '</p>');
                                 }
@@ -492,24 +434,7 @@ if ($is_json) {
                         <div class="box content items">
                             <?php
                             if (!empty($emote_sets)) {
-                                foreach ($emote_sets as $set_row) { ?>
-                                    <a href="/emotesets.php?id=<?php echo $set_row["id"] ?>" class="box">
-                                        <div>
-                                            <?php
-                                            echo '<p>' . $set_row["name"] . '</p>';
-                                            ?>
-                                        </div>
-
-                                        <div>
-                                            <?php
-                                            for ($i = 0; $i < clamp(count($set_row["emotes"]), 0, 5); $i++) {
-                                                $e = &$set_row["emotes"][$i];
-                                                echo '<img src="/static/userdata/emotes/' . $e["id"] . '/1x.webp">';
-                                            }
-                                            ?>
-                                        </div>
-                                    </a>
-                                <?php }
+                                html_display_emoteset($emote_sets);
                             } else {
                                 echo '<p>No emote sets found... ' . ((($_SESSION["user_id"] ?? "") == $id) ? 'Start adding emotes and you will have one! :)</p>' : '</p>');
                             }
@@ -545,7 +470,7 @@ if ($is_json) {
 
                                     echo '<div class="column">';
                                     echo '<p>';
-                                    echo '<i>' . $user->username() . '</i> ';
+                                    echo '<i>' . $user->username . '</i> ';
 
                                     $payload = json_decode($action["action_payload"], true);
 
@@ -629,14 +554,7 @@ if ($is_json) {
                                 <?php echo $user_preferences["private_profile"] ? " <img src='/static/img/icons/eye.png' alt='(Private)' title='You are the only one who sees this' />" : "" ?>
                             </div>
                             <div class="box content items">
-                                <?php
-                                foreach ($uploaded_emotes as $emote_row) {
-                                    echo '<a class="box emote" href="/emotes?id=' . $emote_row["id"] . '">';
-                                    echo '<img src="/static/userdata/emotes/' . $emote_row["id"] . '/2x.webp" alt="' . $emote_row["code"] . '"/>';
-                                    echo '<h1>' . $emote_row["code"] . '</h1>';
-                                    echo '</a>';
-                                }
-                                ?>
+                                <?php html_display_emotes($uploaded_emotes); ?>
                             </div>
                         </section>
                     <?php endif; ?>

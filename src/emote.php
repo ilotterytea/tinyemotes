@@ -1,4 +1,6 @@
 <?php
+include_once "user.php";
+
 class Emote
 {
     public string $id;
@@ -14,18 +16,39 @@ class Emote
 
     public array $tags;
 
-    function __construct($id, $code, $ext, $created_at, $uploaded_by, $is_in_user_set, $rating, $visibility, $source, $tags)
+    public static function from_array(array $arr): Emote
     {
-        $this->id = $id;
-        $this->code = $code;
-        $this->ext = $ext;
-        $this->created_at = $created_at;
-        $this->uploaded_by = $uploaded_by;
-        $this->is_in_user_set = $is_in_user_set;
-        $this->rating = $rating;
-        $this->visibility = $visibility;
-        $this->source = $source;
-        $this->tags = $tags;
+        $e = new Emote();
+
+        $e->id = $arr["id"];
+        $e->code = $arr["code"];
+        $e->ext = $arr["ext"] ?? "webp";
+        $e->uploaded_by = $arr["uploaded_by"];
+        $e->created_at = strtotime($arr["created_at"] ?? 0);
+        $e->is_in_user_set = $arr["is_in_user_set"] ?? false;
+        $e->visibility = $arr["visibility"];
+        $e->source = $arr["source"] ?? null;
+        $e->tags = $arr["tags"] ?? [];
+
+        if (isset($arr["total_rating"], $arr["average_rating"])) {
+            $e->rating = [
+                "total" => $arr["total_rating"],
+                "average" => $arr["average_rating"]
+            ];
+        } else {
+            $e->rating = $arr["rating"] ?? null;
+        }
+
+        return $e;
+    }
+
+    public static function from_array_with_user(array $arr, PDO &$db): Emote
+    {
+        if ($arr["uploaded_by"]) {
+            $arr["uploaded_by"] = User::get_user_by_id($db, $arr["uploaded_by"]);
+        }
+
+        return Emote::from_array($arr);
     }
 
     function get_id()
@@ -79,6 +102,58 @@ class Emote
     }
 }
 
+class Emoteset
+{
+    public string $id;
+    public string $name;
+    public User|null $owner;
+    public array $emotes;
+
+    public bool $is_default;
+
+    public static function from_array(array $arr): Emoteset
+    {
+        $s = new Emoteset();
+
+        $s->id = $arr["id"];
+        $s->name = $arr["name"];
+        $s->owner = $arr["owner_id"];
+        $s->emotes = $arr["emotes"] ?? [];
+        $s->is_default = $arr["is_default"] ?? false;
+
+        return $s;
+    }
+
+    public static function from_array_extended(array $arr, string $user_id, PDO &$db): Emoteset
+    {
+        if ($arr["owner_id"]) {
+            $arr["owner_id"] = User::get_user_by_id($db, $arr["owner_id"]);
+        }
+
+        $arr["emotes"] = fetch_all_emotes_from_emoteset($db, $arr["id"], $user_id);
+
+        return Emoteset::from_array($arr);
+    }
+
+    public static function get_all_user_emotesets(PDO &$db, string $user_id): array
+    {
+        $stmt = $db->prepare("SELECT es.*, aes.is_default FROM emote_sets es
+            INNER JOIN acquired_emote_sets aes ON aes.emote_set_id = es.id
+            WHERE aes.user_id = ?
+        ");
+        $stmt->execute([$user_id]);
+
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $emote_sets = [];
+
+        foreach ($rows as $row) {
+            array_push($emote_sets, Emoteset::from_array_extended($row, $user_id, $db));
+        }
+
+        return $emote_sets;
+    }
+}
+
 function fetch_all_emotes_from_emoteset(PDO &$db, string $emote_set_id, string $user_id, int|null $limit = null): array
 {
     // fetching emotes
@@ -106,17 +181,16 @@ function fetch_all_emotes_from_emoteset(PDO &$db, string $emote_set_id, string $
     $stmt = $db->prepare($sql);
     $stmt->execute([$user_id, $emote_set_id]);
 
-    $emotes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $emotes = [];
 
     // fetching uploaders
-    foreach ($emotes as &$e) {
-        if ($e["uploaded_by"]) {
-            $stmt = $db->prepare("SELECT id, username FROM users WHERE id = ?");
-            $stmt->execute([$e["uploaded_by"]]);
-
-            $e["uploaded_by"] = $stmt->fetch(PDO::FETCH_ASSOC);
+    foreach ($rows as $row) {
+        if ($row["uploaded_by"]) {
+            $row["uploaded_by"] = User::get_user_by_id($db, $row["uploaded_by"]);
         }
-        unset($e);
+
+        array_push($emotes, Emote::from_array($row));
     }
 
     return $emotes;
@@ -170,5 +244,41 @@ function html_featured_emote(PDO &$db)
         </section>
         <?php
         ;
+    }
+}
+
+function html_display_emotes(array $emotes)
+{
+    foreach ($emotes as $e) {
+        echo '<a class="box emote" href="/emotes?id=' . $e->get_id() . '">';
+
+        if ($e->is_added_by_user()) {
+            echo '<img src="/static/img/icons/yes.png" class="emote-check" />';
+        }
+
+        echo '<img src="/static/userdata/emotes/' . $e->get_id() . '/2x.webp" alt="' . $e->get_code() . '"/>';
+        echo '<h1>' . $e->get_code() . '</h1>';
+        echo '<p>' . ($e->get_uploaded_by() == null ? (ANONYMOUS_DEFAULT_NAME . "*") : $e->get_uploaded_by()->username) . '</p>';
+        echo '</a>';
+    }
+}
+
+function html_display_emoteset(array $emotesets)
+{
+    foreach ($emotesets as $es) {
+        echo "<a href='/emotesets.php?id={$es->id}' class='box column small-gap'>";
+
+        echo '<div>';
+        echo "<p>$es->name</p>";
+        echo '</div>';
+
+        echo '<div class="small-gap row">';
+
+        foreach ($es->emotes as $e) {
+            echo "<img src='/static/userdata/emotes/{$e->id}/1x.webp' alt='{$e->code}' title='{$e->code}' height='16' />";
+        }
+
+        echo '</div></a>';
+
     }
 }
