@@ -109,13 +109,14 @@ function fetch_all_emotes_from_emoteset(PDO &$db, string $emote_set_id, string $
     $emotes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // fetching uploaders
-    foreach ($emotes as $e) {
+    foreach ($emotes as &$e) {
         if ($e["uploaded_by"]) {
             $stmt = $db->prepare("SELECT id, username FROM users WHERE id = ?");
             $stmt->execute([$e["uploaded_by"]]);
 
             $e["uploaded_by"] = $stmt->fetch(PDO::FETCH_ASSOC);
         }
+        unset($e);
     }
 
     return $emotes;
