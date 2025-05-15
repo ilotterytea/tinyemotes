@@ -181,7 +181,8 @@ if (CLIENT_REQUIRES_JSON) {
                                 }
                                 echo '</div>';
                             } else {
-                                echo "Emotes - Page $page/$total_pages";
+                                echo "<div class='grow'>Emotes - Page $page/$total_pages</div>";
+                                html_emotelist_mode();
                             }
                             ?>
                         </div>

@@ -247,8 +247,10 @@ function html_featured_emote(PDO &$db)
     }
 }
 
-function html_display_emotes(array $emotes)
+function html_display_emotes(array $emotes, int $scale = 3)
 {
+    $emote_wall = intval($_COOKIE["emotelist_wall"] ?? "0") == 1;
+
     foreach ($emotes as $e) {
         echo "<a class='box emote column justify-center items-center' href='/emotes?id={$e->id}'>";
 
@@ -258,11 +260,16 @@ function html_display_emotes(array $emotes)
 
         // icon
         echo '<div class="flex justify-center items-center grow emote-icon">';
-        echo "<img src='/static/userdata/emotes/{$e->id}/2x.webp' alt='{$e->code}' />";
+        $scale = $emote_wall ? "3" : ((string) $scale);
+        echo "<img src='/static/userdata/emotes/{$e->id}/{$scale}x.webp' alt='{$e->code}' />";
         echo '</div>';
 
         // info
-        echo '<div class="flex column justify-bottom items-center emote-desc">';
+        echo '<div class="flex column justify-bottom items-center emote-desc';
+        if ($emote_wall) {
+            echo ' none';
+        }
+        echo '">';
 
         echo "<h1 title='{$e->code}'>{$e->code}</h1>";
         if ($e->get_uploaded_by()) {
@@ -291,4 +298,35 @@ function html_display_emoteset(array $emotesets)
         echo '</div></a>';
 
     }
+}
+
+function html_emotelist_mode()
+{
+    echo '' ?>
+    <div class="row small-gap" id="control-emotelist" style="display: none;">
+        <a href="#" onclick="set_emotelist_mode('wall')">
+            <img src="/static/img/icons/emotes/emote.png" alt="Emote Wall" title="Emote Wall">
+        </a>
+        <a href="#" onclick="set_emotelist_mode('table')">
+            <img src="/static/img/icons/table.png" alt="Emote Descriptions" title="Emote Descriptions">
+        </a>
+    </div>
+    <script>
+        document.getElementById("control-emotelist").style.display = "flex";
+
+        function set_emotelist_mode(mode) {
+            const elements = document.querySelectorAll(".emote .emote-desc");
+
+            for (const element of elements) {
+                if (mode == "wall") {
+                    element.classList.add("none");
+                    document.cookie = "emotelist_wall = 1; expires=Tue, 19 Jan 2038 00:00:00 UTC; path=/";
+                } else {
+                    element.classList.remove("none");
+                    document.cookie = "emotelist_wall = 0; expires=Tue, 19 Jan 2038 00:00:00 UTC; path=/";
+                }
+            }
+        }
+    </script>
+    <?php ;
 }

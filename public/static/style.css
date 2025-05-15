@@ -388,9 +388,14 @@ button.big,
     font-size: 10px;
 }
 
-.box.emote img {
+.box.emote:has(.emote-desc) img {
     max-width: 64px;
     max-height: 64px;
+}
+
+.box.emote:has(.emote-desc.none) img {
+    max-width: 96px;
+    max-height: 96px;
 }
 
 a.box {
@@ -561,6 +566,10 @@ a.box:hover {
 
 .flex {
     display: flex;
+}
+
+.none {
+    display: none;
 }
 
 .w-full {

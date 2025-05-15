@@ -134,8 +134,15 @@ if (CLIENT_REQUIRES_JSON) {
             <section class="content row">
                 <section class="content">
                     <section class="box">
-                        <div class="box navtab">
-                            <?php echo $title ?>
+                        <div class="box navtab row">
+                            <div class="grow">
+                                <?php echo $title ?>
+                            </div>
+                            <?php
+                            if (!empty($emote_set)) {
+                                html_emotelist_mode();
+                            }
+                            ?>
                         </div>
                         <div class="box content small-gap items">
                             <?php

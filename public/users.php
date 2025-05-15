@@ -410,8 +410,11 @@ if ($is_json) {
                 <section class="content" style="display: inline-block;">
                     <!-- Current emoteset -->
                     <section class="box grow user-tab" id="user-emotes">
-                        <div class="box navtab">
-                            <?php echo !empty($active_emote_set) ? $active_emote_set->name : "Emotes" ?>
+                        <div class="box navtab row">
+                            <div class="grow">
+                                <?php echo !empty($active_emote_set) ? $active_emote_set->name : "Emotes" ?>
+                            </div>
+                            <?php html_emotelist_mode() ?>
                         </div>
                         <div class="box content items flex">
                             <?php if (!empty($active_emote_set)) {
@@ -549,9 +552,11 @@ if ($is_json) {
 
                         <!-- Uploaded emotes -->
                         <section class="box grow user-tab" id="user-uploadedemotes">
-                            <div class="box navtab">
-                                Uploaded emotes
-                                <?php echo $user_preferences["private_profile"] ? " <img src='/static/img/icons/eye.png' alt='(Private)' title='You are the only one who sees this' />" : "" ?>
+                            <div class="box navtab row">
+                                <div class="grow">
+                                    Uploaded emotes
+                                    <?php echo $user_preferences["private_profile"] ? " <img src='/static/img/icons/eye.png' alt='(Private)' title='You are the only one who sees this' />" : "" ?>
+                                </div>
                             </div>
                             <div class="box content items">
                                 <?php html_display_emotes($uploaded_emotes); ?>
