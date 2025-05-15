@@ -55,17 +55,27 @@ function authorize_user(bool $required = false): bool
             $_SESSION["user_role"] = $role_row;
         }
 
-        $stmt = $db->prepare("SELECT es.* FROM emote_sets es
+        $stmt = $db->prepare("SELECT es.*, aes.is_default FROM emote_sets es
             INNER JOIN acquired_emote_sets aes ON aes.emote_set_id = es.id
-            WHERE aes.user_id = ? AND aes.is_default = TRUE
+            WHERE aes.user_id = ?
+            ORDER BY
+                CASE WHEN es.id = ? THEN 0 ELSE 1 END,
+                es.id
             ");
-        $stmt->execute([$row["id"]]);
+        $stmt->execute([$row["id"], $_SESSION["user_active_emote_set_id"] ?? ""]);
 
-        $_SESSION["user_active_emote_set"] = null;
+        $emote_sets = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        if ($emote_set_row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $_SESSION["user_active_emote_set"] = $emote_set_row;
+        if (!isset($_SESSION["user_active_emote_set_id"])) {
+            foreach ($emote_sets as $es) {
+                if ($es["is_default"]) {
+                    $_SESSION["user_active_emote_set"] = $es;
+                    $_SESSION["user_active_emote_set_id"] = $es["id"];
+                }
+            }
         }
+
+        $_SESSION["user_emote_sets"] = $emote_sets;
     } else {
         session_regenerate_id();
         session_unset();

@@ -31,7 +31,7 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
         FROM emote_set_contents ec
         INNER JOIN emote_sets es ON es.id = ec.emote_set_id
         JOIN acquired_emote_sets aes ON aes.emote_set_id = es.id
-        WHERE ec.emote_id = e.id AND es.owner_id = ? AND aes.is_default = TRUE
+        WHERE ec.emote_id = e.id AND es.id = ?
     ) THEN 1 ELSE 0 END AS is_in_user_set, COALESCE(COUNT(r.rate), 0) AS rating
     FROM emotes e
     LEFT JOIN user_preferences up ON up.id = e.uploaded_by
@@ -46,9 +46,10 @@ function display_list_emotes(PDO &$db, string $search, string $sort_by, int $pag
     ");
 
     $sql_search = "%$search%";
+    $current_emote_set_id = $_SESSION["user_active_emote_set_id"] ?? "";
 
     $stmt->bindParam(1, $current_user_id, PDO::PARAM_STR);
-    $stmt->bindParam(2, $user_id, PDO::PARAM_INT);
+    $stmt->bindParam(2, $current_emote_set_id, PDO::PARAM_STR);
     $stmt->bindParam(3, $search, PDO::PARAM_STR);
     $stmt->bindParam(4, $sql_search, PDO::PARAM_STR);
     $stmt->bindParam(5, $limit, PDO::PARAM_INT);
@@ -281,9 +282,9 @@ if (CLIENT_REQUIRES_JSON) {
                                     <?php
                                     $added = false;
 
-                                    if (isset($_SESSION["user_emote_set_id"])) {
+                                    if (isset($_SESSION["user_active_emote_set_id"])) {
                                         $stmt = $db->prepare("SELECT id, code FROM emote_set_contents WHERE emote_set_id = ? AND emote_id = ?");
-                                        $stmt->execute([$_SESSION["user_emote_set_id"], $emote->get_id()]);
+                                        $stmt->execute([$_SESSION["user_active_emote_set_id"], $emote->get_id()]);
 
                                         $added = false;
 
@@ -298,6 +299,8 @@ if (CLIENT_REQUIRES_JSON) {
                                         <form action="/emotes/setmanip.php" method="POST">
                                             <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
                                                 style="display: none;">
+                                            <input type="text" name="emote_set_id"
+                                                value="<?php echo $_SESSION["user_active_emote_set_id"] ?>" style="display: none;">
                                             <?php
                                             if ($added) {
                                                 ?>
@@ -307,6 +310,8 @@ if (CLIENT_REQUIRES_JSON) {
                                             <form action="/emotes/setmanip.php" method="POST" class="row">
                                                 <input type="text" name="id" value="<?php echo $emote->get_id() ?>"
                                                     style="display: none;">
+                                                <input type="text" name="emote_set_id"
+                                                    value="<?php echo $_SESSION["user_active_emote_set_id"] ?>" style="display: none;">
                                                 <input type="text" name="value" id="emote-alias-input"
                                                     value="<?php echo $emote_current_name ?>"
                                                     placeholder="<?php echo $emote->get_code() ?>">

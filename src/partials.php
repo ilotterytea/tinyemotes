@@ -79,6 +79,27 @@ function html_navigation_bar()
         </div>
         <?php if (isset($_SESSION["user_id"])): ?>
             <div class="flex items-bottom small-gap" style="margin-left: auto;">
+                <?php if (isset($_SESSION["user_emote_sets"])): ?>
+                    <form action="/account/change_emoteset.php" method="POST" id="form-change-emoteset">
+                        <input type="text" name="redirect" value="<?php echo $_SERVER["REQUEST_URI"] ?>" style="display: none;">
+                        <div class="row small-gap">
+                            <label for="id">Current emote set: </label>
+                            <select name="id" onchange="send_change_emoteset(event)">
+                                <?php
+                                foreach ($_SESSION["user_emote_sets"] as $es) {
+                                    echo '<option value="' . $es["id"] . '">' . $es["name"] . '</option>';
+                                }
+                                ?>
+                            </select>
+                        </div>
+                    </form>
+                    <script>
+                        function send_change_emoteset(e) {
+                            document.getElementById("form-change-emoteset").submit();
+                        }
+                    </script>
+                <?php endif; ?>
+
                 <a href="/users.php?id=<?php echo $_SESSION["user_id"] ?>" class="flex items-bottom small-gap">
                     Signed in as <?php echo $_SESSION["user_name"] ?>
                     <?php

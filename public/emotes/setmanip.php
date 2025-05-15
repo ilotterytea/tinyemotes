@@ -13,7 +13,7 @@ if (isset($_SESSION["user_role"]) && !$_SESSION["user_role"]["permission_emotese
     exit;
 }
 
-if (!isset($_POST["id"], $_POST["action"])) {
+if (!isset($_POST["id"], $_POST["action"], $_POST["emote_set_id"])) {
     generate_alert("/emotes", "Not enough POST fields");
     exit;
 }
@@ -31,36 +31,16 @@ if ($stmt->rowCount() == 0) {
 $emote = $stmt->fetch(PDO::FETCH_ASSOC);
 
 $user_id = $_SESSION["user_id"];
+$emote_set_id = $_POST["emote_set_id"];
 
-// obtaining or creating a emote set
-$stmt = $db->prepare("SELECT emote_set_id FROM acquired_emote_sets WHERE user_id = ? AND is_default = true");
-$stmt->execute([$user_id]);
-$emote_set_id = null;
+// checking emote set
+$stmt = $db->prepare("SELECT id FROM acquired_emote_sets WHERE emote_set_id = ? AND user_id = ?");
+$stmt->execute([$emote_set_id, $user_id]);
 
-if ($row = $stmt->fetch()) {
-    $emote_set_id = $row["emote_set_id"];
-
-    // checking ownership
-    $stmt = $db->prepare("SELECT id FROM emote_sets WHERE id = ? AND owner_id = ?");
-    $stmt->execute([$emote_set_id, $user_id]);
-
-    if ($stmt->rowCount() == 0) {
-        $_SESSION["user_emote_set_id"] = "";
-        generate_alert("/emotes?id=$emote_id", "Bad ownership permissions on active emoteset", 403);
-        exit;
-    }
+if ($stmt->rowCount() == 0) {
+    generate_alert("/404.php", "You don't own emote set ID $emote_set_id", 403);
+    exit;
 }
-
-if ($emote_set_id == null) {
-    $stmt = $db->prepare("INSERT INTO emote_sets(owner_id, name) VALUES (?, ?)");
-    $stmt->execute([$user_id, $_SESSION["user_name"] . "'s emoteset"]);
-    $emote_set_id = $db->lastInsertId();
-
-    $stmt = $db->prepare("INSERT INTO acquired_emote_sets(user_id, emote_set_id, is_default) VALUES (?, ?, true)");
-    $stmt->execute([$user_id, $emote_set_id]);
-}
-
-$_SESSION["user_emote_set_id"] = $emote_set_id;
 
 // inserting emote
 $stmt = $db->prepare("SELECT id FROM emote_set_contents WHERE emote_set_id = ? AND emote_id = ?");
