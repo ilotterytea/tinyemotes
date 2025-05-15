@@ -24,6 +24,8 @@ if (isset($_SESSION["user_role"]) && $_SESSION["user_role"]["permission_upload"]
     $uploader_name = $_SESSION["user_name"] ?? ANONYMOUS_DEFAULT_NAME;
 }
 
+$db = new PDO(DB_URL, DB_USER, DB_PASS);
+
 function abort_upload(string $path, PDO $db, string $id)
 {
     $stmt = $db->prepare("DELETE FROM emotes WHERE id = ?");
@@ -56,112 +58,164 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
         <div class="container">
             <div class="wrapper">
                 <?php html_navigation_bar() ?>
+                <?php display_alert() ?>
 
-                <section class="content" style="width: 400px;">
-                    <?php display_alert() ?>
-                    <section class="box">
-                        <div class="box navtab">
-                            <div>
-                                <b>Upload a new emote</b>
-                                <p style="font-size:8px;">You can just upload, btw. Anything you want.</p>
+                <section class="content row">
+                    <div class="column small-gap">
+                        <section class="box">
+                            <div class="box navtab">
+                                <div>
+                                    <b>Upload a new emote</b>
+                                    <p style="font-size:8px;">You can just upload, btw. Anything you want.</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="box content">
-                            <form action="/emotes/upload.php" method="POST" enctype="multipart/form-data">
-                                <h3>Image<span style="color:red;">*</span></h3>
+                            <div class="box content">
+                                <form action="/emotes/upload.php" method="POST" enctype="multipart/form-data">
+                                    <h3>Image<span style="color:red;">*</span></h3>
 
-                                <input type="file" name="file" id="form-file" accept=".gif,.jpg,.jpeg,.png,.webp" required>
+                                    <input type="file" name="file" id="form-file" accept=".gif,.jpg,.jpeg,.png,.webp"
+                                        required>
 
-                                <div id="form-manual-files" style="display:none;">
-                                    <input type="file" name="file-1x" id="form-file-1x" accept=".gif,.jpg,.jpeg,.png,.webp">
-                                    <label class="inline"
-                                        for="file-1x"><?php echo sprintf("%dx%d", EMOTE_MAX_SIZE[0] / 4, EMOTE_MAX_SIZE[1] / 4) ?></label>
-                                    <input type="file" name="file-2x" id="form-file-2x" accept=".gif,.jpg,.jpeg,.png,.webp">
-                                    <label class="inline"
-                                        for="file-2x"><?php echo sprintf("%dx%d", EMOTE_MAX_SIZE[0] / 2, EMOTE_MAX_SIZE[1] / 2) ?></label>
-                                    <input type="file" name="file-3x" id="form-file-3x" accept=".gif,.jpg,.jpeg,.png,.webp">
-                                    <label class="inline"
-                                        for="file-3x"><?php echo sprintf("%dx%d", EMOTE_MAX_SIZE[0], EMOTE_MAX_SIZE[1]) ?></label>
-                                </div>
+                                    <div id="form-manual-files" style="display:none;">
+                                        <input type="file" name="file-1x" id="form-file-1x"
+                                            accept=".gif,.jpg,.jpeg,.png,.webp">
+                                        <label class="inline"
+                                            for="file-1x"><?php echo sprintf("%dx%d", EMOTE_MAX_SIZE[0] / 4, EMOTE_MAX_SIZE[1] / 4) ?></label>
+                                        <input type="file" name="file-2x" id="form-file-2x"
+                                            accept=".gif,.jpg,.jpeg,.png,.webp">
+                                        <label class="inline"
+                                            for="file-2x"><?php echo sprintf("%dx%d", EMOTE_MAX_SIZE[0] / 2, EMOTE_MAX_SIZE[1] / 2) ?></label>
+                                        <input type="file" name="file-3x" id="form-file-3x"
+                                            accept=".gif,.jpg,.jpeg,.png,.webp">
+                                        <label class="inline"
+                                            for="file-3x"><?php echo sprintf("%dx%d", EMOTE_MAX_SIZE[0], EMOTE_MAX_SIZE[1]) ?></label>
+                                    </div>
 
-                                <div>
-                                    <label for="manual" class="inline">Manual resize</label>
-                                    <input type="checkbox" name="manual" value="1" onchange="display_manual_resize()">
-                                </div>
+                                    <div>
+                                        <label for="manual" class="inline">Manual resize</label>
+                                        <input type="checkbox" name="manual" value="1" onchange="display_manual_resize()">
+                                    </div>
 
-                                <h3>Emote name<span style="color:red;">*</span></h3>
-                                <input type="text" name="code" id="code" required>
+                                    <h3>Emote name<span style="color:red;">*</span></h3>
+                                    <input type="text" name="code" id="code" required>
 
-                                <div>
-                                    <label for="visibility" class="inline">Emote visibility: </label>
-                                    <select name="visibility" id="form-visibility">
-                                        <option value="1">Public</option>
-                                        <option value="0">Unlisted</option>
-                                    </select><br>
-                                    <p id="form-visibility-description" style="font-size: 10px;">test</p>
-                                </div>
+                                    <div>
+                                        <label for="visibility" class="inline">Emote visibility: </label>
+                                        <select name="visibility" id="form-visibility">
+                                            <option value="1">Public</option>
+                                            <option value="0">Unlisted</option>
+                                        </select><br>
+                                        <p id="form-visibility-description" style="font-size: 10px;">test</p>
+                                    </div>
 
-                                <label for="notes">Approval notes</label>
-                                <textarea name="notes" id="form-notes"></textarea>
+                                    <label for="notes">Approval notes</label>
+                                    <textarea name="notes" id="form-notes"></textarea>
 
-                                <table class="vertical left font-weight-normal">
-                                    <tr>
-                                        <th>Emote source:</th>
-                                        <td class="flex"><input class="grow" name="source" id="form-source"></input></td>
-                                    </tr>
-                                    <?php if (TAGS_ENABLE && TAGS_MAX_COUNT != 0): ?>
+                                    <table class="vertical left font-weight-normal">
                                         <tr>
-                                            <th>Tags <span class="font-small" style="cursor: help;" title="<?php
-                                            echo 'Tags are used for fast search. ';
-                                            if (TAGS_MAX_COUNT > 0) {
-                                                echo 'You can use ' . TAGS_MAX_COUNT . ' tags. ';
-                                            }
-                                            echo 'They are space-separated o algo.';
-                                            ?>">[?]</span>:
-                                            </th>
-                                            <td class="flex"><input class="grow" name="tags" id="form-tags"></input></td>
+                                            <th>Emote source:</th>
+                                            <td class="flex"><input class="grow" name="source" id="form-source"></input>
+                                            </td>
                                         </tr>
-                                    <?php endif; ?>
-                                </table>
+                                        <?php if (TAGS_ENABLE && TAGS_MAX_COUNT != 0): ?>
+                                            <tr>
+                                                <th>Tags <span class="font-small" style="cursor: help;" title="<?php
+                                                echo 'Tags are used for fast search. ';
+                                                if (TAGS_MAX_COUNT > 0) {
+                                                    echo 'You can use ' . TAGS_MAX_COUNT . ' tags. ';
+                                                }
+                                                echo 'They are space-separated o algo.';
+                                                ?>">[?]</span>:
+                                                </th>
+                                                <td class="flex"><input class="grow" name="tags" id="form-tags"></input></td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    </table>
 
-                                <div>
-                                    <label for="tos" class="inline">Do you accept <a href="/rules.php" target="_BLANK">the
-                                            rules</a>?<span style="color:red;">*</span></label>
-                                    <input type="checkbox" name="tos" value="1" required>
+                                    <div>
+                                        <label for="tos" class="inline">Do you accept <a href="/rules.php"
+                                                target="_BLANK">the
+                                                rules</a>?<span style="color:red;">*</span></label>
+                                        <input type="checkbox" name="tos" value="1" required>
+                                    </div>
+
+                                    <button type="submit" id="upload-button">Upload as
+                                        <?php echo $uploader_name ?></button>
+                                </form>
+                            </div>
+                        </section>
+
+                        <?php
+                        if (CAPTCHA_ENABLE && (CAPTCHA_FORCE_USERS || !isset($_SESSION["user_id"]))) {
+                            html_captcha_form();
+                        }
+                        ?>
+                    </div>
+
+                    <div class="column small-gap grow" id="emote-showcase" style="display: none;">
+                        <!-- Emote Preview -->
+                        <section class="box">
+                            <div class="box navtab">
+                                Emote Preview - <span id="emote-name"><i>Empty</i></span>
+                            </div>
+                            <div class="box content">
+                                <div class="emote-showcase items-bottom">
+                                    <div class="emote-image column items-center small-gap">
+                                        <img src="" alt="" class="emote-image-1x">
+                                        <p class="size font-small"></p>
+                                    </div>
+                                    <div class="emote-image column items-center small-gap">
+                                        <img src="" alt="" class="emote-image-2x">
+                                        <p class="size font-small"></p>
+                                    </div>
+                                    <div class="emote-image column items-center small-gap">
+                                        <img src="" alt="" class="emote-image-3x">
+                                        <p class="size font-small"></p>
+                                    </div>
                                 </div>
-
-                                <button type="submit" id="upload-button">Upload as
-                                    <?php echo $uploader_name ?></button>
-                            </form>
-                        </div>
-                    </section>
-
-                    <?php
-                    if (CAPTCHA_ENABLE && (CAPTCHA_FORCE_USERS || !isset($_SESSION["user_id"]))) {
-                        html_captcha_form();
-                    }
-                    ?>
-
-                    <section class="box column" id="emote-showcase" style="display: none;">
-                        <div class="emote-showcase">
-                            <div class="emote-image">
-                                <img src="" alt="" id="emote-image-1x">
-                                <p>1x</p>
-                                <p class="size"></p>
+                                <p style="font-size: 12px;">The result may differ.</p>
                             </div>
-                            <div class="emote-image">
-                                <img src="" alt="" id="emote-image-2x">
-                                <p>2x</p>
-                                <p class="size"></p>
+                        </section>
+
+                        <!-- Chat Preview -->
+                        <section class="box">
+                            <div class="box navtab">
+                                Chat Preview
                             </div>
-                            <div class="emote-image">
-                                <img src="" alt="" id="emote-image-3x">
-                                <p>3x</p>
-                                <p class="size"></p>
+                            <div class="box content no-gap column chat rounded">
+                                <?php
+                                $stmt = $db->query("SELECT u.username,
+                                        CASE
+                                            WHEN ub.badge_id IS NOT NULL THEN ub.badge_id
+                                            WHEN r.badge_id IS NOT NULL THEN r.badge_id
+                                            ELSE NULL
+                                        END AS badge_id
+                                    FROM users u
+                                    LEFT JOIN user_badges ub ON ub.user_id = u.id
+                                    LEFT JOIN role_assigns ra ON ra.user_id = u.id
+                                    LEFT JOIN roles r ON r.id = ra.role_id
+                                    ORDER BY RAND() LIMIT 3
+                                ");
+
+                                while ($row = $stmt->fetch()) {
+                                    echo '<div class="row small-gap items-center chat-message">';
+
+                                    if ($row["badge_id"]) {
+                                        echo '<img src="/static/userdata/badges/' . $row["badge_id"] . '/1x.webp" alt="" title="" /> ';
+                                    }
+
+                                    echo '<span style="color: rgb(' . random_int(128, 255) . ', ' . random_int(128, 255) . ', ' . random_int(128, 255) . ')">';
+                                    echo $row["username"];
+                                    echo ': </span>';
+
+                                    echo '<img src="" alt="" class="emote-image-1x">';
+
+                                    echo '</div>';
+                                }
+                                ?>
                             </div>
-                        </div>
-                        <p style="font-size: 12px;">The result may differ.</p>
-                    </section>
+                        </section>
+                    </div>
                 </section>
             </div>
         </div>
@@ -197,7 +251,6 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
         });
 
         const code = document.getElementById("code");
-        let validCode = "";
 
         code.addEventListener("input", (e) => {
             const regex = <?php echo EMOTE_NAME_REGEX ?>;
@@ -207,6 +260,8 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
             } else {
                 e.target.value = validCode;
             }
+
+            document.getElementById("emote-name").innerHTML = e.target.value ? e.target.value : "<i>Empty</i>";
         });
 
         const visibility = document.getElementById("form-visibility");
@@ -305,17 +360,20 @@ if ($_SERVER['REQUEST_METHOD'] != "POST") {
                 const max_w = max_width / multiplier;
                 const max_h = max_height / multiplier;
 
-                const parentId = `emote-image-${image_index}x`;
-                const img = document.getElementById(parentId);
-                img.setAttribute("src", e.target.result);
+                const parentId = `.emote-image-${image_index}x`;
+                const imgs = document.querySelectorAll(parentId);
 
-                let ratio = Math.min(max_w / image.width, max_h / image.height);
+                for (const img of imgs) {
+                    img.setAttribute("src", e.target.result);
 
-                img.setAttribute("width", Math.floor(image.width * ratio));
-                img.setAttribute("height", Math.floor(image.height * ratio));
+                    let ratio = Math.min(max_w / image.width, max_h / image.height);
 
-                const sizeElement = document.querySelector(`.emote-image:has(#${parentId}) .size`);
-                sizeElement.innerHTML = `${img.getAttribute("width")}x${img.getAttribute("height")}`;
+                    img.setAttribute("width", Math.floor(image.width * ratio));
+                    img.setAttribute("height", Math.floor(image.height * ratio));
+
+                    const sizeElement = document.querySelector(`.emote-image:has(${parentId}) .size`);
+                    sizeElement.innerHTML = `${img.getAttribute("width")}x${img.getAttribute("height")}`;
+                }
             }
         }
     </script>
@@ -367,8 +425,6 @@ if (MOD_EMOTES_APPROVE && $visibility == 1 && EMOTE_VISIBILITY_DEFAULT != 1) {
 }
 
 // creating a new emote record
-$db = new PDO(DB_URL, DB_USER, DB_PASS);
-
 $id = bin2hex(random_bytes(16));
 $stmt = $db->prepare("INSERT INTO emotes(id, code, notes, source, uploaded_by, visibility) VALUES (?, ?, ?, ?, ?, ?)");
 $stmt->execute([$id, $code, $notes, $source, $uploaded_by, $visibility]);
